@@ -28,7 +28,6 @@ library
     PostgresqlSyntax.Ast
     PostgresqlSyntax.KeywordSet
     PostgresqlSyntax.Parsing
-    PostgresqlSyntax.Projections.ChildExprList
     PostgresqlSyntax.Rendering
     PostgresqlSyntax.Validation
   other-modules:
