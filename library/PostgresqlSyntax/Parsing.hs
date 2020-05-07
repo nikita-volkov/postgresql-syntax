@@ -144,10 +144,10 @@ preparableStmt =
 
 insertStmt = do
   a <- optional (wrapToHead withClause <* space1)
-  string' "insert"
+  keyword "insert"
   space1
   endHead
-  string' "into"
+  keyword "into"
   space1
   b <- insertTarget
   space1
@@ -159,21 +159,21 @@ insertStmt = do
 insertTarget = do
   a <- qualifiedName
   endHead
-  b <- optional (space1 *> string' "as" *> space1 *> endHead *> colId)
+  b <- optional (space1 *> keyword "as" *> space1 *> endHead *> colId)
   return (InsertTarget a b)
 
 insertRest = asum [
-    DefaultValuesInsertRest <$ (string' "default" *> space1 *> endHead *> string' "values")
+    DefaultValuesInsertRest <$ (keyword "default" *> space1 *> endHead *> keyword "values")
     ,
     do
       a <- optional (inParens insertColumnList <* space1)
       b <- optional $ do
-        string' "overriding"
+        keyword "overriding"
         space1
         endHead
         b <- overrideKind
         space1
-        string' "value"
+        keyword "value"
         space1
         return b
       c <- selectStmt
@@ -181,8 +181,8 @@ insertRest = asum [
   ]
 
 overrideKind = asum [
-    UserOverrideKind <$ string' "user",
-    SystemOverrideKind <$ string' "system"
+    UserOverrideKind <$ keyword "user",
+    SystemOverrideKind <$ keyword "system"
   ]
 
 insertColumnList = sep1 commaSeparator insertColumnItem
@@ -194,13 +194,13 @@ insertColumnItem = do
   return (InsertColumnItem a b)
 
 onConflict = do
-  string' "on"
+  keyword "on"
   space1
-  string' "conflict"
+  keyword "conflict"
   space1
   endHead
   a <- optional (confExpr <* space1)
-  string' "do"
+  keyword "do"
   space1
   b <- onConflictDo
   return (OnConflict a b)
@@ -208,17 +208,17 @@ onConflict = do
 confExpr = asum [
     WhereConfExpr <$> inParens indexParams <*> optional (space *> whereClause)
     ,
-    ConstraintConfExpr <$> (string' "on" *> space1 *> string' "constraint" *> space1 *> endHead *> name)
+    ConstraintConfExpr <$> (keyword "on" *> space1 *> keyword "constraint" *> space1 *> endHead *> name)
   ]
 
 onConflictDo = asum [
-    NothingOnConflictDo <$ string' "nothing"
+    NothingOnConflictDo <$ keyword "nothing"
     ,
     do
-      string' "update"
+      keyword "update"
       space1
       endHead
-      string' "set"
+      keyword "set"
       space1
       a <- setClauseList
       b <- optional (space1 *> whereClause)
@@ -226,7 +226,7 @@ onConflictDo = asum [
   ]
 
 returningClause = do
-  string' "returning"
+  keyword "returning"
   space1
   endHead
   targetList
@@ -237,12 +237,12 @@ returningClause = do
 
 updateStmt = do
   a <- optional (wrapToHead withClause <* space1)
-  string' "update"
+  keyword "update"
   space1
   endHead
   b <- relationExprOptAlias ["set"]
   space1
-  string' "set"
+  keyword "set"
   space1
   c <- setClauseList
   d <- optional (space1 *> fromClause)
@@ -284,10 +284,10 @@ setTargetList = sep1 commaSeparator setTarget
 
 deleteStmt = do
   a <- optional (wrapToHead withClause <* space1)
-  string' "delete"
+  keyword "delete"
   space1
   endHead
-  string' "from"
+  keyword "from"
   space1
   b <- relationExprOptAlias ["using", "where", "returning"]
   c <- optional (space1 *> usingClause)
@@ -296,7 +296,7 @@ deleteStmt = do
   return (DeleteStmt a b c d e)
 
 usingClause = do
-  string' "using"
+  keyword "using"
   space1
   fromList
 
@@ -352,20 +352,20 @@ selectClause = suffixRec base suffix where
 
 baseSimpleSelect = asum [
     do
-      string' "select"
+      keyword "select"
       notFollowedBy $ satisfy $ isAlphaNum
       endHead
       _targeting <- optional (space1 *> targeting)
-      _intoClause <- optional (space1 *> string' "into" *> endHead *> space1 *> optTempTableName)
+      _intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> optTempTableName)
       _fromClause <- optional (space1 *> fromClause)
       _whereClause <- optional (space1 *> whereClause)
       _groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator groupByItem)
-      _havingClause <- optional (space1 *> string' "having" *> endHead *> space1 *> aExpr)
-      _windowClause <- optional (space1 *> string' "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
+      _havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> aExpr)
+      _windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
       return (NormalSimpleSelect _targeting _intoClause _fromClause _whereClause _groupClause _havingClause _windowClause)
     ,
     do
-      string' "table"
+      keyword "table"
       space1
       endHead
       TableSimpleSelect <$> relationExpr
@@ -380,16 +380,16 @@ extensionSimpleSelect _headSelectClause = do
   _selectClause <- selectClause
   return (BinSimpleSelect _op _headSelectClause _allOrDistinct _selectClause)
   
-allOrDistinct = string' "all" $> False <|> string' "distinct" $> True
+allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
 
 selectBinOp = asum [
-    string' "union" $> UnionSelectBinOp,
-    string' "intersect" $> IntersectSelectBinOp,
-    string' "except" $> ExceptSelectBinOp
+    keyword "union" $> UnionSelectBinOp,
+    keyword "intersect" $> IntersectSelectBinOp,
+    keyword "except" $> ExceptSelectBinOp
   ]
 
 valuesClause = do
-  string' "values"
+  keyword "values"
   space
   sep1 commaSeparator $ do
     char '('
@@ -401,35 +401,35 @@ valuesClause = do
     return _a
 
 withClause = label "with clause" $ do
-  string' "with"
+  keyword "with"
   space1
   endHead
-  _recursive <- option False (True <$ string' "recursive" <* space1)
+  _recursive <- option False (True <$ keyword "recursive" <* space1)
   _cteList <- sep1 commaSeparator commonTableExpr
   return (WithClause _recursive _cteList)
 
 commonTableExpr = label "common table expression" $ do
   _name <- colId <* space <* endHead
   _nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
-  string' "as"
+  keyword "as"
   space1
   _materialized <- optional (materialized <* space1)
   _stmt <- inParens preparableStmt
   return (CommonTableExpr _name _nameList _materialized _stmt)
 
 materialized =
-  True <$ string' "materialized" <|>
+  True <$ keyword "materialized" <|>
   False <$ keyphrase "not materialized"
 
 targeting = distinct <|> allWithTargetList <|> all <|> normal where
   normal = NormalTargeting <$> targetList
   allWithTargetList = do
-    string' "all"
+    keyword "all"
     space1
     AllTargeting <$> Just <$> targetList
-  all = string' "all" $> AllTargeting Nothing
+  all = keyword "all" $> AllTargeting Nothing
   distinct = do
-    string' "distinct"
+    keyword "distinct"
     space1
     endHead
     _optOn <- optional (onExpressionsClause <* space1)
@@ -449,7 +449,7 @@ targetEl = label "target" $ asum [
           do
             space1
             asum [
-                AliasedExprTargetEl _expr <$> (string' "as" *> space1 *> endHead *> colLabel)
+                AliasedExprTargetEl _expr <$> (keyword "as" *> space1 *> endHead *> colLabel)
                 ,
                 ImplicitlyAliasedExprTargetEl _expr <$> ident
               ]
@@ -461,7 +461,7 @@ targetEl = label "target" $ asum [
   ]
 
 onExpressionsClause = do
-  string' "on"
+  keyword "on"
   space1
   endHead
   inParens (sep1 commaSeparator aExpr)
@@ -485,20 +485,20 @@ OptTempTableName:
 optTempTableName = asum [
     do
       a <- asum [
-          TemporaryOptTempTableName <$ string' "temporary" <* space1,
-          TempOptTempTableName <$ string' "temp" <* space1,
-          LocalTemporaryOptTempTableName <$ string' "local temporary" <* space1,
-          LocalTempOptTempTableName <$ string' "local temp" <* space1,
-          GlobalTemporaryOptTempTableName <$ string' "global temporary" <* space1,
-          GlobalTempOptTempTableName <$ string' "global temp" <* space1,
-          UnloggedOptTempTableName <$ string' "unlogged" <* space1
+          TemporaryOptTempTableName <$ keyword "temporary" <* space1,
+          TempOptTempTableName <$ keyword "temp" <* space1,
+          LocalTemporaryOptTempTableName <$ keyphrase "local temporary" <* space1,
+          LocalTempOptTempTableName <$ keyphrase "local temp" <* space1,
+          GlobalTemporaryOptTempTableName <$ keyphrase "global temporary" <* space1,
+          GlobalTempOptTempTableName <$ keyphrase "global temp" <* space1,
+          UnloggedOptTempTableName <$ keyword "unlogged" <* space1
         ]
-      b <- option False (True <$ string' "table" <* space1)
+      b <- option False (True <$ keyword "table" <* space1)
       c <- qualifiedName
       return (a b c)
     ,
     do
-      string' "table"
+      keyword "table"
       space1
       endHead
       TableOptTempTableName <$> qualifiedName
@@ -512,8 +512,8 @@ optTempTableName = asum [
 
 groupByItem = asum [
     EmptyGroupingSetGroupByItem <$ (char '(' *> space *> char ')'),
-    RollupGroupByItem <$> (string' "rollup" *> endHead *> space *> inParens (sep1 commaSeparator aExpr)),
-    CubeGroupByItem <$> (string' "cube" *> endHead *> space *> inParens (sep1 commaSeparator aExpr)),
+    RollupGroupByItem <$> (keyword "rollup" *> endHead *> space *> inParens (sep1 commaSeparator aExpr)),
+    CubeGroupByItem <$> (keyword "cube" *> endHead *> space *> inParens (sep1 commaSeparator aExpr)),
     GroupingSetsGroupByItem <$> (keyphrase "grouping sets" *> endHead *> space *> inParens (sep1 commaSeparator groupByItem)),
     ExprGroupByItem <$> aExpr
   ]
@@ -522,7 +522,7 @@ groupByItem = asum [
 -- * Window clause details
 -------------------------
 
-windowDefinition = WindowDefinition <$> (colId <* space1 <* string' "as" <* space1 <* endHead) <*> windowSpecification
+windowDefinition = WindowDefinition <$> (colId <* space1 <* keyword "as" <* space1 <* endHead) <*> windowSpecification
 
 {-
 window_specification:
@@ -571,13 +571,13 @@ frameClause = do
   return (FrameClause a b c)
 
 frameClauseMode = asum [
-    RangeFrameClauseMode <$ string' "range",
-    RowsFrameClauseMode <$ string' "rows",
-    GroupsFrameClauseMode <$ string' "groups"
+    RangeFrameClauseMode <$ keyword "range",
+    RowsFrameClauseMode <$ keyword "rows",
+    GroupsFrameClauseMode <$ keyword "groups"
   ]
 
 frameExtent =
-  BetweenFrameExtent <$> (string' "between" *> space1 *> endHead *> frameBound <* space1 <* string' "and" <* space1) <*> frameBound <|>
+  BetweenFrameExtent <$> (keyword "between" *> space1 *> endHead *> frameBound <* space1 <* keyword "and" <* space1) <*> frameBound <|>
   SingularFrameExtent <$> frameBound
 
 {-
@@ -594,7 +594,7 @@ frameBound =
   do
     a <- aExpr
     space1
-    PrecedingFrameBound a <$ string' "preceding" <|> FollowingFrameBound a <$ string' "following"
+    PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
 
 windowExclusionClause =
   CurrentRowWindowExclusionClause <$ keyphrase "exclude current row" <|>
@@ -608,7 +608,7 @@ windowExclusionClause =
 
 fromList = sep1 commaSeparator tableRef
 
-fromClause = string' "from" *> endHead *> space1 *> fromList
+fromClause = keyword "from" *> endHead *> space1 *> fromList
 
 {-|
 >>> testParser tableRef "a left join b on (a.i = b.i)"
@@ -658,7 +658,7 @@ nonTrailingTableRef = asum [
     TODO: add xmltable
     -}
     lateralTableRef = do
-      string' "lateral"
+      keyword "lateral"
       space1
       endHead
       lateralableTableRef True
@@ -693,12 +693,12 @@ relationExpr =
   asum
     [
       do
-        string' "only"
+        keyword "only"
         space1
         _name <- qualifiedName
         return (OnlyRelationExpr _name False) 
       ,
-      inParensWithClause (string' "only") qualifiedName <&> \ a -> OnlyRelationExpr a True
+      inParensWithClause (keyword "only") qualifiedName <&> \ a -> OnlyRelationExpr a True
       ,
       do
         _name <- qualifiedName
@@ -714,13 +714,13 @@ relationExprOptAlias reservedKeywords = do
   a <- relationExpr
   b <- optional $ do
     space1
-    b <- trueIfPresent (string' "as" *> space1)
+    b <- trueIfPresent (keyword "as" *> space1)
     c <- filteredColId reservedKeywords
     return (b, c)
   return (RelationExprOptAlias a b)
 
 tablesampleClause = do
-  string' "tablesample"
+  keyword "tablesample"
   space1
   endHead
   a <- funcName
@@ -730,15 +730,15 @@ tablesampleClause = do
   return (TablesampleClause a b c)
 
 repeatableClause = do
-  string' "repeatable"
+  keyword "repeatable"
   space
   inParens (endHead *> aExpr)
 
 funcTable = asum [
     do
-      string' "rows"
+      keyword "rows"
       space1
-      string' "from"
+      keyword "from"
       space
       a <- inParens (endHead *> rowsfromList)
       b <- trueIfPresent (space *> optOrdinality)
@@ -758,9 +758,9 @@ rowsfromItem = do
 
 rowsfromList = sep1 commaSeparator rowsfromItem
 
-colDefList = string' "as" *> space *> inParens (endHead *> tableFuncElementList)
+colDefList = keyword "as" *> space *> inParens (endHead *> tableFuncElementList)
 
-optOrdinality = string' "with" *> space1 *> string' "ordinality"
+optOrdinality = keyword "with" *> space1 *> keyword "ordinality"
 
 tableFuncElementList = sep1 commaSeparator tableFuncElement
 
@@ -771,11 +771,11 @@ tableFuncElement = do
   c <- optional (space1 *> collateClause)
   return (TableFuncElement a b c)
 
-collateClause = string' "collate" *> space1 *> endHead *> anyName
+collateClause = keyword "collate" *> space1 *> endHead *> anyName
 
 funcAliasClause = asum [
     do
-      string' "as"
+      keyword "as"
       asum [
           do
             space
@@ -868,7 +868,7 @@ trailingJoinedTable _tr1 = asum [
       return (MethJoinedTable (QualJoinMeth _jt _jq) _tr1 _tr2)
     ,
     do
-      string' "natural"
+      keyword "natural"
       endHead
       space1
       _jt <- joinTypedJoin
@@ -878,41 +878,41 @@ trailingJoinedTable _tr1 = asum [
   ]
   where
     joinTypedJoin =
-      Just <$> (joinType <* endHead <* space1 <* string' "join") <|>
-      Nothing <$ string' "join"
+      Just <$> (joinType <* endHead <* space1 <* keyword "join") <|>
+      Nothing <$ keyword "join"
 
 joinType = asum [
     do
-      string' "full"
+      keyword "full"
       endHead
       _outer <- outerAfterSpace
       return (FullJoinType _outer)
     ,
     do
-      string' "left"
+      keyword "left"
       endHead
       _outer <- outerAfterSpace
       return (LeftJoinType _outer)
     ,
     do
-      string' "right"
+      keyword "right"
       endHead
       _outer <- outerAfterSpace
       return (RightJoinType _outer)
     ,
-    string' "inner" $> InnerJoinType
+    keyword "inner" $> InnerJoinType
   ]
   where
-    outerAfterSpace = (space1 *> string' "outer") $> True <|> pure False
+    outerAfterSpace = (space1 *> keyword "outer") $> True <|> pure False
 
 joinQual = asum [
-    string' "using" *> space1 *> inParens (sep1 commaSeparator colId) <&> UsingJoinQual
+    keyword "using" *> space1 *> inParens (sep1 commaSeparator colId) <&> UsingJoinQual
     ,
-    string' "on" *> space1 *> aExpr <&> OnJoinQual
+    keyword "on" *> space1 *> aExpr <&> OnJoinQual
   ]
 
 aliasClause = do
-  (_as, _alias) <- (True,) <$> (string' "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
+  (_as, _alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
   _columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
   return (AliasClause _as _alias _columnAliases)
 
@@ -920,17 +920,17 @@ aliasClause = do
 -- * Where
 -------------------------
 
-whereClause = string' "where" *> space1 *> endHead *> aExpr
+whereClause = keyword "where" *> space1 *> endHead *> aExpr
 
 whereOrCurrentClause = do
-  string' "where"
+  keyword "where"
   space1
   endHead
   asum [
       do
-        string' "current"
+        keyword "current"
         space1
-        string' "of"
+        keyword "of"
         space1
         endHead
         a <- cursorName
@@ -955,7 +955,7 @@ sortBy = do
   asum [
       do
         space1
-        string' "using"
+        keyword "using"
         space1
         endHead
         b <- qualAllOp
@@ -997,13 +997,13 @@ filteredAExpr = customizedAExpr . customizedCExpr . filteredColumnref
 customizedAExpr cExpr = suffixRec base suffix where
   aExpr = customizedAExpr cExpr
   base = asum [
-      DefaultAExpr <$ string' "default",
-      UniqueAExpr <$> (string' "unique" *> space1 *> selectWithParens),
-      OverlapsAExpr <$> wrapToHead row <*> (space1 *> string' "overlaps" *> space1 *> endHead *> row),
+      DefaultAExpr <$ keyword "default",
+      UniqueAExpr <$> (keyword "unique" *> space1 *> selectWithParens),
+      OverlapsAExpr <$> wrapToHead row <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
       qualOpExpr aExpr PrefixQualOpAExpr,
       PlusAExpr <$> plusedExpr aExpr,
       MinusAExpr <$> minusedExpr aExpr,
-      NotAExpr <$> (string' "not" *> space1 *> aExpr),
+      NotAExpr <$> (keyword "not" *> space1 *> aExpr),
       CExprAExpr <$> cExpr
     ]
   suffix a = asum [
@@ -1018,7 +1018,7 @@ customizedAExpr cExpr = suffixRec base suffix where
       ,
       typecastExpr a TypecastAExpr
       ,
-      CollateAExpr a <$> (space1 *> string' "collate" *> space1 *> endHead *> anyName)
+      CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName)
       ,
       AtTimeZoneAExpr a <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr)
       ,
@@ -1026,70 +1026,70 @@ customizedAExpr cExpr = suffixRec base suffix where
       ,
       SuffixQualOpAExpr a <$> (space *> qualOp)
       ,
-      AndAExpr a <$> (space1 *> string' "and" *> space1 *> endHead *> aExpr)
+      AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr)
       ,
-      OrAExpr a <$> (space1 *> string' "or" *> space1 *> endHead *> aExpr)
+      OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr)
       ,
       do
         space1
-        b <- trueIfPresent (string' "not" *> space1)
+        b <- trueIfPresent (keyword "not" *> space1)
         c <- asum [
-            LikeVerbalExprBinOp <$ string' "like",
-            IlikeVerbalExprBinOp <$ string' "ilike",
+            LikeVerbalExprBinOp <$ keyword "like",
+            IlikeVerbalExprBinOp <$ keyword "ilike",
             SimilarToVerbalExprBinOp <$ keyphrase "similar to"
           ]
         space1
         endHead
         d <- aExpr
-        e <- optional (space1 *> string' "escape" *> space1 *> endHead *> aExpr)
+        e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
         return (VerbalExprBinOpAExpr a b c d e)
       ,
       do
         space1
-        string' "is"
+        keyword "is"
         space1
         endHead
-        b <- trueIfPresent (string' "not" *> space1)
+        b <- trueIfPresent (keyword "not" *> space1)
         c <- asum [
-            NullAExprReversableOp <$ string' "null",
-            TrueAExprReversableOp <$ string' "true",
-            FalseAExprReversableOp <$ string' "false",
-            UnknownAExprReversableOp <$ string' "unknown",
-            DistinctFromAExprReversableOp <$> (string' "distinct" *> space1 *> string' "from" *> space1 *> endHead *> aExpr),
-            OfAExprReversableOp <$> (string' "of" *> space1 *> endHead *> inParens typeList),
-            DocumentAExprReversableOp <$ string' "document"
+            NullAExprReversableOp <$ keyword "null",
+            TrueAExprReversableOp <$ keyword "true",
+            FalseAExprReversableOp <$ keyword "false",
+            UnknownAExprReversableOp <$ keyword "unknown",
+            DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> aExpr),
+            OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+            DocumentAExprReversableOp <$ keyword "document"
           ]
         return (ReversableOpAExpr a b c)
       ,
       do
         space1
-        b <- trueIfPresent (string' "not" *> space1)
-        string' "between"
+        b <- trueIfPresent (keyword "not" *> space1)
+        keyword "between"
         space1
         endHead
         c <- asum [
-            BetweenSymmetricAExprReversableOp <$ (string' "symmetric" *> space1),
-            BetweenAExprReversableOp True <$ (string' "asymmetric" *> space1),
+            BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
+            BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
             pure (BetweenAExprReversableOp False)
           ]
         d <- bExpr
         space1
-        string' "and"
+        keyword "and"
         space1
         e <- aExpr
         return (ReversableOpAExpr a b (c d e))
       ,
       do
         space1
-        b <- trueIfPresent (string' "not" *> space1)
-        string' "in"
+        b <- trueIfPresent (keyword "not" *> space1)
+        keyword "in"
         space
         c <- InAExprReversableOp <$> inExpr
         return (ReversableOpAExpr a b c)
       ,
-      IsnullAExpr a <$ (space1 *> string' "isnull")
+      IsnullAExpr a <$ (space1 *> keyword "isnull")
       ,
-      NotnullAExpr a <$ (space1 *> string' "notnull")
+      NotnullAExpr a <$ (space1 *> keyword "notnull")
     ]
 
 bExpr = customizedBExpr cExpr
@@ -1108,14 +1108,14 @@ customizedBExpr cExpr = suffixRec base suffix where
       symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
       do
         space1
-        string' "is"
+        keyword "is"
         space1
         endHead
-        b <- trueIfPresent (string' "not" *> space1)
+        b <- trueIfPresent (keyword "not" *> space1)
         c <- asum [
             DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
-            OfBExprIsOp <$> (string' "of" *> space1 *> endHead *> inParens typeList),
-            DocumentBExprIsOp <$ string' "document"
+            OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+            DocumentBExprIsOp <$ keyword "document"
           ]
         return (IsOpBExpr a b c)
     ]
@@ -1131,12 +1131,12 @@ customizedCExpr columnref = asum [
     ,
     ExplicitRowCExpr <$> explicitRow
     ,
-    inParensWithClause (string' "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr)
+    inParensWithClause (keyword "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr)
     ,
-    string' "exists" *> space *> (ExistsCExpr <$> selectWithParens)
+    keyword "exists" *> space *> (ExistsCExpr <$> selectWithParens)
     ,
     do
-      string' "array"
+      keyword "array"
       space
       join $ asum [
           fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
@@ -1163,19 +1163,19 @@ customizedCExpr columnref = asum [
 -------------------------
 
 subqueryOp = asum [
-    AnySubqueryOp <$> (string' "operator" *> space *> endHead *> inParens anyOperator)
+    AnySubqueryOp <$> (keyword "operator" *> space *> endHead *> inParens anyOperator)
     ,
     do
-      a <- trueIfPresent (string' "not" *> space1)
-      LikeSubqueryOp a <$ string' "like" <|> IlikeSubqueryOp a <$ string' "ilike"
+      a <- trueIfPresent (keyword "not" *> space1)
+      LikeSubqueryOp a <$ keyword "like" <|> IlikeSubqueryOp a <$ keyword "ilike"
     ,
     AllSubqueryOp <$> allOp
   ]
 
 subType = asum [
-    AnySubType <$ string' "any",
-    SomeSubType <$ string' "some",
-    AllSubType <$ string' "all"
+    AnySubType <$ keyword "any",
+    SomeSubType <$ keyword "some",
+    AllSubType <$ keyword "all"
   ]
 
 inExpr = SelectInExpr <$> wrapToHead selectWithParens <|> ExprListInExpr <$> inParens exprList
@@ -1202,7 +1202,7 @@ qualOpExpr expr constr = constr <$> wrapToHead qualOp <*> (space *> expr)
 
 row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 
-explicitRow = string' "row" *> space *> inParens (optional exprList)
+explicitRow = keyword "row" *> space *> inParens (optional exprList)
 
 implicitRow = inParens $ do
   a <- wrapToHead aExpr
@@ -1218,29 +1218,29 @@ arrayExprCont = inBracketsCont $ asum [
   ]
 
 caseExpr = label "case expression" $ do
-  string' "case"
+  keyword "case"
   space1
   endHead
   _arg <- optional (aExpr <* space1)
   _whenClauses <- sep1 space1 whenClause
   space1
   _default <- optional elseClause
-  string' "end"
+  keyword "end"
   pure $ CaseExpr _arg _whenClauses _default
 
 whenClause = do
-  string' "when"
+  keyword "when"
   space1
   endHead
   _a <- aExpr
   space1
-  string' "then"
+  keyword "then"
   space1
   _b <- aExpr
   return (WhenClause _a _b)
 
 elseClause = do
-  string' "else"
+  keyword "else"
   space1
   endHead
   a <- aExpr
@@ -1270,13 +1270,13 @@ withinGroupClause = do
   inParens sortClause
 
 filterClause = do
-  string' "filter"
+  keyword "filter"
   endHead
   space
-  inParens (string' "where" *> space1 *> aExpr)
+  inParens (keyword "where" *> space1 *> aExpr)
 
 overClause = do
-  string' "over"
+  keyword "over"
   space1
   endHead
   asum [
@@ -1287,7 +1287,7 @@ overClause = do
 funcExprCommonSubexpr = asum [
     CollationForFuncExprCommonSubexpr <$> (inParensWithClause (keyphrase "collation for") aExpr)
     ,
-    CurrentDateFuncExprCommonSubexpr <$ string' "current_date"
+    CurrentDateFuncExprCommonSubexpr <$ keyword "current_date"
     ,
     CurrentTimestampFuncExprCommonSubexpr <$> labeledIconst "current_timestamp"
     ,
@@ -1297,52 +1297,52 @@ funcExprCommonSubexpr = asum [
     ,
     LocalTimeFuncExprCommonSubexpr <$> labeledIconst "localtime"
     ,
-    CurrentRoleFuncExprCommonSubexpr <$ string' "current_role"
+    CurrentRoleFuncExprCommonSubexpr <$ keyword "current_role"
     ,
-    CurrentUserFuncExprCommonSubexpr <$ string' "current_user"
+    CurrentUserFuncExprCommonSubexpr <$ keyword "current_user"
     ,
-    SessionUserFuncExprCommonSubexpr <$ string' "session_user"
+    SessionUserFuncExprCommonSubexpr <$ keyword "session_user"
     ,
-    UserFuncExprCommonSubexpr <$ string' "user"
+    UserFuncExprCommonSubexpr <$ keyword "user"
     ,
-    CurrentCatalogFuncExprCommonSubexpr <$ string' "current_catalog"
+    CurrentCatalogFuncExprCommonSubexpr <$ keyword "current_catalog"
     ,
-    CurrentSchemaFuncExprCommonSubexpr <$ string' "current_schema"
+    CurrentSchemaFuncExprCommonSubexpr <$ keyword "current_schema"
     ,
-    inParensWithClause (string' "cast") (CastFuncExprCommonSubexpr <$> aExpr <*> (space1 *> string' "as" *> space1 *> typename))
+    inParensWithClause (keyword "cast") (CastFuncExprCommonSubexpr <$> aExpr <*> (space1 *> keyword "as" *> space1 *> typename))
     ,
-    inParensWithClause (string' "extract") (ExtractFuncExprCommonSubexpr <$> optional extractList)
+    inParensWithClause (keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional extractList)
     ,
-    inParensWithClause (string' "overlay") (OverlayFuncExprCommonSubexpr <$> overlayList)
+    inParensWithClause (keyword "overlay") (OverlayFuncExprCommonSubexpr <$> overlayList)
     ,
-    inParensWithClause (string' "position") (PositionFuncExprCommonSubexpr <$> optional positionList)
+    inParensWithClause (keyword "position") (PositionFuncExprCommonSubexpr <$> optional positionList)
     ,
-    inParensWithClause (string' "substring") (SubstringFuncExprCommonSubexpr <$> optional substrList)
+    inParensWithClause (keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional substrList)
     ,
-    inParensWithClause (string' "treat") (TreatFuncExprCommonSubexpr <$> aExpr <*> (space1 *> string' "as" *> space1 *> typename))
+    inParensWithClause (keyword "treat") (TreatFuncExprCommonSubexpr <$> aExpr <*> (space1 *> keyword "as" *> space1 *> typename))
     ,
-    inParensWithClause (string' "trim") (TrimFuncExprCommonSubexpr <$> optional (trimModifier <* space1) <*> trimList)
+    inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (trimModifier <* space1) <*> trimList)
     ,
-    inParensWithClause (string' "nullif") (NullIfFuncExprCommonSubexpr <$> aExpr <*> (commaSeparator *> aExpr))
+    inParensWithClause (keyword "nullif") (NullIfFuncExprCommonSubexpr <$> aExpr <*> (commaSeparator *> aExpr))
     ,
-    inParensWithClause (string' "coalesce") (CoalesceFuncExprCommonSubexpr <$> exprList)
+    inParensWithClause (keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> exprList)
     ,
-    inParensWithClause (string' "greatest") (GreatestFuncExprCommonSubexpr <$> exprList)
+    inParensWithClause (keyword "greatest") (GreatestFuncExprCommonSubexpr <$> exprList)
     ,
-    inParensWithClause (string' "least") (LeastFuncExprCommonSubexpr <$> exprList)
+    inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> exprList)
   ]
   where
-    labeledIconst _label = string' _label *> endHead *> optional (space *> inParens iconst)
+    labeledIconst _label = keyword _label *> endHead *> optional (space *> inParens iconst)
 
-extractList = ExtractList <$> extractArg <*> (space1 *> string' "FROM" *> space1 *> aExpr)
+extractList = ExtractList <$> extractArg <*> (space1 *> keyword "from" *> space1 *> aExpr)
 
 extractArg = asum [
-    YearExtractArg <$ string' "year",
-    MonthExtractArg <$ string' "month",
-    DayExtractArg <$ string' "day",
-    HourExtractArg <$ string' "hour",
-    MinuteExtractArg <$ string' "minute",
-    SecondExtractArg <$ string' "second",
+    YearExtractArg <$ keyword "year",
+    MonthExtractArg <$ keyword "month",
+    DayExtractArg <$ keyword "day",
+    HourExtractArg <$ keyword "hour",
+    MinuteExtractArg <$ keyword "minute",
+    SecondExtractArg <$ keyword "second",
     SconstExtractArg <$> sconst,
     IdentExtractArg <$> ident
   ]
@@ -1356,9 +1356,9 @@ overlayList = do
   d <- optional (space1 *> substrFor)
   return (OverlayList a b c d)
 
-overlayPlacing = string' "placing" *> space1 *> endHead *> aExpr
+overlayPlacing = keyword "placing" *> space1 *> endHead *> aExpr
 
-positionList = PositionList <$> bExpr <*> (space1 *> string' "IN" *> space1 *> bExpr)
+positionList = PositionList <$> bExpr <*> (space1 *> keyword "in" *> space1 *> bExpr)
 
 substrList = asum [
     ExprSubstrList <$> wrapToHead aExpr <*> (space1 *> substrListFromFor),
@@ -1387,19 +1387,19 @@ substrListFromFor = asum [
         ]
   ]
 
-substrFrom = string' "from" *> space1 *> endHead *> aExpr
+substrFrom = keyword "from" *> space1 *> endHead *> aExpr
 
-substrFor = string' "for" *> space1 *> endHead *> aExpr
+substrFor = keyword "for" *> space1 *> endHead *> aExpr
 
 trimModifier =
-  BothTrimModifier <$ string' "both" <|>
-  LeadingTrimModifier <$ string' "leading" <|>
-  TrailingTrimModifier <$ string' "trailing"
+  BothTrimModifier <$ keyword "both" <|>
+  LeadingTrimModifier <$ keyword "leading" <|>
+  TrailingTrimModifier <$ keyword "trailing"
 
 trimList = asum [
-    ExprFromExprListTrimList <$> wrapToHead aExpr <*> (space1 *> string' "from" *> space1 *> endHead *> exprList)
+    ExprFromExprListTrimList <$> wrapToHead aExpr <*> (space1 *> keyword "from" *> space1 *> endHead *> exprList)
     ,
-    FromExprListTrimList <$> (string' "from" *> space1 *> endHead *> exprList)
+    FromExprListTrimList <$> (keyword "from" *> space1 *> endHead *> exprList)
     ,
     ExprListTrimList <$> exprList
   ]
@@ -1423,7 +1423,7 @@ normalFuncApplicationParams = do
   return (NormalFuncApplicationParams _optAllOrDistinct _argList _optSortClause)
 
 singleVariadicFuncApplicationParams = do
-  string' "variadic"
+  keyword "variadic"
   space1
   endHead
   _arg <- funcArgExpr
@@ -1431,7 +1431,7 @@ singleVariadicFuncApplicationParams = do
   return (VariadicFuncApplicationParams Nothing _arg _optSortClause)
 
 listVariadicFuncApplicationParams = do
-  (_argList, _) <- wrapToHead $ sepEnd1 commaSeparator (string' "variadic" <* space1) funcArgExpr
+  (_argList, _) <- wrapToHead $ sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr
   endHead
   _arg <- funcArgExpr
   _optSortClause <- optional (space1 *> sortClause)
@@ -1480,11 +1480,11 @@ lexicalExprBinOp = asum $ fmap keyphrase $ ["and", "or", "is distinct from", "is
 
 qualOp = asum [
     OpQualOp <$> op,
-    OperatorQualOp <$> inParensWithClause (string' "operator") anyOperator
+    OperatorQualOp <$> inParensWithClause (keyword "operator") anyOperator
   ]
 
 qualAllOp = asum [
-    AnyQualAllOp <$> (string' "operator" *> space *> inParens (endHead *> anyOperator)),
+    AnyQualAllOp <$> (keyword "operator" *> space *> inParens (endHead *> anyOperator)),
     AllQualAllOp <$> allOp
   ]
 
@@ -1557,7 +1557,7 @@ AexprConst: Iconst
 -}
 aexprConst = asum [
     do
-      string' "interval"
+      keyword "interval"
       space1
       endHead
       a <- asum [
@@ -1583,11 +1583,11 @@ aexprConst = asum [
       b <- sconst
       return (ConstTypenameAexprConst a b)
     ,
-    BoolAexprConst True <$ string' "true"
+    BoolAexprConst True <$ keyword "true"
     ,
-    BoolAexprConst False <$ string' "false"
+    BoolAexprConst False <$ keyword "false"
     ,
-    NullAexprConst <$ string' "null" <* parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar)
+    NullAexprConst <$ keyword "null" <* parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar)
     ,
     either IAexprConst FAexprConst <$> iconstOrFconst
     ,
@@ -1639,22 +1639,22 @@ constTypename = asum [
   ]
 
 numeric = asum [
-    IntegerNumeric <$ string' "integer",
-    IntNumeric <$ string' "int",
-    SmallintNumeric <$ string' "smallint",
-    BigintNumeric <$ string' "bigint",
-    RealNumeric <$ string' "real",
-    FloatNumeric <$> (string' "float" *> endHead *> optional (space *> inParens iconst)),
+    IntegerNumeric <$ keyword "integer",
+    IntNumeric <$ keyword "int",
+    SmallintNumeric <$ keyword "smallint",
+    BigintNumeric <$ keyword "bigint",
+    RealNumeric <$ keyword "real",
+    FloatNumeric <$> (keyword "float" *> endHead *> optional (space *> inParens iconst)),
     DoublePrecisionNumeric <$ keyphrase "double precision",
-    DecimalNumeric <$> (string' "decimal" *> endHead *> optional (space *> exprListInParens)),
-    DecNumeric <$> (string' "dec" *> endHead *> optional (space *> exprListInParens)),
-    NumericNumeric <$> (string' "numeric" *> endHead *> optional (space *> exprListInParens)),
-    BooleanNumeric <$ string' "boolean"
+    DecimalNumeric <$> (keyword "decimal" *> endHead *> optional (space *> exprListInParens)),
+    DecNumeric <$> (keyword "dec" *> endHead *> optional (space *> exprListInParens)),
+    NumericNumeric <$> (keyword "numeric" *> endHead *> optional (space *> exprListInParens)),
+    BooleanNumeric <$ keyword "boolean"
   ]
 
 bit = do
-  string' "bit"
-  a <- option False (True <$ space1 <* string' "varying")
+  keyword "bit"
+  a <- option False (True <$ space1 <* keyword "varying")
   b <- optional (space1 *> exprListInParens)
   return (Bit a b)
 
@@ -1663,15 +1663,15 @@ constBit = bit
 constCharacter = ConstCharacter <$> (character <* endHead) <*> optional (space *> inParens iconst)
 
 character = asum [
-    CharacterCharacter <$> (string' "character" *> optVaryingAfterSpace),
-    CharCharacter <$> (string' "char" *> optVaryingAfterSpace),
-    VarcharCharacter <$ string' "varchar",
+    CharacterCharacter <$> (keyword "character" *> optVaryingAfterSpace),
+    CharCharacter <$> (keyword "char" *> optVaryingAfterSpace),
+    VarcharCharacter <$ keyword "varchar",
     NationalCharacterCharacter <$> (keyphrase "national character" *> optVaryingAfterSpace),
     NationalCharCharacter <$> (keyphrase "national char" *> optVaryingAfterSpace),
-    NcharCharacter <$> (string' "nchar" *> optVaryingAfterSpace)
+    NcharCharacter <$> (keyword "nchar" *> optVaryingAfterSpace)
   ]
   where
-    optVaryingAfterSpace = True <$ space1 <* string' "varying" <|> pure False
+    optVaryingAfterSpace = True <$ space1 <* keyword "varying" <|> pure False
 
 {-
 ConstDatetime:
@@ -1682,13 +1682,13 @@ ConstDatetime:
 -}
 constDatetime = asum [
     do
-      string' "timestamp"
+      keyword "timestamp"
       a <- optional (space1 *> inParens iconst)
       b <- optional (space1 *> timezone)
       return (TimestampConstDatetime a b)
     ,
     do
-      string' "time"
+      keyword "time"
       a <- optional (space1 *> inParens iconst)
       b <- optional (space1 *> timezone)
       return (TimeConstDatetime a b)
@@ -1707,16 +1707,16 @@ interval = asum [
     HourToMinuteInterval <$ keyphrase "hour to minute",
     HourToSecondInterval <$> (keyphrase "hour to" *> space1 *> endHead *> intervalSecond),
     MinuteToSecondInterval <$> (keyphrase "minute to" *> space1 *> endHead *> intervalSecond),
-    YearInterval <$ string' "year",
-    MonthInterval <$ string' "month",
-    DayInterval <$ string' "day",
-    HourInterval <$ string' "hour",
-    MinuteInterval <$ string' "minute",
+    YearInterval <$ keyword "year",
+    MonthInterval <$ keyword "month",
+    DayInterval <$ keyword "day",
+    HourInterval <$ keyword "hour",
+    MinuteInterval <$ keyword "minute",
     SecondInterval <$> intervalSecond
   ]
 
 intervalSecond = do
-  string' "second"
+  keyword "second"
   a <- optional (space *> inParens iconst)
   return a
 
@@ -1752,7 +1752,7 @@ limit_clause:
 -}
 limitClause =
   (do
-    string' "limit"
+    keyword "limit"
     endHead
     space1
     _a <- selectLimitValue
@@ -1762,7 +1762,7 @@ limitClause =
     return (LimitLimitClause _a _b)
   ) <|>
   (do
-    string' "fetch"
+    keyword "fetch"
     endHead
     space1
     _a <- firstOrNext
@@ -1771,7 +1771,7 @@ limitClause =
         do
           _b <- rowOrRows
           space1
-          string' "only"
+          keyword "only"
           return (FetchOnlyLimitClause _a Nothing _b)
         ,
         do
@@ -1779,13 +1779,13 @@ limitClause =
           space1
           _c <- rowOrRows
           space1
-          string' "only"
+          keyword "only"
           return (FetchOnlyLimitClause _a (Just _b) _c)
       ]
   )
 
 offsetClause = do
-  string' "offset"
+  keyword "offset"
   endHead
   space1
   offsetClauseParams
@@ -1800,16 +1800,16 @@ select_limit_value:
   | ALL
 -}
 selectLimitValue =
-  AllSelectLimitValue <$ string' "all" <|>
+  AllSelectLimitValue <$ keyword "all" <|>
   ExprSelectLimitValue <$> aExpr
 
 rowOrRows =
-  True <$ string' "rows" <|>
-  False <$ string' "row"
+  True <$ keyword "rows" <|>
+  False <$ keyword "row"
 
 firstOrNext =
-  False <$ string' "first" <|>
-  True <$ string' "next"
+  False <$ keyword "first" <|>
+  True <$ keyword "next"
 
 selectFetchFirstValue =
   ExprSelectFetchFirstValue <$> cExpr <|>
@@ -1846,7 +1846,7 @@ opt_nowait_or_skip:
 -}
 forLockingItem = do
   _strength <- forLockingStrength
-  _rels <- optional $ space1 *> string' "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
+  _rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
   _nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
   return (ForLockingItem _strength _rels _nowaitOrSkip)
 
@@ -1863,7 +1863,7 @@ forLockingStrength =
   ShareForLockingStrength <$ keyphrase "for share" <|>
   KeyForLockingStrength <$ keyphrase "for key share"
 
-nowaitOrSkip = False <$ string' "nowait" <|> True <$ keyphrase "skip locked"
+nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
 
 -- * References & Names
@@ -1903,7 +1903,7 @@ ColLabel:
   |  reserved_keyword
 -}
 colLabel = label "column label" $
-  ident <|> keywordNameFromSet KeywordSet.keyword
+  keywordNameFromSet KeywordSet.keyword <|> ident
 
 {-|
 >>> testParser qualifiedName "a.b"
@@ -1964,8 +1964,8 @@ type_function_name:
   | type_func_name_keyword
 -}
 typeFunctionName =
-  ident <|>
-  keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.typeFuncNameKeyword)
+  keywordNameFromSet KeywordSet.typeFunctionName <|>
+  ident
 
 {-
 indirection:
@@ -2036,18 +2036,29 @@ keywordNameByPredicate _predicate =
   filter
     (\ a -> "Reserved keyword " <> show a <> " used as an identifier. If that's what you intend, you have to wrap it in double quotes.")
     _predicate
-    keyword
+    anyKeyword
 
-keyword = parse $ Megaparsec.label "keyword" $ do
+anyKeyword = parse $ Megaparsec.label "keyword" $ do
   _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
   _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
   return (Text.toLower (Text.cons _firstChar _remainder))
 
+{-| Expected keyword -}
+keyword a = mfilter (a ==) anyKeyword
+
 {-|
 Consume a keyphrase, ignoring case and types of spaces between words.
 -}
-keyphrase a = Text.words a & fmap (void . MegaparsecChar.string') & intersperse MegaparsecChar.space1 & sequence_ & fmap (const (Text.toUpper a)) & Megaparsec.label (show a) & parse
-
+keyphrase a =
+  Text.words a &
+  fmap (void . MegaparsecChar.string') &
+  intersperse MegaparsecChar.space1 &
+  sequence_ &
+  (<* Megaparsec.notFollowedBy (Megaparsec.satisfy Predicate.notFirstIdentifierChar)) &
+  fmap (const (Text.toUpper a)) &
+  Megaparsec.label (show a) &
+  parse &
+  (<* endHead)
 
 -- * Typename
 -------------------------
@@ -2056,14 +2067,14 @@ typeList = sep1 commaSeparator typename
 
 typename =
   do
-    a <- option False (string' "SETOF" *> space1 $> True)
+    a <- option False (keyword "setof" *> space1 $> True)
     b <- simpleTypename
     endHead
     c <- trueIfPresent (space *> char '?')
     asum [
         do
           space1
-          string' "ARRAY"
+          keyword "array"
           endHead
           d <- optional (space *> inBrackets iconst)
           e <- trueIfPresent (space *> char '?')
@@ -2081,18 +2092,18 @@ typename =
 
 arrayBounds = sep1 space (inBrackets (optional iconst))
 
-simpleTypename = asum [
+simpleTypename = asum $ [
     do
-      string' "interval"
+      keyword "interval"
       endHead
       asum [
           ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
           ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
         ],
+    ConstDatetimeSimpleTypename <$> constDatetime,
     NumericSimpleTypename <$> numeric,
     BitSimpleTypename <$> bit,
     CharacterSimpleTypename <$> character,
-    ConstDatetimeSimpleTypename <$> constDatetime,
     GenericTypeSimpleTypename <$> genericType
   ]
 
@@ -2125,10 +2136,10 @@ indexElemDef =
   FuncIndexElemDef <$> funcExprWindowless <|>
   IdIndexElemDef <$> colId 
 
-collate = string' "collate" *> space1 *> endHead *> anyName
+collate = keyword "collate" *> space1 *> endHead *> anyName
 
 class_ = filteredAnyName ["asc", "desc", "nulls"]
 
-ascDesc = string' "asc" $> AscAscDesc <|> string' "desc" $> DescAscDesc
+ascDesc = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
 
-nullsOrder = string' "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ string' "first" <|> LastNullsOrder <$ string' "last")
+nullsOrder = keyword "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")
