@@ -984,11 +984,11 @@ so we're not bothering with that.
 
 Composite on the right:
 >>> testParser aExpr "a = b :: int4"
-SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (TypecastTypename (UnquotedIdent "int4") False 0 False))
+SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (Typename False (GenericTypeSimpleTypename (GenericType (UnquotedIdent "int4") Nothing Nothing)) False Nothing))
 
 Composite on the left:
 >>> testParser aExpr "a = b :: int4 and c"
-SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (AndAExpr (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (TypecastTypename (UnquotedIdent "int4") False 0 False)) (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "c") Nothing))))
+SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (AndAExpr (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (Typename False (GenericTypeSimpleTypename (GenericType (UnquotedIdent "int4") Nothing Nothing)) False Nothing)) (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "c") Nothing))))
 -}
 aExpr = customizedAExpr cExpr
 
