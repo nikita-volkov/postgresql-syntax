@@ -895,14 +895,14 @@ anyName (AnyName a b) = colId a <> foldMap attrs b
 -------------------------
 
 typename (Typename a b c d) =
-  bool "" "SETOF " a <> simpleTypename b <> suffixMaybe typenameArrayDimensionsWithQuestionMark d
+  bool "" "SETOF " a <> simpleTypename b <> foldMap typenameArrayDimensionsWithQuestionMark d
 
 typenameArrayDimensionsWithQuestionMark (a, b) =
   typenameArrayDimensions a
 
 typenameArrayDimensions = \ case
   BoundsTypenameArrayDimensions a -> arrayBounds a
-  ExplicitTypenameArrayDimensions a -> "ARRAY" <> foldMap (inBrackets . iconst) a
+  ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (inBrackets . iconst) a
 
 arrayBounds = spaceNonEmpty (inBrackets . foldMap iconst)
 
