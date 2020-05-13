@@ -2081,7 +2081,7 @@ typename =
           return (Typename a b c (Just (ExplicitTypenameArrayDimensions d, e)))
         ,
         do
-          space1
+          space
           d <- arrayBounds
           endHead
           e <- trueIfPresent (space *> char '?')

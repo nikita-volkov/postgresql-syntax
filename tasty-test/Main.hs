@@ -33,6 +33,10 @@ main = defaultMain $ testGroup "" [
               \on b.provider_fk = p.provider_id"
             ],
           testParserOnAllInputs "typename" Parsing.typename [
+              "int4[]",
+              "int4[][]",
+              "int4?[]",
+              "int4?[]?",
               "aa array",
               "DOUBLE PRECISION",
               "bool", "int2", "int4", "int8", "float4", "float8", "numeric", "char", "text", "bytea", "date", "timestamp", "timestamptz", "time", "timetz", "interval", "uuid", "inet", "json", "jsonb"
