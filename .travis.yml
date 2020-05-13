@@ -58,5 +58,5 @@ script:
     if [ "$tests" = "1" ];
     then
       cabal v1-doctest;
-      travis_wait 50 cabal v1-test --show-details=always;
+      travis_wait 30 cabal v1-test --show-details=always;
     fi;
