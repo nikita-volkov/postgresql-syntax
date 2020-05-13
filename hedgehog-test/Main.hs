@@ -27,6 +27,8 @@ main = defaultMain [
                   failure
                 Right ast' -> ast === ast'
       in [
+          p "typename" 10000 Gen.typename Parsing.typename Rendering.typename
+          ,
           p "tableRef" 10000 Gen.tableRef Parsing.tableRef Rendering.tableRef
           ,
           p "aExpr" 100000 Gen.aExpr Parsing.aExpr Rendering.aExpr
