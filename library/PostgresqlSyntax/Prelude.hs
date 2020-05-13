@@ -77,14 +77,6 @@ import Text.Printf as Exports (printf, hPrintf)
 import Text.Read as Exports (Read(..), readMaybe, readEither)
 import Unsafe.Coerce as Exports
 
--- contravariant
--------------------------
-import Data.Functor.Contravariant.Divisible as Exports
-
--- selective
--------------------------
-import Control.Selective as Exports
-
 -- bytestring
 -------------------------
 import Data.ByteString as Exports (ByteString)
@@ -92,14 +84,6 @@ import Data.ByteString as Exports (ByteString)
 -- text
 -------------------------
 import Data.Text as Exports (Text)
-
--- containers
--------------------------
-import Data.IntMap.Strict as Exports (IntMap)
-import Data.IntSet as Exports (IntSet)
-import Data.Map.Strict as Exports (Map)
-import Data.Sequence as Exports (Seq)
-import Data.Set as Exports (Set)
 
 -- unordered-containers
 -------------------------
@@ -109,14 +93,6 @@ import Data.HashMap.Strict as Exports (HashMap)
 -- hashable
 -------------------------
 import Data.Hashable as Exports (Hashable)
-
--- foldl
--------------------------
-import Control.Foldl as Exports (Fold(..))
-
--- uuid
--------------------------
-import Data.UUID as Exports (UUID)
 
 -- case-insensitive
 -------------------------
