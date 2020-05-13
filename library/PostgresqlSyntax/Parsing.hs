@@ -125,8 +125,8 @@ quotedString q = do
     in collectChunks mempty
   return _tail
 
-quasiQuote :: Parser a -> Parser a
-quasiQuote p = space *> p <* endHead <* space <* eof
+atEnd :: Parser a -> Parser a
+atEnd p = space *> p <* endHead <* space <* eof
 
 
 -- * PreparableStmt
