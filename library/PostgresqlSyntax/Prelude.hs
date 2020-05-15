@@ -31,7 +31,6 @@ import Data.Fixed as Exports
 import Data.Foldable as Exports
 import Data.Function as Exports hiding (id, (.))
 import Data.Functor as Exports
-import Data.Functor.Contravariant as Exports
 import Data.Functor.Identity as Exports
 import Data.Int as Exports
 import Data.IORef as Exports
