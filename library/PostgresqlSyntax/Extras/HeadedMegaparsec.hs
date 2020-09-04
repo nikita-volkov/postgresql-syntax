@@ -7,7 +7,7 @@ import PostgresqlSyntax.Prelude hiding (expr, try, option, some, many, sortBy, f
 import HeadedMegaparsec hiding (string)
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
-import Text.Megaparsec (Stream, Parsec)
+import Text.Megaparsec (Stream, Parsec, VisualStream, TraversableStream)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified Text.Megaparsec.Char.Lexer as MegaparsecLexer
@@ -22,7 +22,7 @@ import qualified Data.Text as Text
 -- * Executors
 -------------------------
 
-run :: (Ord err, Stream strm, Megaparsec.ShowErrorComponent err) => HeadedParsec err strm a -> strm -> Either String a
+run :: (Ord err, VisualStream strm, TraversableStream strm, Megaparsec.ShowErrorComponent err) => HeadedParsec err strm a -> strm -> Either String a
 run p = first Megaparsec.errorBundlePretty . Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
 
 
