@@ -31,8 +31,8 @@ main = defaultMain [
           ,
           p "tableRef" 10000 Gen.tableRef Parsing.tableRef Rendering.tableRef
           ,
-          p "aExpr" 100000 Gen.aExpr Parsing.aExpr Rendering.aExpr
+          p "aExpr" 60000 Gen.aExpr Parsing.aExpr Rendering.aExpr
           ,
-          p "preparableStmt" 35000 Gen.preparableStmt Parsing.preparableStmt Rendering.preparableStmt
+          p "preparableStmt" 30000 Gen.preparableStmt Parsing.preparableStmt Rendering.preparableStmt
         ]
   ]
