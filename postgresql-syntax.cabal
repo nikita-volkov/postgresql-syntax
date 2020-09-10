@@ -37,7 +37,7 @@ library
     PostgresqlSyntax.Predicate
     PostgresqlSyntax.Prelude
   build-depends:
-    base >=4.11 && <5,
+    base >=4.12 && <5,
     bytestring >=0.10 && <0.11,
     case-insensitive >=1.2 && <2,
     fast-builder >=0.1.2 && <0.2,
