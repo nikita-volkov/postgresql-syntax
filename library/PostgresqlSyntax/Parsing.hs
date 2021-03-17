@@ -60,6 +60,7 @@ import qualified Text.Megaparsec.Char.Lexer    as MegaparsecLexer
 import qualified PostgresqlSyntax.KeywordSet   as KeywordSet
 import qualified PostgresqlSyntax.Predicate    as Predicate
 import qualified PostgresqlSyntax.Validation   as Validation
+import qualified Data.Char                     as Char
 import qualified Data.Text                     as Text
 import qualified Data.List.NonEmpty            as NonEmpty
 import qualified Text.Builder                  as TextBuilder
@@ -2122,7 +2123,14 @@ anyKeyword = parse $ Megaparsec.label "keyword" $ do
   return (Text.toLower (Text.cons _firstChar _remainder))
 
 {-| Expected keyword -}
-keyword a = mfilter (a ==) anyKeyword
+-- keyword a = mfilter (a ==) anyKeyword
+keyword a = parse $ Megaparsec.label "keyword" $ do
+  _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+  guard (Char.toLower _firstChar == Text.head a)
+  _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+  let r = Text.toLower (Text.cons _firstChar _remainder)
+  guard (r == a)
+  return r
 
 {-|
 Consume a keyphrase, ignoring case and types of spaces between words.
