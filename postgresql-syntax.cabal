@@ -40,7 +40,6 @@ library
     base >=4.12 && <5,
     bytestring >=0.10 && <0.12,
     case-insensitive >=1.2 && <2,
-    fast-builder >=0.1.2 && <0.2,
     hashable >=1.2 && <2,
     headed-megaparsec >=0.2.0.1 && <0.3,
     megaparsec >=9 && <10,

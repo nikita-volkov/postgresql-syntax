@@ -2,12 +2,11 @@ module PostgresqlSyntax.Rendering where
 
 import PostgresqlSyntax.Prelude hiding (aExpr, try, option, many, sortBy, bit, fromList)
 import PostgresqlSyntax.Ast
-import Data.ByteString.FastBuilder
+import Data.ByteString.Builder
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
-import qualified Data.ByteString.Builder as BsBuilder
 import qualified Data.ByteString.Lazy as LazyBs
 
 
@@ -15,7 +14,7 @@ import qualified Data.ByteString.Lazy as LazyBs
 -------------------------
 
 toByteString :: Builder -> ByteString
-toByteString = toStrictByteString
+toByteString = LazyBs.toStrict . toLazyByteString
 
 toText :: Builder -> Text
 toText = Text.decodeUtf8 . toByteString
