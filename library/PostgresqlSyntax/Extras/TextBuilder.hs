@@ -3,7 +3,6 @@ module PostgresqlSyntax.Extras.TextBuilder where
 import PostgresqlSyntax.Prelude
 import Text.Builder
 
-
 char7 :: Char -> Builder
 char7 = char
 

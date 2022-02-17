@@ -1,3 +1,1 @@
-resolver: nightly-2021-07-04
-extra-deps:
-  - headed-megaparsec-0.2.0.1
+resolver: nightly-2022-02-16

@@ -1,39 +1,33 @@
 module PostgresqlSyntax.Predicate where
 
-import PostgresqlSyntax.Prelude hiding (expression)
 import qualified Data.HashSet as HashSet
 import qualified PostgresqlSyntax.CharSet as CharSet
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-
+import PostgresqlSyntax.Prelude hiding (expression)
 
 -- * Generic
--------------------------
 
-{-|
->>> test = oneOf [(==3), (==7), (==3), (==5)]
->>> test 1
-False
-
->>> test 3
-True
-
->>> test 5
-True
--}
+-- |
+-- >>> test = oneOf [(==3), (==7), (==3), (==5)]
+-- >>> test 1
+-- False
+--
+-- >>> test 3
+-- True
+--
+-- >>> test 5
+-- True
 oneOf :: [a -> Bool] -> a -> Bool
-oneOf = foldr (\ a b c -> a c || b c) (const False)
+oneOf = foldr (\a b c -> a c || b c) (const False)
 
 inSet :: (Eq a, Hashable a) => HashSet a -> a -> Bool
 inSet = flip HashSet.member
 
-
 -- *
--------------------------
 
 hexDigit = inSet CharSet.hexDigit
 
 -- *
--------------------------
 
 {-
 ident_start   [A-Za-z\200-\377_]
@@ -67,7 +61,6 @@ symbolicBinOpChar :: Char -> Bool
 symbolicBinOpChar = inSet CharSet.symbolicBinOp
 
 -- ** Op chars
--------------------------
 
 opChar = inSet CharSet.op
 

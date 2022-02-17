@@ -1,9 +1,8 @@
 module PostgresqlSyntax.CharSet where
 
-import PostgresqlSyntax.Prelude
 import qualified Data.Text as Text
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-
+import PostgresqlSyntax.Prelude
 
 {-# NOINLINE symbolicBinOp #-}
 symbolicBinOp :: HashSet Char

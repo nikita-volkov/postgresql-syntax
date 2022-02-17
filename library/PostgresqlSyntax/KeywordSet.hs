@@ -1,9 +1,8 @@
 module PostgresqlSyntax.KeywordSet where
 
-import PostgresqlSyntax.Prelude hiding (expression, fromList, toList)
 import Data.HashSet
 import qualified Data.Text as Text
-
+import PostgresqlSyntax.Prelude hiding (expression, fromList, toList)
 
 {-# NOINLINE keyword #-}
 {-
@@ -48,16 +47,15 @@ type_function_name:
 {-# NOINLINE typeFunctionName #-}
 typeFunctionName = unions [unreservedKeyword, typeFuncNameKeyword]
 
-{-|
-As per the following comment from the original scanner definition:
-
-/*
- * Likewise, if what we have left is two chars, and
- * those match the tokens ">=", "<=", "=>", "<>" or
- * "!=", then we must return the appropriate token
- * rather than the generic Op.
- */
--}
+-- |
+-- As per the following comment from the original scanner definition:
+--
+-- /*
+--  * Likewise, if what we have left is two chars, and
+--  * those match the tokens ">=", "<=", "=>", "<>" or
+--  * "!=", then we must return the appropriate token
+--  * rather than the generic Op.
+--  */
 {-# NOINLINE nonOp #-}
 nonOp = fromList [">=", "<=", "=>", "<>", "!="] <> mathOp
 
