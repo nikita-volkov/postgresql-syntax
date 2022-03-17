@@ -55,3 +55,4 @@ function bench {
 
 format
 build_all
+haddock
