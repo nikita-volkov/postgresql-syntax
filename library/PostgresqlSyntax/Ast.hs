@@ -764,8 +764,16 @@ data TableRef
 -- | ONLY '(' qualified_name ')'
 -- @
 data RelationExpr
-  = SimpleRelationExpr QualifiedName Bool
-  | OnlyRelationExpr QualifiedName Bool
+  = SimpleRelationExpr
+      QualifiedName
+      -- ^ Name.
+      Bool
+      -- ^ Is asterisk present?
+  | OnlyRelationExpr
+      QualifiedName
+      -- ^ Name.
+      Bool
+      -- ^ Are parentheses present?
   deriving (Show, Generic, Eq, Ord)
 
 -- |
