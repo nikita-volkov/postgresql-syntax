@@ -26,6 +26,11 @@ function build_all {
   --bench --no-run-benchmarks
 }
 
+function haddock {
+  stack haddock \
+  --work-dir ".haddock.stack-work"
+}
+
 function test {
   stack build \
   --ghc-options "$build_ghc_options" \
