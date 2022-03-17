@@ -310,13 +310,14 @@ sharedSelectNoParens _with = do
 
 -- |
 -- The one that doesn't start with \"WITH\".
-
-{-
-  | simple_select
-  | select_clause sort_clause
-  | select_clause opt_sort_clause for_locking_clause opt_select_limit
-  | select_clause opt_sort_clause select_limit opt_for_locking_clause
--}
+--
+-- ==== References
+-- @
+--   | simple_select
+--   | select_clause sort_clause
+--   | select_clause opt_sort_clause for_locking_clause opt_select_limit
+--   | select_clause opt_sort_clause select_limit opt_for_locking_clause
+-- @
 simpleSelectNoParens = sharedSelectNoParens Nothing
 
 withSelectNoParens = do
@@ -450,18 +451,20 @@ onExpressionsClause = do
 
 -- * Into clause details
 
-{-
-OptTempTableName:
-  | TEMPORARY opt_table qualified_name
-  | TEMP opt_table qualified_name
-  | LOCAL TEMPORARY opt_table qualified_name
-  | LOCAL TEMP opt_table qualified_name
-  | GLOBAL TEMPORARY opt_table qualified_name
-  | GLOBAL TEMP opt_table qualified_name
-  | UNLOGGED opt_table qualified_name
-  | TABLE qualified_name
-  | qualified_name
--}
+-- |
+-- ==== References
+-- @
+-- OptTempTableName:
+--   | TEMPORARY opt_table qualified_name
+--   | TEMP opt_table qualified_name
+--   | LOCAL TEMPORARY opt_table qualified_name
+--   | LOCAL TEMP opt_table qualified_name
+--   | GLOBAL TEMPORARY opt_table qualified_name
+--   | GLOBAL TEMP opt_table qualified_name
+--   | UNLOGGED opt_table qualified_name
+--   | TABLE qualified_name
+--   | qualified_name
+-- @
 optTempTableName =
   asum
     [ do
@@ -501,11 +504,13 @@ groupByItem =
 
 windowDefinition = WindowDefinition <$> (colId <* space1 <* keyword "as" <* space1 <* endHead) <*> windowSpecification
 
-{-
-window_specification:
-  |  '(' opt_existing_window_name opt_partition_clause
-            opt_sort_clause opt_frame_clause ')'
--}
+-- |
+-- ==== References
+-- @
+-- window_specification:
+--   |  '(' opt_existing_window_name opt_partition_clause
+--             opt_sort_clause opt_frame_clause ')'
+-- @
 windowSpecification =
   inParens $
     asum
@@ -532,13 +537,15 @@ windowSpecification =
 
 partitionByClause = keyphrase "partition by" *> space1 *> endHead *> sep1 commaSeparator aExpr
 
-{-
-opt_frame_clause:
-  |  RANGE frame_extent opt_window_exclusion_clause
-  |  ROWS frame_extent opt_window_exclusion_clause
-  |  GROUPS frame_extent opt_window_exclusion_clause
-  |  EMPTY
--}
+-- |
+-- ==== References
+-- @
+-- opt_frame_clause:
+--   |  RANGE frame_extent opt_window_exclusion_clause
+--   |  ROWS frame_extent opt_window_exclusion_clause
+--   |  GROUPS frame_extent opt_window_exclusion_clause
+--   |  EMPTY
+-- @
 frameClause = do
   a <- frameClauseMode <* space1 <* endHead
   b <- frameExtent
@@ -556,13 +563,15 @@ frameExtent =
   BetweenFrameExtent <$> (keyword "between" *> space1 *> endHead *> frameBound <* space1 <* keyword "and" <* space1) <*> frameBound
     <|> SingularFrameExtent <$> frameBound
 
-{-
-  |  UNBOUNDED PRECEDING
-  |  UNBOUNDED FOLLOWING
-  |  CURRENT_P ROW
-  |  a_expr PRECEDING
-  |  a_expr FOLLOWING
--}
+-- |
+-- ==== References
+-- @
+--   |  UNBOUNDED PRECEDING
+--   |  UNBOUNDED FOLLOWING
+--   |  CURRENT_P ROW
+--   |  a_expr PRECEDING
+--   |  a_expr FOLLOWING
+-- @
 frameBound =
   UnboundedPrecedingFrameBound <$ keyphrase "unbounded preceding"
     <|> UnboundedFollowingFrameBound <$ keyphrase "unbounded following"
@@ -611,10 +620,6 @@ nonTrailingTableRef =
         <|> inParensJoinedTableTableRef
     ]
   where
-    {-
-    | relation_expr opt_alias_clause
-    | relation_expr opt_alias_clause tablesample_clause
-    -}
     relationExprTableRef = do
       _relationExpr <- relationExpr
       endHead
@@ -622,12 +627,6 @@ nonTrailingTableRef =
       _optTablesampleClause <- optional (space1 *> tablesampleClause)
       return (RelationExprTableRef _relationExpr _optAliasClause _optTablesampleClause)
 
-    {-
-    | LATERAL_P func_table func_alias_clause
-    | LATERAL_P xmltable opt_alias_clause
-    | LATERAL_P select_with_parens opt_alias_clause
-    TODO: add xmltable
-    -}
     lateralTableRef = do
       keyword "lateral"
       space1
@@ -801,18 +800,22 @@ joinedTable =
           pure _jt
         ]
 
-{-
-  | '(' joined_table ')'
--}
+-- |
+-- ==== References
+-- @
+--   | '(' joined_table ')'
+-- @
 inParensJoinedTable = InParensJoinedTable <$> inParens joinedTable
 
-{-
-  | table_ref CROSS JOIN table_ref
-  | table_ref join_type JOIN table_ref join_qual
-  | table_ref JOIN table_ref join_qual
-  | table_ref NATURAL join_type JOIN table_ref
-  | table_ref NATURAL JOIN table_ref
--}
+-- |
+-- ==== References
+-- @
+--   | table_ref CROSS JOIN table_ref
+--   | table_ref join_type JOIN table_ref join_qual
+--   | table_ref JOIN table_ref join_qual
+--   | table_ref NATURAL join_type JOIN table_ref
+--   | table_ref NATURAL JOIN table_ref
+-- @
 trailingJoinedTable _tr1 =
   asum
     [ do
@@ -934,11 +937,13 @@ exprListInParens = inParens exprList
 -- For the purposes of this library it simply doesn't matter,
 -- so we're not bothering with that.
 --
--- Composite on the right:
+-- ==== Composite on the right:
+--
 -- >>> testParser aExpr "a = b :: int4"
 -- SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (Typename False (GenericTypeSimpleTypename (GenericType (UnquotedIdent "int4") Nothing Nothing)) False Nothing))
 --
--- Composite on the left:
+-- ==== Composite on the left:
+--
 -- >>> testParser aExpr "a = b :: int4 and c"
 -- SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp EqualsMathOp) (AndAExpr (TypecastAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))) (Typename False (GenericTypeSimpleTypename (GenericType (UnquotedIdent "int4") Nothing Nothing)) False Nothing)) (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "c") Nothing))))
 aExpr = customizedAExpr cExpr
@@ -1357,14 +1362,16 @@ listVariadicFuncApplicationParams = do
 
 starFuncApplicationParams = space *> char '*' *> endHead *> space $> StarFuncApplicationParams
 
-{-
-func_arg_expr:
-  | a_expr
-  | param_name COLON_EQUALS a_expr
-  | param_name EQUALS_GREATER a_expr
-param_name:
-  | type_function_name
--}
+-- |
+-- ==== References
+-- @
+-- func_arg_expr:
+--   | a_expr
+--   | param_name COLON_EQUALS a_expr
+--   | param_name EQUALS_GREATER a_expr
+-- param_name:
+--   | type_function_name
+-- @
 funcArgExpr =
   asum
     [ do
@@ -1457,22 +1464,23 @@ mathOp =
 --
 -- >>> testParser aexprConst "NULL"
 -- NullAexprConst
-
-{-
-AexprConst: Iconst
-      | FCONST
-      | Sconst
-      | BCONST
-      | XCONST
-      | func_name Sconst
-      | func_name '(' func_arg_list opt_sort_clause ')' Sconst
-      | ConstTypename Sconst
-      | ConstInterval Sconst opt_interval
-      | ConstInterval '(' Iconst ')' Sconst
-      | TRUE_P
-      | FALSE_P
-      | NULL_P
--}
+--
+-- ==== References
+-- @
+-- AexprConst: Iconst
+--       | FCONST
+--       | Sconst
+--       | BCONST
+--       | XCONST
+--       | func_name Sconst
+--       | func_name '(' func_arg_list opt_sort_clause ')' Sconst
+--       | ConstTypename Sconst
+--       | ConstInterval Sconst opt_interval
+--       | ConstInterval '(' Iconst ')' Sconst
+--       | TRUE_P
+--       | FALSE_P
+--       | NULL_P
+-- @
 aexprConst =
   asum
     [ do
@@ -1585,13 +1593,15 @@ character =
   where
     optVaryingAfterSpace = True <$ space1 <* keyword "varying" <|> pure False
 
-{-
-ConstDatetime:
-  | TIMESTAMP '(' Iconst ')' opt_timezone
-  | TIMESTAMP opt_timezone
-  | TIME '(' Iconst ')' opt_timezone
-  | TIME opt_timezone
--}
+-- |
+-- ==== References
+-- @
+-- ConstDatetime:
+--   | TIMESTAMP '(' Iconst ')' opt_timezone
+--   | TIMESTAMP opt_timezone
+--   | TIME '(' Iconst ')' opt_timezone
+--   | TIME opt_timezone
+-- @
 constDatetime =
   asum
     [ do
@@ -1636,13 +1646,15 @@ intervalSecond = do
 
 -- * Clauses
 
-{-
-select_limit:
-  | limit_clause offset_clause
-  | offset_clause limit_clause
-  | limit_clause
-  | offset_clause
--}
+-- |
+-- ==== References
+-- @
+-- select_limit:
+--   | limit_clause offset_clause
+--   | offset_clause limit_clause
+--   | limit_clause
+--   | offset_clause
+-- @
 selectLimit =
   asum
     [ do
@@ -1653,13 +1665,15 @@ selectLimit =
         OffsetLimitSelectLimit _a <$> (space1 *> limitClause) <|> pure (OffsetSelectLimit _a)
     ]
 
-{-
-limit_clause:
-  | LIMIT select_limit_value
-  | LIMIT select_limit_value ',' select_offset_value
-  | FETCH first_or_next select_fetch_first_value row_or_rows ONLY
-  | FETCH first_or_next row_or_rows ONLY
--}
+-- |
+-- ==== References
+-- @
+-- limit_clause:
+--   | LIMIT select_limit_value
+--   | LIMIT select_limit_value ',' select_offset_value
+--   | FETCH first_or_next select_fetch_first_value row_or_rows ONLY
+--   | FETCH first_or_next row_or_rows ONLY
+-- @
 limitClause =
   ( do
       keyword "limit"
@@ -1703,11 +1717,13 @@ offsetClauseParams =
   FetchFirstOffsetClause <$> wrapToHead selectFetchFirstValue <*> (space1 *> rowOrRows)
     <|> ExprOffsetClause <$> aExpr
 
-{-
-select_limit_value:
-  | a_expr
-  | ALL
--}
+-- |
+-- ==== References
+-- @
+-- select_limit_value:
+--   | a_expr
+--   | ALL
+-- @
 selectLimitValue =
   AllSelectLimitValue <$ keyword "all"
     <|> ExprSelectLimitValue <$> aExpr
@@ -1728,43 +1744,49 @@ plusOrMinus = False <$ char '+' <|> True <$ char '-'
 
 -- * For Locking
 
-{-
-for_locking_clause:
-  | for_locking_items
-  | FOR READ ONLY
-for_locking_items:
-  | for_locking_item
-  | for_locking_items for_locking_item
--}
+-- |
+-- ==== References
+-- @
+-- for_locking_clause:
+--   | for_locking_items
+--   | FOR READ ONLY
+-- for_locking_items:
+--   | for_locking_item
+--   | for_locking_items for_locking_item
+-- @
 forLockingClause = readOnly <|> items
   where
     readOnly = ReadOnlyForLockingClause <$ keyphrase "for read only"
     items = ItemsForLockingClause <$> sep1 space1 forLockingItem
 
-{-
-for_locking_item:
-  | for_locking_strength locked_rels_list opt_nowait_or_skip
-locked_rels_list:
-  | OF qualified_name_list
-  | EMPTY
-opt_nowait_or_skip:
-  | NOWAIT
-  | SKIP LOCKED
-  | EMPTY
--}
+-- |
+-- ==== References
+-- @
+-- for_locking_item:
+--   | for_locking_strength locked_rels_list opt_nowait_or_skip
+-- locked_rels_list:
+--   | OF qualified_name_list
+--   | EMPTY
+-- opt_nowait_or_skip:
+--   | NOWAIT
+--   | SKIP LOCKED
+--   | EMPTY
+-- @
 forLockingItem = do
   _strength <- forLockingStrength
   _rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
   _nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
   return (ForLockingItem _strength _rels _nowaitOrSkip)
 
-{-
-for_locking_strength:
-  | FOR UPDATE
-  | FOR NO KEY UPDATE
-  | FOR SHARE
-  | FOR KEY SHARE
--}
+-- |
+-- ==== References
+-- @
+-- for_locking_strength:
+--   | FOR UPDATE
+--   | FOR NO KEY UPDATE
+--   | FOR SHARE
+--   | FOR KEY SHARE
+-- @
 forLockingStrength =
   UpdateForLockingStrength <$ keyphrase "for update"
     <|> NoKeyUpdateForLockingStrength <$ keyphrase "for no key update"
@@ -1777,19 +1799,23 @@ nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
 quotedName = filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
 
-{-
-ident_start   [A-Za-z\200-\377_]
-ident_cont    [A-Za-z\200-\377_0-9\$]
-identifier    {ident_start}{ident_cont}*
--}
+-- |
+-- ==== References
+-- @
+-- ident_start   [A-Za-z\200-\377_]
+-- ident_cont    [A-Za-z\200-\377_0-9\$]
+-- identifier    {ident_start}{ident_cont}*
+-- @
 ident = quotedName <|> keywordNameByPredicate (not . Predicate.keyword)
 
-{-
-ColId:
-  |  IDENT
-  |  unreserved_keyword
-  |  col_name_keyword
--}
+-- |
+-- ==== References
+-- @
+-- ColId:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+-- @
 {-# NOINLINE colId #-}
 colId =
   label "identifier" $
@@ -1801,14 +1827,16 @@ filteredColId =
       _filteredSet = foldr HashSet.delete _originalSet
    in \_reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (_filteredSet _reservedKeywords)
 
-{-
-ColLabel:
-  |  IDENT
-  |  unreserved_keyword
-  |  col_name_keyword
-  |  type_func_name_keyword
-  |  reserved_keyword
--}
+-- |
+-- ==== References
+-- @
+-- ColLabel:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+--   |  type_func_name_keyword
+--   |  reserved_keyword
+-- @
 colLabel =
   label "column label" $
     keywordNameFromSet KeywordSet.keyword <|> ident
@@ -1820,12 +1848,13 @@ colLabel =
 -- >>> testParser qualifiedName "a.-"
 -- ...
 -- expecting '*', column label, or white space
-
-{-
-qualified_name:
-  | ColId
-  | ColId indirection
--}
+--
+-- ==== References
+-- @
+-- qualified_name:
+--   | ColId
+--   | ColId indirection
+-- @
 qualifiedName =
   IndirectedQualifiedName <$> wrapToHead colId <*> (space *> indirection)
     <|> SimpleQualifiedName <$> colId
@@ -1856,42 +1885,50 @@ nameList = sep1 commaSeparator name
 
 cursorName = name
 
-{-
-func_name:
-  | type_function_name
-  | ColId indirection
--}
+-- |
+-- ==== References
+-- @
+-- func_name:
+--   | type_function_name
+--   | ColId indirection
+-- @
 funcName =
   IndirectedFuncName <$> wrapToHead colId <*> (space *> indirection)
     <|> TypeFuncName <$> typeFunctionName
 
-{-
-type_function_name:
-  | IDENT
-  | unreserved_keyword
-  | type_func_name_keyword
--}
+-- |
+-- ==== References
+-- @
+-- type_function_name:
+--   | IDENT
+--   | unreserved_keyword
+--   | type_func_name_keyword
+-- @
 typeFunctionName =
   keywordNameFromSet KeywordSet.typeFunctionName
     <|> ident
 
-{-
-indirection:
-  | indirection_el
-  | indirection indirection_el
--}
+-- |
+-- ==== References
+-- @
+-- indirection:
+--   | indirection_el
+--   | indirection indirection_el
+-- @
 indirection = some indirectionEl
 
-{-
-indirection_el:
-  | '.' attr_name
-  | '.' '*'
-  | '[' a_expr ']'
-  | '[' opt_slice_bound ':' opt_slice_bound ']'
-opt_slice_bound:
-  | a_expr
-  | EMPTY
--}
+-- |
+-- ==== References
+-- @
+-- indirection_el:
+--   | '.' attr_name
+--   | '.' '*'
+--   | '[' a_expr ']'
+--   | '[' opt_slice_bound ':' opt_slice_bound ']'
+-- opt_slice_bound:
+--   | a_expr
+--   | EMPTY
+-- @
 indirectionEl =
   asum
     [ do
@@ -1928,10 +1965,12 @@ indirectionEl =
         return _a
     ]
 
-{-
-attr_name:
-  | ColLabel
--}
+-- |
+-- ==== References
+-- @
+-- attr_name:
+--   | ColLabel
+-- @
 attrName = colLabel
 
 keywordNameFromSet _set = keywordNameByPredicate (Predicate.inSet _set)
