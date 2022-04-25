@@ -122,10 +122,20 @@ atEnd p = space *> p <* endHead <* space <* eof
 -- * PreparableStmt
 
 preparableStmt =
-  SelectPreparableStmt <$> selectStmt
-    <|> InsertPreparableStmt <$> insertStmt
-    <|> UpdatePreparableStmt <$> updateStmt
-    <|> DeletePreparableStmt <$> deleteStmt
+  asum
+    [ SelectPreparableStmt <$> selectStmt,
+      InsertPreparableStmt <$> insertStmt,
+      UpdatePreparableStmt <$> updateStmt,
+      DeletePreparableStmt <$> deleteStmt,
+      CallPreparableStmt <$> callStmt
+    ]
+
+-- * Call
+
+callStmt = do
+  keyword "call"
+  space1
+  CallStmt <$> funcApplication
 
 -- * Insert
 

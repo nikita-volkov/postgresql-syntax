@@ -24,8 +24,13 @@ preparableStmt =
     [ SelectPreparableStmt <$> selectStmt,
       InsertPreparableStmt <$> insertStmt,
       UpdatePreparableStmt <$> updateStmt,
-      DeletePreparableStmt <$> deleteStmt
+      DeletePreparableStmt <$> deleteStmt,
+      CallPreparableStmt <$> callStmt
     ]
+
+-- * Call
+
+callStmt = CallStmt <$> funcApplication
 
 -- * Insert
 

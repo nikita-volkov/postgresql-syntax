@@ -17,12 +17,20 @@ import PostgresqlSyntax.Prelude hiding (Op, Order)
 --   |  InsertStmt
 --   |  UpdateStmt
 --   |  DeleteStmt
+--   |  CallStmt
 -- @
 data PreparableStmt
   = SelectPreparableStmt SelectStmt
   | InsertPreparableStmt InsertStmt
   | UpdatePreparableStmt UpdateStmt
   | DeletePreparableStmt DeleteStmt
+  | CallPreparableStmt CallStmt
+  deriving (Show, Generic, Eq, Ord)
+
+-- * Call
+
+newtype CallStmt
+  = CallStmt FuncApplication
   deriving (Show, Generic, Eq, Ord)
 
 -- * Insert

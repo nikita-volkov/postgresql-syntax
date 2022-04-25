@@ -54,5 +54,6 @@ function bench {
 
 
 format
+test
 build_all
 haddock
