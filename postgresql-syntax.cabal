@@ -1,5 +1,5 @@
 name: postgresql-syntax
-version: 0.4.0.2
+version: 0.4.1
 category: Database, PostgreSQL, Parsing
 synopsis: PostgreSQL AST parsing and rendering
 description:
