@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 --
 -- Our parsing strategy is to port the original Postgres parser as closely as possible.
@@ -44,6 +45,16 @@ import Text.Megaparsec (Parsec, Stream)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified Text.Megaparsec.Char.Lexer as MegaparsecLexer
+import ValidLiterals
+
+
+#define QUASIQUOTER(X, Y)      \
+instance Validate Text X where {  \
+  fromLiteralWithError = run Y;   \
+  } ;                             \
+                                  \
+Y/**/Q = quasiQuoter (Proxy :: Proxy Text) (Proxy :: Proxy X)
+
 
 -- $setup
 -- >>> testParser parser = either putStr print . run parser
@@ -2094,3 +2105,109 @@ class_ = filteredAnyName ["asc", "desc", "nulls"]
 ascDesc = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
 
 nullsOrder = keyword "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")
+
+-- * QuasiQuoters
+
+QUASIQUOTER(PreparableStmt, preparableStmt)
+QUASIQUOTER(InsertStmt, insertStmt)
+QUASIQUOTER(InsertTarget, insertTarget)
+QUASIQUOTER(InsertRest, insertRest)
+QUASIQUOTER(OverrideKind, overrideKind)
+QUASIQUOTER(InsertColumnItem, insertColumnItem)
+QUASIQUOTER(OnConflict, onConflict)
+QUASIQUOTER(OnConflictDo, onConflictDo)
+QUASIQUOTER(ConfExpr, confExpr)
+QUASIQUOTER(UpdateStmt, updateStmt)
+QUASIQUOTER(SetClause, setClause)
+QUASIQUOTER(SetTarget, setTarget)
+QUASIQUOTER(DeleteStmt, deleteStmt)
+QUASIQUOTER(SelectWithParens, selectWithParens)
+QUASIQUOTER(SelectNoParens, selectNoParens)
+QUASIQUOTER(SimpleSelect, baseSimpleSelect)
+QUASIQUOTER(Targeting, targeting)
+QUASIQUOTER(TargetEl, targetEl)
+QUASIQUOTER(SelectBinOp, selectBinOp)
+QUASIQUOTER(WithClause, withClause)
+QUASIQUOTER(CommonTableExpr, commonTableExpr)
+QUASIQUOTER(OptTempTableName, optTempTableName)
+QUASIQUOTER(GroupByItem, groupByItem)
+QUASIQUOTER(WindowDefinition, windowDefinition)
+QUASIQUOTER(WindowSpecification, windowSpecification)
+QUASIQUOTER(FrameClause, frameClause)
+QUASIQUOTER(FrameClauseMode, frameClauseMode)
+QUASIQUOTER(FrameExtent, frameExtent)
+QUASIQUOTER(FrameBound, frameBound)
+QUASIQUOTER(WindowExclusionClause, windowExclusionClause)
+QUASIQUOTER(SortBy, sortBy)
+QUASIQUOTER(SelectLimit, selectLimit)
+QUASIQUOTER(LimitClause, limitClause)
+QUASIQUOTER(SelectFetchFirstValue, selectFetchFirstValue)
+QUASIQUOTER(SelectLimitValue, selectLimitValue)
+QUASIQUOTER(OffsetClause, offsetClause)
+QUASIQUOTER(ForLockingClause, forLockingClause)
+QUASIQUOTER(ForLockingItem, forLockingItem)
+QUASIQUOTER(ForLockingStrength, forLockingStrength)
+QUASIQUOTER(TableRef, tableRef)
+QUASIQUOTER(RelationExpr, relationExpr)
+QUASIQUOTER(TablesampleClause, tablesampleClause)
+QUASIQUOTER(FuncTable, funcTable)
+QUASIQUOTER(RowsfromItem, rowsfromItem)
+QUASIQUOTER(TableFuncElement, tableFuncElement)
+QUASIQUOTER(AliasClause, aliasClause)
+QUASIQUOTER(FuncAliasClause, funcAliasClause)
+QUASIQUOTER(JoinedTable, joinedTable)
+QUASIQUOTER(JoinType, joinType)
+QUASIQUOTER(JoinQual, joinQual)
+QUASIQUOTER(WhereOrCurrentClause, whereOrCurrentClause)
+QUASIQUOTER(AExpr, aExpr)
+QUASIQUOTER(BExpr, bExpr)
+QUASIQUOTER(CExpr, cExpr)
+QUASIQUOTER(InExpr, inExpr)
+QUASIQUOTER(SubType, subType)
+QUASIQUOTER(Row, row)
+QUASIQUOTER(ImplicitRow, implicitRow)
+QUASIQUOTER(FuncExpr, funcExpr)
+QUASIQUOTER(FuncExprWindowless, funcExprWindowless)
+QUASIQUOTER(OverClause, overClause)
+QUASIQUOTER(FuncExprCommonSubexpr, funcExprCommonSubexpr)
+QUASIQUOTER(ExtractList, extractList)
+QUASIQUOTER(ExtractArg, extractArg)
+QUASIQUOTER(OverlayList, overlayList)
+QUASIQUOTER(PositionList, positionList)
+QUASIQUOTER(SubstrList, substrList)
+QUASIQUOTER(SubstrListFromFor, substrListFromFor)
+QUASIQUOTER(TrimModifier, trimModifier)
+QUASIQUOTER(TrimList, trimList)
+QUASIQUOTER(CaseExpr, caseExpr)
+QUASIQUOTER(WhenClause, whenClause)
+QUASIQUOTER(FuncApplication, funcApplication)
+QUASIQUOTER(FuncApplicationParams, funcApplicationParams)
+QUASIQUOTER(FuncArgExpr, funcArgExpr)
+QUASIQUOTER(AexprConst, aexprConst)
+QUASIQUOTER(ConstTypename, constTypename)
+QUASIQUOTER(Numeric, numeric)
+QUASIQUOTER(Bit, bit)
+QUASIQUOTER(ConstCharacter, constCharacter)
+QUASIQUOTER(Character, character)
+QUASIQUOTER(ConstDatetime, constDatetime)
+QUASIQUOTER(Interval, interval)
+QUASIQUOTER(Ident, ident)
+QUASIQUOTER(Columnref, columnref)
+QUASIQUOTER(AnyName, anyName)
+QUASIQUOTER(FuncName, funcName)
+QUASIQUOTER(QualifiedName, qualifiedName)
+QUASIQUOTER(IndirectionEl, indirectionEl)
+QUASIQUOTER(Typename, typename)
+QUASIQUOTER(SimpleTypename, simpleTypename)
+QUASIQUOTER(GenericType, genericType)
+QUASIQUOTER(QualOp, qualOp)
+QUASIQUOTER(QualAllOp, qualAllOp)
+QUASIQUOTER(AnyOperator, anyOperator)
+QUASIQUOTER(AllOp, allOp)
+QUASIQUOTER(MathOp, mathOp)
+QUASIQUOTER(SymbolicExprBinOp, symbolicExprBinOp)
+QUASIQUOTER(SubqueryOp, subqueryOp)
+QUASIQUOTER(IndexElem, indexElem)
+QUASIQUOTER(IndexElemDef, indexElemDef)
+QUASIQUOTER(AscDesc, ascDesc)
+QUASIQUOTER(NullsOrder, nullsOrder)
