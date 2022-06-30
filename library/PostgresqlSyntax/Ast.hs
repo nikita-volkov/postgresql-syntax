@@ -5,6 +5,7 @@
 -- For reasoning see the docs of the parsing module of this project.
 module PostgresqlSyntax.Ast where
 
+import Data.Data
 import PostgresqlSyntax.Prelude hiding (Op, Order)
 
 -- * Statement
@@ -25,13 +26,13 @@ data PreparableStmt
   | UpdatePreparableStmt UpdateStmt
   | DeletePreparableStmt DeleteStmt
   | CallPreparableStmt CallStmt
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Call
 
 newtype CallStmt
   = CallStmt FuncApplication
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Insert
 
@@ -43,7 +44,7 @@ newtype CallStmt
 --       opt_on_conflict returning_clause
 -- @
 data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe OnConflict) (Maybe ReturningClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -53,7 +54,7 @@ data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe O
 --   | qualified_name AS ColId
 -- @
 data InsertTarget = InsertTarget QualifiedName (Maybe ColId)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -68,7 +69,7 @@ data InsertTarget = InsertTarget QualifiedName (Maybe ColId)
 data InsertRest
   = SelectInsertRest (Maybe InsertColumnList) (Maybe OverrideKind) SelectStmt
   | DefaultValuesInsertRest
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -78,7 +79,7 @@ data InsertRest
 --   | SYSTEM_P
 -- @
 data OverrideKind = UserOverrideKind | SystemOverrideKind
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -96,7 +97,7 @@ type InsertColumnList = NonEmpty InsertColumnItem
 --   | ColId opt_indirection
 -- @
 data InsertColumnItem = InsertColumnItem ColId (Maybe Indirection)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -107,7 +108,7 @@ data InsertColumnItem = InsertColumnItem ColId (Maybe Indirection)
 --   | EMPTY
 -- @
 data OnConflict = OnConflict (Maybe ConfExpr) OnConflictDo
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -120,7 +121,7 @@ data OnConflict = OnConflict (Maybe ConfExpr) OnConflictDo
 data OnConflictDo
   = UpdateOnConflictDo SetClauseList (Maybe WhereClause)
   | NothingOnConflictDo
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -133,7 +134,7 @@ data OnConflictDo
 data ConfExpr
   = WhereConfExpr IndexParams (Maybe WhereClause)
   | ConstraintConfExpr Name
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -157,7 +158,7 @@ type ReturningClause = TargetList
 --       returning_clause
 -- @
 data UpdateStmt = UpdateStmt (Maybe WithClause) RelationExprOptAlias SetClauseList (Maybe FromClause) (Maybe WhereOrCurrentClause) (Maybe ReturningClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -178,7 +179,7 @@ type SetClauseList = NonEmpty SetClause
 data SetClause
   = TargetSetClause SetTarget AExpr
   | TargetListSetClause SetTargetList AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -187,7 +188,7 @@ data SetClause
 --   | ColId opt_indirection
 -- @
 data SetTarget = SetTarget ColId (Maybe Indirection)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -208,7 +209,7 @@ type SetTargetList = NonEmpty SetTarget
 --       using_clause where_or_current_clause returning_clause
 -- @
 data DeleteStmt = DeleteStmt (Maybe WithClause) RelationExprOptAlias (Maybe UsingClause) (Maybe WhereOrCurrentClause) (Maybe ReturningClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -240,7 +241,7 @@ type SelectStmt = Either SelectNoParens SelectWithParens
 data SelectWithParens
   = NoParensSelectWithParens SelectNoParens
   | WithParensSelectWithParens SelectWithParens
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- Covers the following cases:
@@ -258,7 +259,7 @@ data SelectWithParens
 -- @
 data SelectNoParens
   = SelectNoParens (Maybe WithClause) SelectClause (Maybe SortClause) (Maybe SelectLimit) (Maybe ForLockingClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- @
@@ -289,7 +290,7 @@ data SimpleSelect
   | ValuesSimpleSelect ValuesClause
   | TableSimpleSelect RelationExpr
   | BinSimpleSelect SelectBinOp SelectClause (Maybe Bool) SelectClause
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- Covers these parts of spec:
@@ -312,7 +313,7 @@ data Targeting
   = NormalTargeting TargetList
   | AllTargeting (Maybe TargetList)
   | DistinctTargeting (Maybe ExprList) TargetList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -337,7 +338,7 @@ data TargetEl
   | ImplicitlyAliasedExprTargetEl AExpr Ident
   | ExprTargetEl AExpr
   | AsteriskTargetEl
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -347,7 +348,7 @@ data TargetEl
 --   |  select_clause EXCEPT all_or_distinct select_clause
 -- @
 data SelectBinOp = UnionSelectBinOp | IntersectSelectBinOp | ExceptSelectBinOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -358,7 +359,7 @@ data SelectBinOp = UnionSelectBinOp | IntersectSelectBinOp | ExceptSelectBinOp
 --   |  WITH RECURSIVE cte_list
 -- @
 data WithClause = WithClause Bool (NonEmpty CommonTableExpr)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -371,7 +372,7 @@ data WithClause = WithClause Bool (NonEmpty CommonTableExpr)
 --   | EMPTY
 -- @
 data CommonTableExpr = CommonTableExpr Ident (Maybe (NonEmpty Ident)) (Maybe Bool) PreparableStmt
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 type IntoClause = OptTempTableName
 
@@ -399,7 +400,7 @@ data OptTempTableName
   | UnloggedOptTempTableName Bool QualifiedName
   | TableOptTempTableName QualifiedName
   | QualifedOptTempTableName QualifiedName
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 type FromClause = NonEmpty TableRef
 
@@ -429,7 +430,7 @@ data GroupByItem
   | RollupGroupByItem ExprList
   | CubeGroupByItem ExprList
   | GroupingSetsGroupByItem (NonEmpty GroupByItem)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- @
@@ -457,7 +458,7 @@ type WindowClause = NonEmpty WindowDefinition
 --   |  ColId AS window_specification
 -- @
 data WindowDefinition = WindowDefinition Ident WindowSpecification
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- @
@@ -474,7 +475,7 @@ data WindowDefinition = WindowDefinition Ident WindowSpecification
 --   |  EMPTY
 -- @
 data WindowSpecification = WindowSpecification (Maybe ExistingWindowName) (Maybe PartitionClause) (Maybe SortClause) (Maybe FrameClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 type ExistingWindowName = ColId
 
@@ -490,7 +491,7 @@ type PartitionClause = ExprList
 --   |  EMPTY
 -- @
 data FrameClause = FrameClause FrameClauseMode FrameExtent (Maybe WindowExclusionClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -502,7 +503,7 @@ data FrameClause = FrameClause FrameClauseMode FrameExtent (Maybe WindowExclusio
 --   |  EMPTY
 -- @
 data FrameClauseMode = RangeFrameClauseMode | RowsFrameClauseMode | GroupsFrameClauseMode
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -512,7 +513,7 @@ data FrameClauseMode = RangeFrameClauseMode | RowsFrameClauseMode | GroupsFrameC
 --   |  BETWEEN frame_bound AND frame_bound
 -- @
 data FrameExtent = SingularFrameExtent FrameBound | BetweenFrameExtent FrameBound FrameBound
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -530,7 +531,7 @@ data FrameBound
   | CurrentRowFrameBound
   | PrecedingFrameBound AExpr
   | FollowingFrameBound AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -547,7 +548,7 @@ data WindowExclusionClause
   | GroupWindowExclusionClause
   | TiesWindowExclusionClause
   | NoOthersWindowExclusionClause
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -578,7 +579,7 @@ type SortClause = NonEmpty SortBy
 data SortBy
   = UsingSortBy AExpr QualAllOp (Maybe NullsOrder)
   | AscDescSortBy AExpr (Maybe AscDesc) (Maybe NullsOrder)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -594,7 +595,7 @@ data SelectLimit
   | OffsetLimitSelectLimit OffsetClause LimitClause
   | LimitSelectLimit LimitClause
   | OffsetSelectLimit OffsetClause
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -616,7 +617,7 @@ data SelectLimit
 data LimitClause
   = LimitLimitClause SelectLimitValue (Maybe AExpr)
   | FetchOnlyLimitClause Bool (Maybe SelectFetchFirstValue) Bool
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -629,7 +630,7 @@ data LimitClause
 data SelectFetchFirstValue
   = ExprSelectFetchFirstValue CExpr
   | NumSelectFetchFirstValue Bool (Either Int64 Double)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -641,7 +642,7 @@ data SelectFetchFirstValue
 data SelectLimitValue
   = ExprSelectLimitValue AExpr
   | AllSelectLimitValue
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -658,7 +659,7 @@ data SelectLimitValue
 data OffsetClause
   = ExprOffsetClause AExpr
   | FetchFirstOffsetClause SelectFetchFirstValue Bool
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * For Locking
 
@@ -675,7 +676,7 @@ data OffsetClause
 data ForLockingClause
   = ItemsForLockingClause (NonEmpty ForLockingItem)
   | ReadOnlyForLockingClause
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -691,7 +692,7 @@ data ForLockingClause
 --   | EMPTY
 -- @
 data ForLockingItem = ForLockingItem ForLockingStrength (Maybe (NonEmpty QualifiedName)) (Maybe Bool)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -707,7 +708,7 @@ data ForLockingStrength
   | NoKeyUpdateForLockingStrength
   | ShareForLockingStrength
   | KeyForLockingStrength
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Table references and joining
 
@@ -761,7 +762,7 @@ data TableRef
     --    | '(' joined_table ')' alias_clause
     -- @
     JoinTableRef JoinedTable (Maybe AliasClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -782,7 +783,7 @@ data RelationExpr
       -- ^ Name.
       Bool
       -- ^ Are parentheses present?
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -793,7 +794,7 @@ data RelationExpr
 --   | relation_expr AS ColId
 -- @
 data RelationExprOptAlias = RelationExprOptAlias RelationExpr (Maybe (Bool, ColId))
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -802,7 +803,7 @@ data RelationExprOptAlias = RelationExprOptAlias RelationExpr (Maybe (Bool, ColI
 --   | TABLESAMPLE func_name '(' expr_list ')' opt_repeatable_clause
 -- @
 data TablesampleClause = TablesampleClause FuncName ExprList (Maybe RepeatableClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -823,7 +824,7 @@ type RepeatableClause = AExpr
 data FuncTable
   = FuncExprFuncTable FuncExprWindowless OptOrdinality
   | RowsFromFuncTable RowsfromList OptOrdinality
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -832,7 +833,7 @@ data FuncTable
 --   | func_expr_windowless opt_col_def_list
 -- @
 data RowsfromItem = RowsfromItem FuncExprWindowless (Maybe ColDefList)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -877,7 +878,7 @@ type TableFuncElementList = NonEmpty TableFuncElement
 --   | ColId Typename opt_collate_clause
 -- @
 data TableFuncElement = TableFuncElement ColId Typename (Maybe CollateClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -898,7 +899,7 @@ type CollateClause = AnyName
 --   |  ColId
 -- @
 data AliasClause = AliasClause Bool ColId (Maybe NameList)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -915,7 +916,7 @@ data FuncAliasClause
   | AsFuncAliasClause TableFuncElementList
   | AsColIdFuncAliasClause ColId TableFuncElementList
   | ColIdFuncAliasClause ColId TableFuncElementList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -932,7 +933,7 @@ data FuncAliasClause
 data JoinedTable
   = InParensJoinedTable JoinedTable
   | MethJoinedTable JoinMeth TableRef TableRef
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -947,7 +948,7 @@ data JoinMeth
   = CrossJoinMeth
   | QualJoinMeth (Maybe JoinType) JoinQual
   | NaturalJoinMeth (Maybe JoinType)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -962,7 +963,7 @@ data JoinType
   | LeftJoinType Bool
   | RightJoinType Bool
   | InnerJoinType
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -974,7 +975,7 @@ data JoinType
 data JoinQual
   = UsingJoinQual (NonEmpty Ident)
   | OnJoinQual AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Where
 
@@ -990,7 +991,7 @@ type WhereClause = AExpr
 data WhereOrCurrentClause
   = ExprWhereOrCurrentClause AExpr
   | CursorWhereOrCurrentClause CursorName
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Expression
 
@@ -1086,7 +1087,7 @@ data AExpr
   | SubqueryAExpr AExpr SubqueryOp SubType (Either SelectWithParens AExpr)
   | UniqueAExpr SelectWithParens
   | DefaultAExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1126,7 +1127,7 @@ data BExpr
   | SymbolicBinOpBExpr BExpr SymbolicExprBinOp BExpr
   | QualOpBExpr QualOp BExpr
   | IsOpBExpr BExpr Bool BExprIsOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1160,7 +1161,7 @@ data CExpr
   | ExplicitRowCExpr ExplicitRow
   | ImplicitRowCExpr ImplicitRow
   | GroupingCExpr ExprList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- **
 
@@ -1174,7 +1175,7 @@ data CExpr
 data InExpr
   = SelectInExpr SelectWithParens
   | ExprListInExpr ExprList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1185,7 +1186,7 @@ data InExpr
 --   | ALL
 -- @
 data SubType = AnySubType | SomeSubType | AllSubType
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -1199,7 +1200,7 @@ data ArrayExpr
   = ExprListArrayExpr ExprList
   | ArrayExprListArrayExpr ArrayExprList
   | EmptyArrayExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1221,7 +1222,7 @@ type ArrayExprList = NonEmpty ArrayExpr
 data Row
   = ExplicitRowRow ExplicitRow
   | ImplicitRowRow ImplicitRow
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1239,7 +1240,7 @@ type ExplicitRow = Maybe ExprList
 --   | '(' expr_list ',' a_expr ')'
 -- @
 data ImplicitRow = ImplicitRow ExprList AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1251,7 +1252,7 @@ data ImplicitRow = ImplicitRow ExprList AExpr
 data FuncExpr
   = ApplicationFuncExpr FuncApplication (Maybe WithinGroupClause) (Maybe FilterClause) (Maybe OverClause)
   | SubexprFuncExpr FuncExprCommonSubexpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1263,7 +1264,7 @@ data FuncExpr
 data FuncExprWindowless
   = ApplicationFuncExprWindowless FuncApplication
   | CommonSubexprFuncExprWindowless FuncExprCommonSubexpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1294,7 +1295,7 @@ type FilterClause = AExpr
 data OverClause
   = WindowOverClause WindowSpecification
   | ColIdOverClause ColId
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1369,7 +1370,7 @@ data FuncExprCommonSubexpr
   | CoalesceFuncExprCommonSubexpr ExprList
   | GreatestFuncExprCommonSubexpr ExprList
   | LeastFuncExprCommonSubexpr ExprList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1379,7 +1380,7 @@ data FuncExprCommonSubexpr
 --   | EMPTY
 -- @
 data ExtractList = ExtractList ExtractArg AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1403,7 +1404,7 @@ data ExtractArg
   | MinuteExtractArg
   | SecondExtractArg
   | SconstExtractArg Sconst
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1413,7 +1414,7 @@ data ExtractArg
 --   | a_expr overlay_placing substr_from
 -- @
 data OverlayList = OverlayList AExpr OverlayPlacing SubstrFrom (Maybe SubstrFor)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1431,7 +1432,7 @@ type OverlayPlacing = AExpr
 --   | EMPTY
 -- @
 data PositionList = PositionList BExpr BExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1447,7 +1448,7 @@ data PositionList = PositionList BExpr BExpr
 data SubstrList
   = ExprSubstrList AExpr SubstrListFromFor
   | ExprListSubstrList ExprList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1462,7 +1463,7 @@ data SubstrListFromFor
   | ForFromSubstrListFromFor SubstrFor SubstrFrom
   | FromSubstrListFromFor SubstrFrom
   | ForSubstrListFromFor SubstrFor
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1488,7 +1489,7 @@ type SubstrFor = AExpr
 --   | TRIM '(' TRAILING trim_list ')'
 -- @
 data TrimModifier = BothTrimModifier | LeadingTrimModifier | TrailingTrimModifier
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -1502,7 +1503,7 @@ data TrimList
   = ExprFromExprListTrimList AExpr ExprList
   | FromExprListTrimList ExprList
   | ExprListTrimList ExprList
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1511,7 +1512,7 @@ data TrimList
 --   | CASE case_arg when_clause_list case_default END_P
 -- @
 data CaseExpr = CaseExpr (Maybe CaseArg) WhenClauseList (Maybe CaseDefault)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1547,7 +1548,7 @@ type CaseDefault = AExpr
 --   |  WHEN a_expr THEN a_expr
 -- @
 data WhenClause = WhenClause AExpr AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1562,7 +1563,7 @@ data WhenClause = WhenClause AExpr AExpr
 --   |  func_name '(' '*' ')'
 -- @
 data FuncApplication = FuncApplication FuncName (Maybe FuncApplicationParams)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1580,13 +1581,13 @@ data FuncApplicationParams
   = NormalFuncApplicationParams (Maybe Bool) (NonEmpty FuncArgExpr) (Maybe SortClause)
   | VariadicFuncApplicationParams (Maybe (NonEmpty FuncArgExpr)) FuncArgExpr (Maybe SortClause)
   | StarFuncApplicationParams
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 data FuncArgExpr
   = ExprFuncArgExpr AExpr
   | ColonEqualsFuncArgExpr Ident AExpr
   | EqualsGreaterFuncArgExpr Ident AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Constants
 
@@ -1627,7 +1628,7 @@ data AexprConst
   | IntIntervalAexprConst Iconst Sconst
   | BoolAexprConst Bool
   | NullAexprConst
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1635,7 +1636,7 @@ data AexprConst
 --   |  func_name '(' func_arg_list opt_sort_clause ')' Sconst
 -- @
 data FuncConstArgs = FuncConstArgs (NonEmpty FuncArgExpr) (Maybe SortClause)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1651,7 +1652,7 @@ data ConstTypename
   | ConstBitConstTypename ConstBit
   | ConstCharacterConstTypename ConstCharacter
   | ConstDatetimeConstTypename ConstDatetime
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1687,7 +1688,7 @@ data Numeric
   | DecNumeric (Maybe TypeModifiers)
   | NumericNumeric (Maybe TypeModifiers)
   | BooleanNumeric
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1704,7 +1705,7 @@ data Numeric
 --   | BIT opt_varying
 -- @
 data Bit = Bit OptVarying (Maybe ExprList)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 type ConstBit = Bit
 
@@ -1732,7 +1733,7 @@ type OptVarying = Bool
 --   | character
 -- @
 data ConstCharacter = ConstCharacter Character (Maybe Int64)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1752,7 +1753,7 @@ data Character
   | NationalCharacterCharacter OptVarying
   | NationalCharCharacter OptVarying
   | NcharCharacter OptVarying
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1766,7 +1767,7 @@ data Character
 data ConstDatetime
   = TimestampConstDatetime (Maybe Int64) (Maybe Timezone)
   | TimeConstDatetime (Maybe Int64) (Maybe Timezone)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1811,7 +1812,7 @@ data Interval
   | HourToMinuteInterval
   | HourToSecondInterval IntervalSecond
   | MinuteToSecondInterval IntervalSecond
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1830,7 +1831,7 @@ type IntervalSecond = Maybe Int64
 -- IDENT
 -- @
 data Ident = QuotedIdent Text | UnquotedIdent Text
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1887,7 +1888,7 @@ type CursorName = Name
 --   | ColId indirection
 -- @
 data Columnref = Columnref ColId (Maybe Indirection)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1897,7 +1898,7 @@ data Columnref = Columnref ColId (Maybe Indirection)
 --   | ColId attrs
 -- @
 data AnyName = AnyName ColId (Maybe Attrs)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1909,7 +1910,7 @@ data AnyName = AnyName ColId (Maybe Attrs)
 data FuncName
   = TypeFuncName TypeFunctionName
   | IndirectedFuncName ColId Indirection
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1934,7 +1935,7 @@ type TypeFunctionName = Ident
 data QualifiedName
   = SimpleQualifiedName Ident
   | IndirectedQualifiedName Ident Indirection
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -1962,7 +1963,7 @@ data IndirectionEl
   | AllIndirectionEl
   | ExprIndirectionEl AExpr
   | SliceIndirectionEl (Maybe AExpr) (Maybe AExpr)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Types
 
@@ -1990,7 +1991,7 @@ data Typename
       -- ^ Question mark
       (Maybe (TypenameArrayDimensions, Bool))
       -- ^ Array dimensions possibly followed by a question mark
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2003,7 +2004,7 @@ data Typename
 data TypenameArrayDimensions
   = BoundsTypenameArrayDimensions ArrayBounds
   | ExplicitTypenameArrayDimensions (Maybe Iconst)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2036,7 +2037,7 @@ data SimpleTypename
   | CharacterSimpleTypename Character
   | ConstDatetimeSimpleTypename ConstDatetime
   | ConstIntervalSimpleTypename (Either (Maybe Interval) Iconst)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2046,7 +2047,7 @@ data SimpleTypename
 --   | type_function_name attrs opt_type_modifiers
 -- @
 data GenericType = GenericType TypeFunctionName (Maybe Attrs) (Maybe TypeModifiers)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2095,7 +2096,7 @@ type TypeList = NonEmpty Typename
 data QualOp
   = OpQualOp Op
   | OperatorQualOp AnyOperator
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2107,7 +2108,7 @@ data QualOp
 data QualAllOp
   = AllQualAllOp AllOp
   | AnyQualAllOp AnyOperator
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2147,7 +2148,7 @@ type Op = Text
 data AnyOperator
   = AllOpAnyOperator AllOp
   | QualifiedAnyOperator ColId AnyOperator
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2159,7 +2160,7 @@ data AnyOperator
 data AllOp
   = OpAllOp Op
   | MathAllOp MathOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2192,18 +2193,18 @@ data MathOp
   | GreaterEqualsMathOp
   | ArrowLeftArrowRightMathOp
   | ExclamationEqualsMathOp
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 data SymbolicExprBinOp
   = MathSymbolicExprBinOp MathOp
   | QualSymbolicExprBinOp QualOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 data VerbalExprBinOp
   = LikeVerbalExprBinOp
   | IlikeVerbalExprBinOp
   | SimilarToVerbalExprBinOp
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -2230,7 +2231,7 @@ data AExprReversableOp
   | BetweenSymmetricAExprReversableOp BExpr AExpr
   | InAExprReversableOp InExpr
   | DocumentAExprReversableOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2246,7 +2247,7 @@ data BExprIsOp
   = DistinctFromBExprIsOp BExpr
   | OfBExprIsOp TypeList
   | DocumentBExprIsOp
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2264,7 +2265,7 @@ data SubqueryOp
   | AnySubqueryOp AnyOperator
   | LikeSubqueryOp Bool
   | IlikeSubqueryOp Bool
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Indexes
 
@@ -2286,7 +2287,7 @@ type IndexParams = NonEmpty IndexElem
 --   | '(' a_expr ')' opt_collate opt_class opt_asc_desc opt_nulls_order
 -- @
 data IndexElem = IndexElem IndexElemDef (Maybe Collate) (Maybe Class) (Maybe AscDesc) (Maybe NullsOrder)
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2299,7 +2300,7 @@ data IndexElemDef
   = IdIndexElemDef ColId
   | FuncIndexElemDef FuncExprWindowless
   | ExprIndexElemDef AExpr
-  deriving (Show, Generic, Eq, Ord)
+  deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
 -- ==== References
@@ -2328,7 +2329,7 @@ type Class = AnyName
 --   | EMPTY
 -- @
 data AscDesc = AscAscDesc | DescAscDesc
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -2339,4 +2340,4 @@ data AscDesc = AscAscDesc | DescAscDesc
 --   | EMPTY
 -- @
 data NullsOrder = FirstNullsOrder | LastNullsOrder
-  deriving (Show, Generic, Eq, Ord, Enum, Bounded)
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
