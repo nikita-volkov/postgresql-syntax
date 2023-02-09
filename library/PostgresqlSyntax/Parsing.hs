@@ -27,6 +27,7 @@ module PostgresqlSyntax.Parsing where
 
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
+import qualified Data.Char as Char
 import qualified Data.HashSet as HashSet
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
@@ -1999,7 +2000,15 @@ anyKeyword = parse $
     return (Text.toLower (Text.cons _firstChar _remainder))
 
 -- | Expected keyword
-keyword a = mfilter (a ==) anyKeyword
+-- keyword a = mfilter (a ==) anyKeyword
+keyword a = parse $
+  Megaparsec.label "keyword" $ do
+    _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    guard (Char.toLower _firstChar == Text.head a)
+    _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    let r = Text.toLower (Text.cons _firstChar _remainder)
+    guard (r == a)
+    return r
 
 -- |
 -- Consume a keyphrase, ignoring case and types of spaces between words.
