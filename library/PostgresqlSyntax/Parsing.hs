@@ -1102,8 +1102,22 @@ customizedCExpr columnref =
   asum
     [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> indirection),
       CaseCExpr <$> caseExpr,
-      ImplicitRowCExpr <$> implicitRow,
       ExplicitRowCExpr <$> explicitRow,
+      char '(' *> space
+        *> asum
+          [ do
+              a <- selectNoParens <* endHead <* space <* char ')'
+              b <- optional (space *> indirection)
+              return (SelectWithParensCExpr (NoParensSelectWithParens a) b),
+            do
+              a <- aExpr
+              endHead
+              asum
+                [ ImplicitRowCExpr <$> implicitRowTail a,
+                  InParensCExpr a
+                    <$> (space *> char ')' *> optional (space *> indirection))
+                ]
+          ],
       inParensWithClause (keyword "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr),
       keyword "exists" *> space *> (ExistsCExpr <$> selectWithParens),
       do
@@ -1114,12 +1128,6 @@ customizedCExpr columnref =
             [ fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
               fmap (fmap (ArrayCExpr . Left) . pure) selectWithParens
             ],
-      do
-        a <- wrapToHead selectWithParens
-        endHead
-        b <- optional (space *> indirection)
-        return (SelectWithParensCExpr a b),
-      InParensCExpr <$> (inParens aExpr <* endHead) <*> optional (space *> indirection),
       AexprConstCExpr <$> wrapToHead aexprConst,
       FuncCExpr <$> funcExpr,
       ColumnrefCExpr <$> columnref
