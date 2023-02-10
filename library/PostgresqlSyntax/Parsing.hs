@@ -975,12 +975,31 @@ customizedAExpr cExpr = suffixRec base suffix
       asum
         [ DefaultAExpr <$ keyword "default",
           UniqueAExpr <$> (keyword "unique" *> space1 *> selectWithParens),
-          OverlapsAExpr <$> wrapToHead row <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
+          OverlapsAExpr
+            <$> wrapToHead (ExplicitRowRow <$> explicitRow)
+            <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
           qualOpExpr aExpr PrefixQualOpAExpr,
           PlusAExpr <$> plusedExpr aExpr,
           MinusAExpr <$> minusedExpr aExpr,
           NotAExpr <$> (keyword "not" *> space1 *> aExpr),
-          CExprAExpr <$> cExpr
+          CExprAExpr <$> cExprNoCommonPrefix,
+          char '(' *> space
+            *> asum
+              [ CExprAExpr <$> cExprTailNoCommonPrefix,
+                do
+                  a <- wrapToHead aExpr
+                  asum
+                    [ do
+                        b <- wrapToHead $ ImplicitRowRow <$> implicitRowTail a
+                        space1
+                        keyword "overlaps"
+                        space1
+                        endHead
+                        c <- row
+                        return $ OverlapsAExpr b c,
+                      CExprAExpr . convertNestedParenSelect <$> cExprTailParenExpr a
+                    ]
+              ]
         ]
     suffix a =
       asum
@@ -1113,7 +1132,11 @@ customizedBExpr cExpr = suffixRec base suffix
             return (IsOpBExpr a b c)
         ]
 
-cExpr =
+cExpr :: Parser CExpr
+cExpr = asum [cExprNoCommonPrefix, char '(' *> space *> cExprTailParen]
+
+cExprNoCommonPrefix :: Parser CExpr
+cExprNoCommonPrefix =
   asum
     [ cExprCommon,
       FuncCExpr <$> funcExprNoCommonPrefix,
@@ -1123,30 +1146,12 @@ cExpr =
         asum [FuncCExpr <$> funcExprTail a, ColumnrefCExpr <$> columnrefCont a]
     ]
 
-customizedCExpr columnref =
-  asum [cExprCommon, FuncCExpr <$> funcExpr, ColumnrefCExpr <$> columnref]
-
+cExprCommon :: Parser CExpr
 cExprCommon =
   asum
     [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> indirection),
       CaseCExpr <$> caseExpr,
       ExplicitRowCExpr <$> explicitRow,
-      char '(' *> space
-        *> asum
-          [ do
-              a <- selectNoParens <* endHead <* space <* char ')'
-              b <- optional (space *> indirection)
-              return (SelectWithParensCExpr (NoParensSelectWithParens a) b),
-            do
-              a <- aExpr
-              endHead
-              asum
-                [ ImplicitRowCExpr <$> implicitRowTail a,
-                  convertNestedParenSelect
-                    . InParensCExpr a
-                    <$> (space *> char ')' *> optional (space *> indirection))
-                ]
-          ],
       inParensWithClause (keyword "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr),
       keyword "exists" *> space *> (ExistsCExpr <$> selectWithParens),
       do
@@ -1159,6 +1164,45 @@ cExprCommon =
             ],
       AexprConstCExpr <$> wrapToHead aexprConst
     ]
+
+-- cExpr following a '('
+cExprTailParen :: Parser CExpr
+cExprTailParen =
+  asum
+    [ cExprTailNoCommonPrefix,
+      do
+        a <- aExpr
+        endHead
+        cExprTailParenExpr a
+    ]
+
+-- the part of the tail-parser of a cExpr after a '(' that does not have a
+-- @aExpr@ prefix.
+cExprTailNoCommonPrefix :: Parser CExpr
+cExprTailNoCommonPrefix = do
+  a <- selectNoParens <* endHead <* space <* char ')'
+  b <- optional (space *> indirection)
+  return (SelectWithParensCExpr (NoParensSelectWithParens a) b)
+
+-- cExpr following a '(' plus an @aExpr@.
+cExprTailParenExpr :: AExpr -> Parser CExpr
+cExprTailParenExpr a =
+  asum
+    [ ImplicitRowCExpr <$> implicitRowTail a,
+      InParensCExpr a <$> (space *> char ')' *> optional (space *> indirection))
+    ]
+
+customizedCExpr :: Parser Columnref -> Parser CExpr
+customizedCExpr columnref =
+  asum
+    [ cExprCommon,
+      char '(' *> space *> cExprTailParen,
+      FuncCExpr <$> funcExpr,
+      ColumnrefCExpr <$> columnref
+    ]
+
+openParenAExpr :: Parser AExpr
+openParenAExpr = char '(' *> space *> aExpr <* endHead
 
 convertNestedParenSelect :: CExpr -> CExpr
 convertNestedParenSelect cExpr = case go cExpr of
@@ -1220,6 +1264,13 @@ row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 explicitRow = keyword "row" *> space *> inParens (optional exprList)
 
 implicitRow = inParens (wrapToHead aExpr >>= implicitRowTailInner)
+
+-- implicitRow = inParens $ do
+--   a <- wrapToHead aExpr
+--   commaSeparator
+--   b <- exprList
+--   return $ case NonEmpty.consAndUnsnoc a b of
+--     (c, d) -> ImplicitRow c d
 
 -- the "tail" of the @implicitRow@ parser, i.e. the parser after the initial
 -- "( $EXPR" part.
