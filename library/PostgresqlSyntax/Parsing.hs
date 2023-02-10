@@ -985,6 +985,11 @@ customizedAExpr cExpr = suffixRec base suffix
     suffix a =
       asum
         [ typecastExpr a TypecastAExpr,
+          -- we could just use `base` instead of `aExpr` for the BinOp, would
+          -- lead to slightly different trees. I am not completely convinced that
+          -- `wrapHead` catches the case where you have a sequence of expressions
+          -- and operators followed by something that does not parse (my fear is
+          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
           space1
             *> asum
@@ -1085,6 +1090,11 @@ customizedBExpr cExpr = suffixRec base suffix
     suffix a =
       asum
         [ typecastExpr a TypecastBExpr,
+          -- we could just use `base` instead of `bExpr` for the BinOp, would
+          -- lead to slightly different trees. I am not completely convinced that
+          -- `wrapHead` catches the case where you have a sequence of expressions
+          -- and operators followed by something that does not parse (my fear is
+          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
           do
             space1
