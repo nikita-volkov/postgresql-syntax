@@ -976,81 +976,94 @@ customizedAExpr cExpr = suffixRec base suffix
           CExprAExpr <$> cExpr
         ]
     suffix a =
-      asum
-        [ do
-            space1
-            b <- wrapToHead subqueryOp
-            space1
-            c <- wrapToHead subType
-            space
-            d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
-            return (SubqueryAExpr a b c d),
-          typecastExpr a TypecastAExpr,
-          CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName),
-          AtTimeZoneAExpr a <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
-          symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (space *> qualOp),
-          AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
-          OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
+      do
+        do
           do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            c <-
-              asum
-                [ LikeVerbalExprBinOp <$ keyword "like",
-                  IlikeVerbalExprBinOp <$ keyword "ilike",
-                  SimilarToVerbalExprBinOp <$ keyphrase "similar to"
-                ]
-            space1
-            endHead
-            d <- aExpr
-            e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
-            return (VerbalExprBinOpAExpr a b c d e),
-          do
-            space1
-            keyword "is"
-            space1
-            endHead
-            b <- trueIfPresent (keyword "not" *> space1)
-            c <-
-              asum
-                [ NullAExprReversableOp <$ keyword "null",
-                  TrueAExprReversableOp <$ keyword "true",
-                  FalseAExprReversableOp <$ keyword "false",
-                  UnknownAExprReversableOp <$ keyword "unknown",
-                  DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> aExpr),
-                  OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
-                  DocumentAExprReversableOp <$ keyword "document"
-                ]
-            return (ReversableOpAExpr a b c),
-          do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            keyword "between"
-            space1
-            endHead
-            c <-
-              asum
-                [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
-                  BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
-                  pure (BetweenAExprReversableOp False)
-                ]
-            d <- bExpr
-            space1
-            keyword "and"
-            space1
-            e <- aExpr
-            return (ReversableOpAExpr a b (c d e)),
-          do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            keyword "in"
-            space
-            c <- InAExprReversableOp <$> inExpr
-            return (ReversableOpAExpr a b c),
-          IsnullAExpr a <$ (space1 *> keyword "isnull"),
-          NotnullAExpr a <$ (space1 *> keyword "notnull")
-        ]
+            asum
+              [ do
+                  space1
+                  b <- wrapToHead subqueryOp
+                  space1
+                  c <- wrapToHead subType
+                  space
+                  d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
+                  return (SubqueryAExpr a b c d),
+                typecastExpr a TypecastAExpr,
+                CollateAExpr a
+                  <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName),
+                AtTimeZoneAExpr a
+                  <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+                symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
+                SuffixQualOpAExpr a <$> (space *> qualOp),
+                AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
+                OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
+                do
+                  space1
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  c <-
+                    asum
+                      [ LikeVerbalExprBinOp <$ keyword "like",
+                        IlikeVerbalExprBinOp <$ keyword "ilike",
+                        SimilarToVerbalExprBinOp <$ keyphrase "similar to"
+                      ]
+                  space1
+                  endHead
+                  d <- aExpr
+                  e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
+                  return (VerbalExprBinOpAExpr a b c d e),
+                do
+                  space1
+                  keyword "is"
+                  space1
+                  endHead
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  c <-
+                    asum
+                      [ NullAExprReversableOp <$ keyword "null",
+                        TrueAExprReversableOp <$ keyword "true",
+                        FalseAExprReversableOp <$ keyword "false",
+                        UnknownAExprReversableOp <$ keyword "unknown",
+                        DistinctFromAExprReversableOp
+                          <$> ( keyword "distinct"
+                                  *> space1
+                                  *> keyword "from"
+                                  *> space1
+                                  *> endHead
+                                  *> aExpr
+                              ),
+                        OfAExprReversableOp
+                          <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                        DocumentAExprReversableOp <$ keyword "document"
+                      ]
+                  return (ReversableOpAExpr a b c),
+                do
+                  space1
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  keyword "between"
+                  space1
+                  endHead
+                  c <-
+                    asum
+                      [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
+                        BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
+                        pure (BetweenAExprReversableOp False)
+                      ]
+                  d <- bExpr
+                  space1
+                  keyword "and"
+                  space1
+                  e <- aExpr
+                  return (ReversableOpAExpr a b (c d e)),
+                do
+                  space1
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  keyword "in"
+                  space
+                  c <- InAExprReversableOp <$> inExpr
+                  return (ReversableOpAExpr a b c),
+                IsnullAExpr a <$ (space1 *> keyword "isnull"),
+                NotnullAExpr a <$ (space1 *> keyword "notnull")
+              ]
 
 bExpr = customizedBExpr cExpr
 
@@ -1077,8 +1090,10 @@ customizedBExpr cExpr = suffixRec base suffix
             b <- trueIfPresent (keyword "not" *> space1)
             c <-
               asum
-                [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
-                  OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                [ DistinctFromBExprIsOp
+                    <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
+                  OfBExprIsOp
+                    <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
                   DocumentBExprIsOp <$ keyword "document"
                 ]
             return (IsOpBExpr a b c)
