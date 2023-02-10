@@ -1113,9 +1113,20 @@ customizedBExpr cExpr = suffixRec base suffix
             return (IsOpBExpr a b c)
         ]
 
-cExpr = customizedCExpr columnref
+cExpr =
+  asum
+    [ cExprCommon,
+      FuncCExpr <$> funcExprNoCommonPrefix,
+      do
+        a <- wrapToHead colId
+        endHead
+        asum [FuncCExpr <$> funcExprTail a, ColumnrefCExpr <$> columnrefCont a]
+    ]
 
 customizedCExpr columnref =
+  asum [cExprCommon, FuncCExpr <$> funcExpr, ColumnrefCExpr <$> columnref]
+
+cExprCommon =
   asum
     [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> indirection),
       CaseCExpr <$> caseExpr,
@@ -1146,9 +1157,7 @@ customizedCExpr columnref =
             [ fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
               fmap (fmap (ArrayCExpr . Left) . pure) selectWithParens
             ],
-      AexprConstCExpr <$> wrapToHead aexprConst,
-      FuncCExpr <$> funcExpr,
-      ColumnrefCExpr <$> columnref
+      AexprConstCExpr <$> wrapToHead aexprConst
     ]
 
 convertNestedParenSelect :: CExpr -> CExpr
@@ -1261,17 +1270,29 @@ elseClause = do
   space1
   return a
 
-funcExpr =
+funcExpr :: Parser FuncExpr
+funcExpr = funcExprNoCommonPrefix <|> (wrapToHead colId >>= funcExprTail)
+
+funcExprNoCommonPrefix :: Parser FuncExpr
+funcExprNoCommonPrefix =
   asum
     [ SubexprFuncExpr <$> funcExprCommonSubexpr,
       do
-        a <- funcApplication
-        endHead
-        b <- optional (space1 *> withinGroupClause)
-        c <- optional (space1 *> filterClause)
-        d <- optional (space1 *> overClause)
-        return (ApplicationFuncExpr a b c d)
+        app <- funcApplicationNoCommonPrefix
+        appFuncExprTail app
     ]
+
+funcExprTail :: Ident -> HeadedParsec Void Text FuncExpr
+funcExprTail ident = do
+  a <- wrapToHead $ funcApplicationTailIdent ident
+  endHead
+  appFuncExprTail a
+
+appFuncExprTail a = do
+  b <- optional (space1 *> withinGroupClause)
+  c <- optional (space1 *> filterClause)
+  d <- optional (space1 *> overClause)
+  return (ApplicationFuncExpr a b c d)
 
 funcExprWindowless =
   asum
@@ -1399,6 +1420,29 @@ trimList =
     ]
 
 funcApplication = inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
+
+funcApplicationNoCommonPrefix :: Parser FuncApplication
+funcApplicationNoCommonPrefix = do
+  label <- wrapToHead funcNameNoCommonPrefix
+  funcApplicationContFuncName label
+
+-- the tail of the @funcApplication@ parser after the initial @Ident@ parser.
+funcApplicationTailIdent :: Ident -> Parser FuncApplication
+funcApplicationTailIdent ident = do
+  label <- funcNameTail ident
+  funcApplicationContFuncName label
+
+funcApplicationContFuncName ::
+  FuncName -> HeadedParsec Void Text FuncApplication
+funcApplicationContFuncName label = do
+  space
+  char '('
+  endHead
+  space
+  content <- optional funcApplicationParams
+  space
+  char ')'
+  pure (FuncApplication label content)
 
 funcApplicationParams =
   asum
@@ -1931,11 +1975,16 @@ qualifiedName =
 
 columnref = customizedColumnref colId
 
+columnrefCont = customizedColumnrefCont
+
 filteredColumnref _keywords = customizedColumnref (filteredColId _keywords)
 
 customizedColumnref colId = do
   a <- wrapToHead colId
   endHead
+  customizedColumnrefCont a
+
+customizedColumnrefCont a = do
   b <- optional (space *> indirection)
   return (Columnref a b)
 
@@ -1963,8 +2012,14 @@ cursorName = name
 --   | ColId indirection
 -- @
 funcName =
-  IndirectedFuncName <$> wrapToHead colId <*> (space *> indirection)
-    <|> TypeFuncName <$> typeFunctionName
+  (wrapToHead colId >>= funcNameTail) <|> TypeFuncName <$> typeFunctionName
+
+-- the tail of the @funcName@ parser after the head consisting of an @Ident@.
+funcNameTail :: Ident -> HeadedParsec Void Text FuncName
+funcNameTail a = IndirectedFuncName a <$> (space *> indirection)
+
+funcNameNoCommonPrefix :: HeadedParsec Void Text FuncName
+funcNameNoCommonPrefix = TypeFuncName <$> typeFunctionName
 
 -- |
 -- ==== References
