@@ -1169,8 +1169,14 @@ row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 
 explicitRow = keyword "row" *> space *> inParens (optional exprList)
 
-implicitRow = inParens $ do
-  a <- wrapToHead aExpr
+implicitRow = inParens (wrapToHead aExpr >>= implicitRowTailInner)
+
+-- the "tail" of the @implicitRow@ parser, i.e. the parser after the initial
+-- "( $EXPR" part.
+implicitRowTail :: AExpr -> Parser ImplicitRow
+implicitRowTail a = implicitRowTailInner a <* space <* char ')'
+
+implicitRowTailInner a = do
   commaSeparator
   b <- exprList
   return $ case NonEmpty.consAndUnsnoc a b of
