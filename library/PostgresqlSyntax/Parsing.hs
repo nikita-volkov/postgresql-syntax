@@ -27,6 +27,7 @@ module PostgresqlSyntax.Parsing where
 
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
+import qualified Data.Char as Char
 import qualified Data.HashSet as HashSet
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
@@ -312,7 +313,9 @@ selectWithParens = inParens (WithParensSelectWithParens <$> selectWithParens <|>
 selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 
 sharedSelectNoParens _with = do
-  _select <- selectClause
+  _select <- case _with of
+    Just {} -> selectClause
+    Nothing -> selectClauseNoParens
   _sort <- optional (space1 *> sortClause)
   _limit <- optional (space1 *> selectLimit)
   _forLocking <- optional (space1 *> forLockingClause)
@@ -342,6 +345,11 @@ selectClause = suffixRec base suffix
         [ Right <$> selectWithParens,
           Left <$> baseSimpleSelect
         ]
+    suffix a = Left <$> extensionSimpleSelect a
+
+selectClauseNoParens = suffixRec base suffix
+  where
+    base = Left <$> baseSimpleSelect
     suffix a = Left <$> extensionSimpleSelect a
 
 baseSimpleSelect =
@@ -967,88 +975,122 @@ customizedAExpr cExpr = suffixRec base suffix
       asum
         [ DefaultAExpr <$ keyword "default",
           UniqueAExpr <$> (keyword "unique" *> space1 *> selectWithParens),
-          OverlapsAExpr <$> wrapToHead row <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
+          OverlapsAExpr
+            <$> wrapToHead (ExplicitRowRow <$> explicitRow)
+            <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
           qualOpExpr aExpr PrefixQualOpAExpr,
           PlusAExpr <$> plusedExpr aExpr,
           MinusAExpr <$> minusedExpr aExpr,
           NotAExpr <$> (keyword "not" *> space1 *> aExpr),
-          CExprAExpr <$> cExpr
+          CExprAExpr <$> cExprNoCommonPrefix,
+          char '(' *> space
+            *> asum
+              [ CExprAExpr <$> cExprTailNoCommonPrefix,
+                do
+                  a <- wrapToHead aExpr
+                  asum
+                    [ do
+                        b <- wrapToHead $ ImplicitRowRow <$> implicitRowTail a
+                        space1
+                        keyword "overlaps"
+                        space1
+                        endHead
+                        c <- row
+                        return $ OverlapsAExpr b c,
+                      CExprAExpr . convertNestedParenSelect <$> cExprTailParenExpr a
+                    ]
+              ]
         ]
     suffix a =
       asum
-        [ do
-            space1
-            b <- wrapToHead subqueryOp
-            space1
-            c <- wrapToHead subType
-            space
-            d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
-            return (SubqueryAExpr a b c d),
-          typecastExpr a TypecastAExpr,
-          CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName),
-          AtTimeZoneAExpr a <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+        [ typecastExpr a TypecastAExpr,
+          -- we could just use `base` instead of `aExpr` for the BinOp, would
+          -- lead to slightly different trees. I am not completely convinced that
+          -- `wrapHead` catches the case where you have a sequence of expressions
+          -- and operators followed by something that does not parse (my fear is
+          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (space *> qualOp),
-          AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
-          OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
-          do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            c <-
-              asum
-                [ LikeVerbalExprBinOp <$ keyword "like",
-                  IlikeVerbalExprBinOp <$ keyword "ilike",
-                  SimilarToVerbalExprBinOp <$ keyphrase "similar to"
-                ]
-            space1
-            endHead
-            d <- aExpr
-            e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
-            return (VerbalExprBinOpAExpr a b c d e),
-          do
-            space1
-            keyword "is"
-            space1
-            endHead
-            b <- trueIfPresent (keyword "not" *> space1)
-            c <-
-              asum
-                [ NullAExprReversableOp <$ keyword "null",
-                  TrueAExprReversableOp <$ keyword "true",
-                  FalseAExprReversableOp <$ keyword "false",
-                  UnknownAExprReversableOp <$ keyword "unknown",
-                  DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> aExpr),
-                  OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
-                  DocumentAExprReversableOp <$ keyword "document"
-                ]
-            return (ReversableOpAExpr a b c),
-          do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            keyword "between"
-            space1
-            endHead
-            c <-
-              asum
-                [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
-                  BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
-                  pure (BetweenAExprReversableOp False)
-                ]
-            d <- bExpr
-            space1
-            keyword "and"
-            space1
-            e <- aExpr
-            return (ReversableOpAExpr a b (c d e)),
-          do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
-            keyword "in"
-            space
-            c <- InAExprReversableOp <$> inExpr
-            return (ReversableOpAExpr a b c),
-          IsnullAExpr a <$ (space1 *> keyword "isnull"),
-          NotnullAExpr a <$ (space1 *> keyword "notnull")
+          space1
+            *> asum
+              [ do
+                  b <- wrapToHead subqueryOp
+                  space1
+                  c <- wrapToHead subType
+                  space
+                  d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
+                  return (SubqueryAExpr a b c d),
+                CollateAExpr a <$> (keyword "collate" *> space1 *> endHead *> anyName),
+                AtTimeZoneAExpr a
+                  <$> (keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+                AndAExpr a <$> (keyword "and" *> space1 *> endHead *> aExpr),
+                OrAExpr a <$> (keyword "or" *> space1 *> endHead *> aExpr),
+                do
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  c <-
+                    asum
+                      [ LikeVerbalExprBinOp <$ keyword "like",
+                        IlikeVerbalExprBinOp <$ keyword "ilike",
+                        SimilarToVerbalExprBinOp <$ keyphrase "similar to"
+                      ]
+                  space1
+                  endHead
+                  d <- aExpr
+                  e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
+                  return (VerbalExprBinOpAExpr a b c d e),
+                do
+                  keyword "is"
+                  space1
+                  endHead
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  c <-
+                    asum
+                      [ NullAExprReversableOp <$ keyword "null",
+                        TrueAExprReversableOp <$ keyword "true",
+                        FalseAExprReversableOp <$ keyword "false",
+                        UnknownAExprReversableOp <$ keyword "unknown",
+                        DistinctFromAExprReversableOp
+                          <$> ( keyword "distinct"
+                                  *> space1
+                                  *> keyword "from"
+                                  *> space1
+                                  *> endHead
+                                  *> aExpr
+                              ),
+                        OfAExprReversableOp
+                          <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                        DocumentAExprReversableOp <$ keyword "document"
+                      ]
+                  return (ReversableOpAExpr a b c),
+                do
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  keyword "between"
+                  space1
+                  endHead
+                  c <-
+                    asum
+                      [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
+                        BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
+                        pure (BetweenAExprReversableOp False)
+                      ]
+                  d <- bExpr
+                  space1
+                  keyword "and"
+                  space1
+                  e <- aExpr
+                  return (ReversableOpAExpr a b (c d e)),
+                do
+                  b <- trueIfPresent (keyword "not" *> space1)
+                  keyword "in"
+                  space
+                  c <- InAExprReversableOp <$> inExpr
+                  return (ReversableOpAExpr a b c),
+                IsnullAExpr a <$ (keyword "isnull"),
+                NotnullAExpr a <$ (keyword "notnull")
+              ],
+          SuffixQualOpAExpr a <$> (space *> qualOp)
+          -- TODO SuffixQualOpAExpr has a common prefix with SubqueryAExpr
+          -- so for now we rely on the order of the parsers here, which works well
+          -- enough.
         ]
 
 bExpr = customizedBExpr cExpr
@@ -1067,6 +1109,11 @@ customizedBExpr cExpr = suffixRec base suffix
     suffix a =
       asum
         [ typecastExpr a TypecastBExpr,
+          -- we could just use `base` instead of `bExpr` for the BinOp, would
+          -- lead to slightly different trees. I am not completely convinced that
+          -- `wrapHead` catches the case where you have a sequence of expressions
+          -- and operators followed by something that does not parse (my fear is
+          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
           do
             space1
@@ -1076,20 +1123,34 @@ customizedBExpr cExpr = suffixRec base suffix
             b <- trueIfPresent (keyword "not" *> space1)
             c <-
               asum
-                [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
-                  OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                [ DistinctFromBExprIsOp
+                    <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
+                  OfBExprIsOp
+                    <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
                   DocumentBExprIsOp <$ keyword "document"
                 ]
             return (IsOpBExpr a b c)
         ]
 
-cExpr = customizedCExpr columnref
+cExpr :: Parser CExpr
+cExpr = asum [cExprNoCommonPrefix, char '(' *> space *> cExprTailParen]
 
-customizedCExpr columnref =
+cExprNoCommonPrefix :: Parser CExpr
+cExprNoCommonPrefix =
+  asum
+    [ cExprCommon,
+      FuncCExpr <$> funcExprNoCommonPrefix,
+      do
+        a <- wrapToHead colId
+        endHead
+        asum [FuncCExpr <$> funcExprTail a, ColumnrefCExpr <$> columnrefCont a]
+    ]
+
+cExprCommon :: Parser CExpr
+cExprCommon =
   asum
     [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> indirection),
       CaseCExpr <$> caseExpr,
-      ImplicitRowCExpr <$> implicitRow,
       ExplicitRowCExpr <$> explicitRow,
       inParensWithClause (keyword "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr),
       keyword "exists" *> space *> (ExistsCExpr <$> selectWithParens),
@@ -1101,16 +1162,62 @@ customizedCExpr columnref =
             [ fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
               fmap (fmap (ArrayCExpr . Left) . pure) selectWithParens
             ],
+      AexprConstCExpr <$> wrapToHead aexprConst
+    ]
+
+-- cExpr following a '('
+cExprTailParen :: Parser CExpr
+cExprTailParen =
+  asum
+    [ cExprTailNoCommonPrefix,
       do
-        a <- wrapToHead selectWithParens
+        a <- aExpr
         endHead
-        b <- optional (space *> indirection)
-        return (SelectWithParensCExpr a b),
-      InParensCExpr <$> (inParens aExpr <* endHead) <*> optional (space *> indirection),
-      AexprConstCExpr <$> wrapToHead aexprConst,
+        cExprTailParenExpr a
+    ]
+
+-- the part of the tail-parser of a cExpr after a '(' that does not have a
+-- @aExpr@ prefix.
+cExprTailNoCommonPrefix :: Parser CExpr
+cExprTailNoCommonPrefix = do
+  a <- selectNoParens <* endHead <* space <* char ')'
+  b <- optional (space *> indirection)
+  return (SelectWithParensCExpr (NoParensSelectWithParens a) b)
+
+-- cExpr following a '(' plus an @aExpr@.
+cExprTailParenExpr :: AExpr -> Parser CExpr
+cExprTailParenExpr a =
+  asum
+    [ ImplicitRowCExpr <$> implicitRowTail a,
+      InParensCExpr a <$> (space *> char ')' *> optional (space *> indirection))
+    ]
+
+customizedCExpr :: Parser Columnref -> Parser CExpr
+customizedCExpr columnref =
+  asum
+    [ cExprCommon,
+      char '(' *> space *> cExprTailParen,
       FuncCExpr <$> funcExpr,
       ColumnrefCExpr <$> columnref
     ]
+
+openParenAExpr :: Parser AExpr
+openParenAExpr = char '(' *> space *> aExpr <* endHead
+
+convertNestedParenSelect :: CExpr -> CExpr
+convertNestedParenSelect cExpr = case go cExpr of
+  Left x -> SelectWithParensCExpr x Nothing
+  Right x -> x
+  where
+    go :: CExpr -> Either SelectWithParens CExpr
+    go (InParensCExpr (CExprAExpr e) ind) = case go e of
+      Left select -> case ind of
+        Nothing -> Left $ WithParensSelectWithParens select
+        Just {} ->
+          Right $ SelectWithParensCExpr (WithParensSelectWithParens select) ind
+      Right x -> Right $ InParensCExpr (CExprAExpr x) ind
+    go (SelectWithParensCExpr a Nothing) = Left a
+    go x = Right x
 
 -- *
 
@@ -1156,8 +1263,21 @@ row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 
 explicitRow = keyword "row" *> space *> inParens (optional exprList)
 
-implicitRow = inParens $ do
-  a <- wrapToHead aExpr
+implicitRow = inParens (wrapToHead aExpr >>= implicitRowTailInner)
+
+-- implicitRow = inParens $ do
+--   a <- wrapToHead aExpr
+--   commaSeparator
+--   b <- exprList
+--   return $ case NonEmpty.consAndUnsnoc a b of
+--     (c, d) -> ImplicitRow c d
+
+-- the "tail" of the @implicitRow@ parser, i.e. the parser after the initial
+-- "( $EXPR" part.
+implicitRowTail :: AExpr -> Parser ImplicitRow
+implicitRowTail a = implicitRowTailInner a <* space <* char ')'
+
+implicitRowTailInner a = do
   commaSeparator
   b <- exprList
   return $ case NonEmpty.consAndUnsnoc a b of
@@ -1201,17 +1321,29 @@ elseClause = do
   space1
   return a
 
-funcExpr =
+funcExpr :: Parser FuncExpr
+funcExpr = funcExprNoCommonPrefix <|> (wrapToHead colId >>= funcExprTail)
+
+funcExprNoCommonPrefix :: Parser FuncExpr
+funcExprNoCommonPrefix =
   asum
     [ SubexprFuncExpr <$> funcExprCommonSubexpr,
       do
-        a <- funcApplication
-        endHead
-        b <- optional (space1 *> withinGroupClause)
-        c <- optional (space1 *> filterClause)
-        d <- optional (space1 *> overClause)
-        return (ApplicationFuncExpr a b c d)
+        app <- funcApplicationNoCommonPrefix
+        appFuncExprTail app
     ]
+
+funcExprTail :: Ident -> HeadedParsec Void Text FuncExpr
+funcExprTail ident = do
+  a <- wrapToHead $ funcApplicationTailIdent ident
+  endHead
+  appFuncExprTail a
+
+appFuncExprTail a = do
+  b <- optional (space1 *> withinGroupClause)
+  c <- optional (space1 *> filterClause)
+  d <- optional (space1 *> overClause)
+  return (ApplicationFuncExpr a b c d)
 
 funcExprWindowless =
   asum
@@ -1339,6 +1471,29 @@ trimList =
     ]
 
 funcApplication = inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
+
+funcApplicationNoCommonPrefix :: Parser FuncApplication
+funcApplicationNoCommonPrefix = do
+  label <- wrapToHead funcNameNoCommonPrefix
+  funcApplicationContFuncName label
+
+-- the tail of the @funcApplication@ parser after the initial @Ident@ parser.
+funcApplicationTailIdent :: Ident -> Parser FuncApplication
+funcApplicationTailIdent ident = do
+  label <- funcNameTail ident
+  funcApplicationContFuncName label
+
+funcApplicationContFuncName ::
+  FuncName -> HeadedParsec Void Text FuncApplication
+funcApplicationContFuncName label = do
+  space
+  char '('
+  endHead
+  space
+  content <- optional funcApplicationParams
+  space
+  char ')'
+  pure (FuncApplication label content)
 
 funcApplicationParams =
   asum
@@ -1747,7 +1902,7 @@ firstOrNext =
     <|> True <$ keyword "next"
 
 selectFetchFirstValue =
-  ExprSelectFetchFirstValue <$> cExpr
+  ExprSelectFetchFirstValue . convertNestedParenSelect <$> cExpr
     <|> NumSelectFetchFirstValue <$> (plusOrMinus <* endHead <* space) <*> iconstOrFconst
 
 plusOrMinus = False <$ char '+' <|> True <$ char '-'
@@ -1871,11 +2026,16 @@ qualifiedName =
 
 columnref = customizedColumnref colId
 
+columnrefCont = customizedColumnrefCont
+
 filteredColumnref _keywords = customizedColumnref (filteredColId _keywords)
 
 customizedColumnref colId = do
   a <- wrapToHead colId
   endHead
+  customizedColumnrefCont a
+
+customizedColumnrefCont a = do
   b <- optional (space *> indirection)
   return (Columnref a b)
 
@@ -1903,8 +2063,14 @@ cursorName = name
 --   | ColId indirection
 -- @
 funcName =
-  IndirectedFuncName <$> wrapToHead colId <*> (space *> indirection)
-    <|> TypeFuncName <$> typeFunctionName
+  (wrapToHead colId >>= funcNameTail) <|> TypeFuncName <$> typeFunctionName
+
+-- the tail of the @funcName@ parser after the head consisting of an @Ident@.
+funcNameTail :: Ident -> HeadedParsec Void Text FuncName
+funcNameTail a = IndirectedFuncName a <$> (space *> indirection)
+
+funcNameNoCommonPrefix :: HeadedParsec Void Text FuncName
+funcNameNoCommonPrefix = TypeFuncName <$> typeFunctionName
 
 -- |
 -- ==== References
@@ -1999,7 +2165,15 @@ anyKeyword = parse $
     return (Text.toLower (Text.cons _firstChar _remainder))
 
 -- | Expected keyword
-keyword a = mfilter (a ==) anyKeyword
+-- keyword a = mfilter (a ==) anyKeyword
+keyword a = parse $
+  Megaparsec.label "keyword" $ do
+    _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    guard (Char.toLower _firstChar == Text.head a)
+    _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    let r = Text.toLower (Text.cons _firstChar _remainder)
+    guard (r == a)
+    return r
 
 -- |
 -- Consume a keyphrase, ignoring case and types of spaces between words.
