@@ -84,8 +84,14 @@ showAsText = show >>> fromString
 
 -- |
 -- Compose a monad, which attempts to extend a value, based on the following input.
--- It does that recursively until the suffix alternative fails.
-suffixRec :: (MonadPlus m) => m a -> (a -> m a) -> m a
-suffixRec base suffix = do
-  _base <- base
-  mplus (suffixRec (suffix _base) suffix) (return _base)
+-- It does so recursively until the suffix alternative fails.
+suffixRec :: MonadPlus m => m a -> (a -> m a) -> m a
+suffixRec base suffix = base >>= extendMany suffix
+
+extendMany :: MonadPlus m => (a -> m a) -> a -> m a
+extendMany attempt = loop
+  where
+    loop !state =
+      optional (attempt state) >>= \case
+        Nothing -> pure state
+        Just newState -> loop newState
