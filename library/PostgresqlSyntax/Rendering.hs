@@ -567,8 +567,6 @@ mathOp = \case
   ArrowLeftArrowRightMathOp -> "<>"
   ExclamationEqualsMathOp -> "!="
 
--- *
-
 inExpr = \case
   SelectInExpr a -> selectWithParens a
   ExprListInExpr a -> inParens (exprList a)

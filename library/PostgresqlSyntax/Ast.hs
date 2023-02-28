@@ -1162,8 +1162,6 @@ data CExpr
   | GroupingCExpr ExprList
   deriving (Show, Generic, Eq, Ord)
 
--- **
-
 -- |
 -- ==== References
 -- @

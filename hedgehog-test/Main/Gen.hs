@@ -523,8 +523,6 @@ cExpr =
       GroupingCExpr <$> exprList
     ]
 
--- **
-
 caseExpr = CaseExpr <$> maybe aExpr <*> whenClauseList <*> maybe aExpr
 
 whenClauseList = nonEmpty (Range.exponential 1 7) whenClause

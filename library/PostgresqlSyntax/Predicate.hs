@@ -23,11 +23,7 @@ oneOf = foldr (\a b c -> a c || b c) (const False)
 inSet :: (Eq a, Hashable a) => HashSet a -> a -> Bool
 inSet = flip HashSet.member
 
--- *
-
 hexDigit = inSet CharSet.hexDigit
-
--- *
 
 {-
 ident_start   [A-Za-z\200-\377_]

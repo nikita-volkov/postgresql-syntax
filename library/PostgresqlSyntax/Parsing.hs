@@ -1112,8 +1112,6 @@ customizedCExpr columnref =
       ColumnrefCExpr <$> columnref
     ]
 
--- *
-
 subqueryOp =
   asum
     [ AnySubqueryOp <$> (keyword "operator" *> space *> endHead *> inParens anyOperator),
