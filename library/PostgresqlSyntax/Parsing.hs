@@ -976,29 +976,24 @@ customizedAExpr cExpr = suffixRec base suffix
           CExprAExpr <$> cExpr
         ]
     suffix a =
-      do
-        do
-          do
-            asum
+      asum
+        [ typecastExpr a TypecastAExpr,
+          symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
+          space1
+            *> asum
               [ do
-                  space1
                   b <- wrapToHead subqueryOp
                   space1
                   c <- wrapToHead subType
                   space
                   d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
                   return (SubqueryAExpr a b c d),
-                typecastExpr a TypecastAExpr,
-                CollateAExpr a
-                  <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName),
+                CollateAExpr a <$> (keyword "collate" *> space1 *> endHead *> anyName),
                 AtTimeZoneAExpr a
-                  <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
-                symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-                SuffixQualOpAExpr a <$> (space *> qualOp),
-                AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
-                OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
+                  <$> (keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+                AndAExpr a <$> (keyword "and" *> space1 *> endHead *> aExpr),
+                OrAExpr a <$> (keyword "or" *> space1 *> endHead *> aExpr),
                 do
-                  space1
                   b <- trueIfPresent (keyword "not" *> space1)
                   c <-
                     asum
@@ -1012,7 +1007,6 @@ customizedAExpr cExpr = suffixRec base suffix
                   e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
                   return (VerbalExprBinOpAExpr a b c d e),
                 do
-                  space1
                   keyword "is"
                   space1
                   endHead
@@ -1037,7 +1031,6 @@ customizedAExpr cExpr = suffixRec base suffix
                       ]
                   return (ReversableOpAExpr a b c),
                 do
-                  space1
                   b <- trueIfPresent (keyword "not" *> space1)
                   keyword "between"
                   space1
@@ -1055,15 +1048,19 @@ customizedAExpr cExpr = suffixRec base suffix
                   e <- aExpr
                   return (ReversableOpAExpr a b (c d e)),
                 do
-                  space1
                   b <- trueIfPresent (keyword "not" *> space1)
                   keyword "in"
                   space
                   c <- InAExprReversableOp <$> inExpr
                   return (ReversableOpAExpr a b c),
-                IsnullAExpr a <$ (space1 *> keyword "isnull"),
-                NotnullAExpr a <$ (space1 *> keyword "notnull")
-              ]
+                IsnullAExpr a <$ (keyword "isnull"),
+                NotnullAExpr a <$ (keyword "notnull")
+              ],
+          SuffixQualOpAExpr a <$> (space *> qualOp)
+          -- TODO SuffixQualOpAExpr has a common prefix with SubqueryAExpr
+          -- so for now we rely on the order of the parsers here, which works well
+          -- enough.
+        ]
 
 bExpr = customizedBExpr cExpr
 
