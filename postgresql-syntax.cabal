@@ -97,6 +97,7 @@ test-suite tasty-test
   type:           exitcode-stdio-1.0
   hs-source-dirs: tasty-test
   main-is:        Main.hs
+  ghc-options:    -threaded
   build-depends:
     , postgresql-syntax
     , QuickCheck >=2.10 && <3
@@ -111,6 +112,7 @@ test-suite hedgehog-test
   type:           exitcode-stdio-1.0
   hs-source-dirs: hedgehog-test
   main-is:        Main.hs
+  ghc-options:    -threaded
   other-modules:  Main.Gen
   build-depends:
     , hedgehog >=1.0.1 && <2
