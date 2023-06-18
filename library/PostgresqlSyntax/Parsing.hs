@@ -76,16 +76,16 @@ inParensCont :: Parser a -> Parser (Parser a)
 inParensCont p = char '(' *> endHead *> pure (space *> p <* endHead <* space <* char ')')
 
 inParensWithLabel :: (label -> content -> result) -> Parser label -> Parser content -> Parser result
-inParensWithLabel _result _labelParser _contentParser = do
-  _label <- wrapToHead _labelParser
+inParensWithLabel result labelParser contentParser = do
+  label <- wrapToHead labelParser
   space
   char '('
   endHead
   space
-  _content <- _contentParser
+  content <- contentParser
   space
   char ')'
-  pure (_result _label _content)
+  pure (result label content)
 
 inParensWithClause :: Parser clause -> Parser content -> Parser content
 inParensWithClause = inParensWithLabel (const id)
@@ -100,7 +100,7 @@ quotedString :: Char -> Parser Text
 quotedString q = do
   char q
   endHead
-  _tail <-
+  tail <-
     parse $
       let collectChunks !bdr = do
             chunk <- Megaparsec.takeWhileP Nothing (/= q)
@@ -114,7 +114,7 @@ quotedString q = do
             MegaparsecChar.char q
             return (TextBuilder.run bdr)
        in collectChunks mempty
-  return _tail
+  return tail
 
 atEnd :: Parser a -> Parser a
 atEnd p = space *> p <* endHead <* space <* eof
@@ -311,12 +311,12 @@ selectWithParens = inParens (WithParensSelectWithParens <$> selectWithParens <|>
 
 selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 
-sharedSelectNoParens _with = do
-  _select <- selectClause
-  _sort <- optional (space1 *> sortClause)
-  _limit <- optional (space1 *> selectLimit)
-  _forLocking <- optional (space1 *> forLockingClause)
-  return (SelectNoParens _with _select _sort _limit _forLocking)
+sharedSelectNoParens with = do
+  select <- selectClause
+  sort <- optional (space1 *> sortClause)
+  limit <- optional (space1 *> selectLimit)
+  forLocking <- optional (space1 *> forLockingClause)
+  return (SelectNoParens with select sort limit forLocking)
 
 -- |
 -- The one that doesn't start with \"WITH\".
@@ -331,9 +331,9 @@ sharedSelectNoParens _with = do
 simpleSelectNoParens = sharedSelectNoParens Nothing
 
 withSelectNoParens = do
-  _with <- wrapToHead withClause
+  with <- wrapToHead withClause
   space1
-  sharedSelectNoParens (Just _with)
+  sharedSelectNoParens (Just with)
 
 selectClause = suffixRec base suffix
   where
@@ -350,14 +350,14 @@ baseSimpleSelect =
         keyword "select"
         notFollowedBy $ satisfy $ isAlphaNum
         endHead
-        _targeting <- optional (space1 *> targeting)
-        _intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> optTempTableName)
-        _fromClause <- optional (space1 *> fromClause)
-        _whereClause <- optional (space1 *> whereClause)
-        _groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator groupByItem)
-        _havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> aExpr)
-        _windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
-        return (NormalSimpleSelect _targeting _intoClause _fromClause _whereClause _groupClause _havingClause _windowClause),
+        targeting <- optional (space1 *> targeting)
+        intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> optTempTableName)
+        fromClause <- optional (space1 *> fromClause)
+        whereClause <- optional (space1 *> whereClause)
+        groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator groupByItem)
+        havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> aExpr)
+        windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
+        return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
       do
         keyword "table"
         space1
@@ -366,12 +366,12 @@ baseSimpleSelect =
       ValuesSimpleSelect <$> valuesClause
     ]
 
-extensionSimpleSelect _headSelectClause = do
-  _op <- space1 *> selectBinOp <* space1
+extensionSimpleSelect headSelectClause = do
+  op <- space1 *> selectBinOp <* space1
   endHead
-  _allOrDistinct <- optional (allOrDistinct <* space1)
-  _selectClause <- selectClause
-  return (BinSimpleSelect _op _headSelectClause _allOrDistinct _selectClause)
+  allOrDistinct <- optional (allOrDistinct <* space1)
+  selectClause <- selectClause
+  return (BinSimpleSelect op headSelectClause allOrDistinct selectClause)
 
 allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
 
@@ -389,27 +389,27 @@ valuesClause = do
     char '('
     endHead
     space
-    _a <- sep1 commaSeparator aExpr
+    a <- sep1 commaSeparator aExpr
     space
     char ')'
-    return _a
+    return a
 
 withClause = label "with clause" $ do
   keyword "with"
   space1
   endHead
-  _recursive <- option False (True <$ keyword "recursive" <* space1)
-  _cteList <- sep1 commaSeparator commonTableExpr
-  return (WithClause _recursive _cteList)
+  recursive <- option False (True <$ keyword "recursive" <* space1)
+  cteList <- sep1 commaSeparator commonTableExpr
+  return (WithClause recursive cteList)
 
 commonTableExpr = label "common table expression" $ do
-  _name <- colId <* space <* endHead
-  _nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
+  name <- colId <* space <* endHead
+  nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
   keyword "as"
   space1
-  _materialized <- optional (materialized <* space1)
-  _stmt <- inParens preparableStmt
-  return (CommonTableExpr _name _nameList _materialized _stmt)
+  materialized <- optional (materialized <* space1)
+  stmt <- inParens preparableStmt
+  return (CommonTableExpr name nameList materialized stmt)
 
 materialized =
   True <$ keyword "materialized"
@@ -427,9 +427,9 @@ targeting = distinct <|> allWithTargetList <|> all <|> normal
       keyword "distinct"
       space1
       endHead
-      _optOn <- optional (onExpressionsClause <* space1)
-      _targetList <- targetList
-      return (DistinctTargeting _optOn _targetList)
+      optOn <- optional (onExpressionsClause <* space1)
+      targetList <- targetList
+      return (DistinctTargeting optOn targetList)
 
 targetList = sep1 commaSeparator targetEl
 
@@ -440,15 +440,15 @@ targetEl =
   label "target" $
     asum
       [ do
-          _expr <- aExpr
+          expr <- aExpr
           asum
             [ do
                 space1
                 asum
-                  [ AliasedExprTargetEl _expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
-                    ImplicitlyAliasedExprTargetEl _expr <$> ident
+                  [ AliasedExprTargetEl expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
+                    ImplicitlyAliasedExprTargetEl expr <$> ident
                   ],
-              pure (ExprTargetEl _expr)
+              pure (ExprTargetEl expr)
             ],
         AsteriskTargetEl <$ char '*'
       ]
@@ -609,16 +609,16 @@ fromClause = keyword "from" *> endHead *> space1 *> fromList
 tableRef =
   label "table reference" $
     do
-      _tr <- nonTrailingTableRef
-      recur _tr
+      tr <- nonTrailingTableRef
+      recur tr
   where
-    recur _tr =
+    recur tr =
       asum
         [ do
-            _tr2 <- wrapToHead (space1 *> trailingTableRef _tr)
+            tr2 <- wrapToHead (space1 *> trailingTableRef tr)
             endHead
-            recur _tr2,
-          pure _tr
+            recur tr2,
+          pure tr
         ]
 
 nonTrailingTableRef =
@@ -631,11 +631,11 @@ nonTrailingTableRef =
     ]
   where
     relationExprTableRef = do
-      _relationExpr <- relationExpr
+      relationExpr <- relationExpr
       endHead
-      _optAliasClause <- optional (space1 *> aliasClause)
-      _optTablesampleClause <- optional (space1 *> tablesampleClause)
-      return (RelationExprTableRef _relationExpr _optAliasClause _optTablesampleClause)
+      optAliasClause <- optional (space1 *> aliasClause)
+      optTablesampleClause <- optional (space1 *> tablesampleClause)
+      return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
 
     lateralTableRef = do
       keyword "lateral"
@@ -645,28 +645,28 @@ nonTrailingTableRef =
 
     nonLateralTableRef = lateralableTableRef False
 
-    lateralableTableRef _lateral =
+    lateralableTableRef lateral =
       asum
         [ do
             a <- funcTable
             b <- optional (space1 *> funcAliasClause)
-            return (FuncTableRef _lateral a b),
+            return (FuncTableRef lateral a b),
           do
-            _select <- selectWithParens
-            _optAliasClause <- optional $ space1 *> aliasClause
-            return (SelectTableRef _lateral _select _optAliasClause)
+            select <- selectWithParens
+            optAliasClause <- optional $ space1 *> aliasClause
+            return (SelectTableRef lateral select optAliasClause)
         ]
 
     inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable <*> pure Nothing
 
     joinedTableWithAliasTableRef = do
-      _joinedTable <- wrapToHead (inParens joinedTable)
+      joinedTable <- wrapToHead (inParens joinedTable)
       space1
-      _alias <- aliasClause
-      return (JoinTableRef _joinedTable (Just _alias))
+      alias <- aliasClause
+      return (JoinTableRef joinedTable (Just alias))
 
-trailingTableRef _tableRef =
-  JoinTableRef <$> trailingJoinedTable _tableRef <*> pure Nothing
+trailingTableRef tableRef =
+  JoinTableRef <$> trailingJoinedTable tableRef <*> pure Nothing
 
 relationExpr =
   label "relation expression" $
@@ -674,17 +674,17 @@ relationExpr =
       [ do
           keyword "only"
           space1
-          _name <- qualifiedName
-          return (OnlyRelationExpr _name False),
+          name <- qualifiedName
+          return (OnlyRelationExpr name False),
         inParensWithClause (keyword "only") qualifiedName <&> \a -> OnlyRelationExpr a True,
         do
-          _name <- qualifiedName
-          _asterisk <-
+          name <- qualifiedName
+          asterisk <-
             asum
               [ True <$ (space1 *> char '*'),
                 pure False
               ]
-          return (SimpleRelationExpr _name _asterisk)
+          return (SimpleRelationExpr name asterisk)
       ]
 
 relationExprOptAlias reservedKeywords = do
@@ -796,18 +796,18 @@ joinedTable =
     head =
       asum
         [ do
-            _tr <- wrapToHead nonTrailingTableRef
+            tr <- wrapToHead nonTrailingTableRef
             space1
-            trailingJoinedTable _tr,
+            trailingJoinedTable tr,
           inParensJoinedTable
         ]
-    tail _jt =
+    tail jt =
       asum
         [ do
-            _jt2 <- wrapToHead (space1 *> trailingJoinedTable (JoinTableRef _jt Nothing))
+            jt2 <- wrapToHead (space1 *> trailingJoinedTable (JoinTableRef jt Nothing))
             endHead
-            tail _jt2,
-          pure _jt
+            tail jt2,
+          pure jt
         ]
 
 -- |
@@ -826,30 +826,30 @@ inParensJoinedTable = InParensJoinedTable <$> inParens joinedTable
 --   | table_ref NATURAL join_type JOIN table_ref
 --   | table_ref NATURAL JOIN table_ref
 -- @
-trailingJoinedTable _tr1 =
+trailingJoinedTable tr1 =
   asum
     [ do
         keyphrase "cross join"
         endHead
         space1
-        _tr2 <- nonTrailingTableRef
-        return (MethJoinedTable CrossJoinMeth _tr1 _tr2),
+        tr2 <- nonTrailingTableRef
+        return (MethJoinedTable CrossJoinMeth tr1 tr2),
       do
-        _jt <- joinTypedJoin
+        jt <- joinTypedJoin
         endHead
         space1
-        _tr2 <- tableRef
+        tr2 <- tableRef
         space1
-        _jq <- joinQual
-        return (MethJoinedTable (QualJoinMeth _jt _jq) _tr1 _tr2),
+        jq <- joinQual
+        return (MethJoinedTable (QualJoinMeth jt jq) tr1 tr2),
       do
         keyword "natural"
         endHead
         space1
-        _jt <- joinTypedJoin
+        jt <- joinTypedJoin
         space1
-        _tr2 <- nonTrailingTableRef
-        return (MethJoinedTable (NaturalJoinMeth _jt) _tr1 _tr2)
+        tr2 <- nonTrailingTableRef
+        return (MethJoinedTable (NaturalJoinMeth jt) tr1 tr2)
     ]
   where
     joinTypedJoin =
@@ -861,18 +861,18 @@ joinType =
     [ do
         keyword "full"
         endHead
-        _outer <- outerAfterSpace
-        return (FullJoinType _outer),
+        outer <- outerAfterSpace
+        return (FullJoinType outer),
       do
         keyword "left"
         endHead
-        _outer <- outerAfterSpace
-        return (LeftJoinType _outer),
+        outer <- outerAfterSpace
+        return (LeftJoinType outer),
       do
         keyword "right"
         endHead
-        _outer <- outerAfterSpace
-        return (RightJoinType _outer),
+        outer <- outerAfterSpace
+        return (RightJoinType outer),
       keyword "inner" $> InnerJoinType
     ]
   where
@@ -885,9 +885,9 @@ joinQual =
     ]
 
 aliasClause = do
-  (_as, _alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
-  _columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
-  return (AliasClause _as _alias _columnAliases)
+  (as, alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
+  columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
+  return (AliasClause as alias columnAliases)
 
 -- * Where
 
@@ -1130,19 +1130,19 @@ subType =
 
 inExpr = SelectInExpr <$> wrapToHead selectWithParens <|> ExprListInExpr <$> inParens exprList
 
-symbolicBinOpExpr _a _bParser _constr = do
-  _binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
-  _b <- _bParser
-  return (_constr _a _binOp _b)
+symbolicBinOpExpr a bParser constr = do
+  binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
+  b <- bParser
+  return (constr a binOp b)
 
 typecastExpr :: a -> (a -> Typename -> a) -> HeadedParsec Void Text a
-typecastExpr _prefix _constr = do
+typecastExpr prefix constr = do
   space
   string "::"
   endHead
   space
-  _type <- typename
-  return (_constr _prefix _type)
+  type' <- typename
+  return (constr prefix type')
 
 plusedExpr expr = char '+' *> space *> expr
 
@@ -1173,23 +1173,23 @@ caseExpr = label "case expression" $ do
   keyword "case"
   space1
   endHead
-  _arg <- optional (aExpr <* space1)
-  _whenClauses <- sep1 space1 whenClause
+  arg <- optional (aExpr <* space1)
+  whenClauses <- sep1 space1 whenClause
   space1
-  _default <- optional elseClause
+  default' <- optional elseClause
   keyword "end"
-  pure $ CaseExpr _arg _whenClauses _default
+  pure $ CaseExpr arg whenClauses default'
 
 whenClause = do
   keyword "when"
   space1
   endHead
-  _a <- aExpr
+  a <- aExpr
   space1
   keyword "then"
   space1
-  _b <- aExpr
-  return (WhenClause _a _b)
+  b <- aExpr
+  return (WhenClause a b)
 
 elseClause = do
   keyword "else"
@@ -1265,7 +1265,7 @@ funcExprCommonSubexpr =
       inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> exprList)
     ]
   where
-    labeledIconst _label = keyword _label *> endHead *> optional (space *> inParens iconst)
+    labeledIconst label = keyword label *> endHead *> optional (space *> inParens iconst)
 
 extractList = ExtractList <$> extractArg <*> (space1 *> keyword "from" *> space1 *> aExpr)
 
@@ -1347,26 +1347,26 @@ funcApplicationParams =
     ]
 
 normalFuncApplicationParams = do
-  _optAllOrDistinct <- optional (allOrDistinct <* space1)
-  _argList <- sep1 commaSeparator funcArgExpr
+  optAllOrDistinct <- optional (allOrDistinct <* space1)
+  argList <- sep1 commaSeparator funcArgExpr
   endHead
-  _optSortClause <- optional (space1 *> sortClause)
-  return (NormalFuncApplicationParams _optAllOrDistinct _argList _optSortClause)
+  optSortClause <- optional (space1 *> sortClause)
+  return (NormalFuncApplicationParams optAllOrDistinct argList optSortClause)
 
 singleVariadicFuncApplicationParams = do
   keyword "variadic"
   space1
   endHead
-  _arg <- funcArgExpr
-  _optSortClause <- optional (space1 *> sortClause)
-  return (VariadicFuncApplicationParams Nothing _arg _optSortClause)
+  arg <- funcArgExpr
+  optSortClause <- optional (space1 *> sortClause)
+  return (VariadicFuncApplicationParams Nothing arg optSortClause)
 
 listVariadicFuncApplicationParams = do
-  (_argList, _) <- wrapToHead $ sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr
+  (argList, _) <- wrapToHead $ sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr
   endHead
-  _arg <- funcArgExpr
-  _optSortClause <- optional (space1 *> sortClause)
-  return (VariadicFuncApplicationParams (Just _argList) _arg _optSortClause)
+  arg <- funcArgExpr
+  optSortClause <- optional (space1 *> sortClause)
+  return (VariadicFuncApplicationParams (Just argList) arg optSortClause)
 
 starFuncApplicationParams = space *> char '*' *> endHead *> space $> StarFuncApplicationParams
 
@@ -1666,11 +1666,11 @@ intervalSecond = do
 selectLimit =
   asum
     [ do
-        _a <- limitClause
-        LimitOffsetSelectLimit _a <$> (space1 *> offsetClause) <|> pure (LimitSelectLimit _a),
+        a <- limitClause
+        LimitOffsetSelectLimit a <$> (space1 *> offsetClause) <|> pure (LimitSelectLimit a),
       do
-        _a <- offsetClause
-        OffsetLimitSelectLimit _a <$> (space1 *> limitClause) <|> pure (OffsetSelectLimit _a)
+        a <- offsetClause
+        OffsetLimitSelectLimit a <$> (space1 *> limitClause) <|> pure (OffsetSelectLimit a)
     ]
 
 -- |
@@ -1687,31 +1687,31 @@ limitClause =
       keyword "limit"
       endHead
       space1
-      _a <- selectLimitValue
-      _b <- optional $ do
+      a <- selectLimitValue
+      b <- optional $ do
         commaSeparator
         aExpr
-      return (LimitLimitClause _a _b)
+      return (LimitLimitClause a b)
   )
     <|> ( do
             keyword "fetch"
             endHead
             space1
-            _a <- firstOrNext
+            a <- firstOrNext
             space1
             asum
               [ do
-                  _b <- rowOrRows
+                  b <- rowOrRows
                   space1
                   keyword "only"
-                  return (FetchOnlyLimitClause _a Nothing _b),
+                  return (FetchOnlyLimitClause a Nothing b),
                 do
-                  _b <- selectFetchFirstValue
+                  b <- selectFetchFirstValue
                   space1
-                  _c <- rowOrRows
+                  c <- rowOrRows
                   space1
                   keyword "only"
-                  return (FetchOnlyLimitClause _a (Just _b) _c)
+                  return (FetchOnlyLimitClause a (Just b) c)
               ]
         )
 
@@ -1781,10 +1781,10 @@ forLockingClause = readOnly <|> items
 --   | EMPTY
 -- @
 forLockingItem = do
-  _strength <- forLockingStrength
-  _rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
-  _nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
-  return (ForLockingItem _strength _rels _nowaitOrSkip)
+  strength <- forLockingStrength
+  rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
+  nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
+  return (ForLockingItem strength rels nowaitOrSkip)
 
 -- |
 -- ==== References
@@ -1831,9 +1831,9 @@ colId =
 
 {-# NOINLINE filteredColId #-}
 filteredColId =
-  let _originalSet = KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword
-      _filteredSet = foldr HashSet.delete _originalSet
-   in \_reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (_filteredSet _reservedKeywords)
+  let originalSet = KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword
+      filteredSet = foldr HashSet.delete originalSet
+   in \reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (filteredSet reservedKeywords)
 
 -- |
 -- ==== References
@@ -1869,7 +1869,7 @@ qualifiedName =
 
 columnref = customizedColumnref colId
 
-filteredColumnref _keywords = customizedColumnref (filteredColId _keywords)
+filteredColumnref keywords = customizedColumnref (filteredColId keywords)
 
 customizedColumnref colId = do
   a <- wrapToHead colId
@@ -1879,7 +1879,7 @@ customizedColumnref colId = do
 
 anyName = customizedAnyName colId
 
-filteredAnyName _keywords = customizedAnyName (filteredColId _keywords)
+filteredAnyName keywords = customizedAnyName (filteredColId keywords)
 
 customizedAnyName colId = do
   a <- wrapToHead colId
@@ -1948,29 +1948,29 @@ indirectionEl =
         char '['
         endHead
         space
-        _a <-
+        a <-
           asum
             [ do
                 char ':'
                 endHead
                 space
-                _b <- optional aExpr
-                return (SliceIndirectionEl Nothing _b),
+                b <- optional aExpr
+                return (SliceIndirectionEl Nothing b),
               do
-                _a <- aExpr
+                a <- aExpr
                 asum
                   [ do
                       space
                       char ':'
                       space
-                      _b <- optional aExpr
-                      return (SliceIndirectionEl (Just _a) _b),
-                    return (ExprIndirectionEl _a)
+                      b <- optional aExpr
+                      return (SliceIndirectionEl (Just a) b),
+                    return (ExprIndirectionEl a)
                   ]
             ]
         space
         char ']'
-        return _a
+        return a
     ]
 
 -- |
@@ -1981,20 +1981,20 @@ indirectionEl =
 -- @
 attrName = colLabel
 
-keywordNameFromSet _set = keywordNameByPredicate (Predicate.inSet _set)
+keywordNameFromSet set = keywordNameByPredicate (Predicate.inSet set)
 
-keywordNameByPredicate _predicate =
+keywordNameByPredicate predicate =
   fmap UnquotedIdent $
     filter
       (\a -> "Reserved keyword " <> show a <> " used as an identifier. If that's what you intend, you have to wrap it in double quotes.")
-      _predicate
+      predicate
       anyKeyword
 
 anyKeyword = parse $
   Megaparsec.label "keyword" $ do
-    _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
-    _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
-    return (Text.toLower (Text.cons _firstChar _remainder))
+    firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    return (Text.toLower (Text.cons firstChar remainder))
 
 -- | Expected keyword
 keyword a = mfilter (a ==) anyKeyword
