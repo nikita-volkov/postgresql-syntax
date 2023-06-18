@@ -15,16 +15,16 @@ main =
   defaultMain
     [ checkParallel $
         Group "Parsing a rendered AST produces the same AST" $
-          let p _name _amount _gen _parser _renderer =
-                (,) _name $
-                  withDiscards (fromIntegral _amount * 200) $
-                    withTests _amount $
+          let p name amount gen parser renderer =
+                (,) name $
+                  withDiscards (fromIntegral amount * 200) $
+                    withTests amount $
                       property $ do
-                        ast <- forAll _gen
-                        let sql = Rendering.toText (_renderer ast)
+                        ast <- forAll gen
+                        let sql = Rendering.toText (renderer ast)
                          in do
                               footnote ("SQL: " <> Text.unpack sql)
-                              case Parsing.run _parser sql of
+                              case Parsing.run parser sql of
                                 Left err -> do
                                   footnote err
                                   failure

@@ -13,9 +13,9 @@ import Prelude hiding (bit, bool, filter, fromList, maybe, sortBy)
 
 -- * Generic
 
-inSet _set = filter (flip HashSet.member _set)
+inSet set = filter (flip HashSet.member set)
 
-notInSet _set = filter (not . flip HashSet.member _set)
+notInSet set = filter (not . flip HashSet.member set)
 
 -- * Statements
 
@@ -105,8 +105,8 @@ terminalSelectNoParens =
 
 -- ** selectWithParens
 
-selectWithParens = sized $ \_size ->
-  if _size <= 1
+selectWithParens = sized $ \size ->
+  if size <= 1
     then discard
     else
       frequency
@@ -144,8 +144,8 @@ tableSimpleSelect = TableSimpleSelect <$> relationExpr
 
 valuesSimpleSelect = ValuesSimpleSelect <$> valuesClause
 
-binSimpleSelect _leftSelect =
-  BinSimpleSelect <$> selectBinOp <*> pure _leftSelect <*> maybe allOrDistinct <*> small selectClause
+binSimpleSelect leftSelect =
+  BinSimpleSelect <$> selectBinOp <*> pure leftSelect <*> maybe allOrDistinct <*> small selectClause
 
 terminalSimpleSelect = pure (NormalSimpleSelect Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
 

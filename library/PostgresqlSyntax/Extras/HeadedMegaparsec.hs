@@ -79,11 +79,11 @@ float = parse MegaparsecLexer.float
 -- * Combinators
 
 sep1 :: (Ord err, Stream strm, Megaparsec.Token strm ~ Char) => HeadedParsec err strm separtor -> HeadedParsec err strm a -> HeadedParsec err strm (NonEmpty a)
-sep1 _separator _parser = do
-  _head <- _parser
+sep1 separator parser = do
+  head <- parser
   endHead
-  _tail <- many $ _separator *> _parser
-  return (_head :| _tail)
+  tail <- many $ separator *> parser
+  return (head :| tail)
 
 sepEnd1 :: (Ord err, Stream strm, Megaparsec.Token strm ~ Char) => HeadedParsec err strm separator -> HeadedParsec err strm end -> HeadedParsec err strm el -> HeadedParsec err strm (NonEmpty el, end)
 sepEnd1 sepP endP elP = do
