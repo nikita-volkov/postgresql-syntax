@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-missing-signatures -Wno-dodgy-imports #-}
+
 -- |
 --
 -- Our parsing strategy is to port the original Postgres parser as closely as possible.
@@ -28,7 +30,6 @@ module PostgresqlSyntax.Parsing where
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
 import qualified Data.HashSet as HashSet
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Ast
@@ -40,10 +41,8 @@ import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified PostgresqlSyntax.Validation as Validation
 import qualified Text.Builder as TextBuilder
-import Text.Megaparsec (Parsec, Stream)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
-import qualified Text.Megaparsec.Char.Lexer as MegaparsecLexer
 
 -- $setup
 -- >>> testParser parser = either putStr print . run parser
@@ -101,19 +100,19 @@ quotedString q = do
   char q
   endHead
   tail <-
-    parse $
-      let collectChunks !bdr = do
-            chunk <- Megaparsec.takeWhileP Nothing (/= q)
-            let bdr' = bdr <> TextBuilder.text chunk
-            Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
-          consumeEscapedQuote bdr = do
-            MegaparsecChar.char q
-            MegaparsecChar.char q
-            collectChunks (bdr <> TextBuilder.char q)
-          finish bdr = do
-            MegaparsecChar.char q
-            return (TextBuilder.run bdr)
-       in collectChunks mempty
+    parse
+      $ let collectChunks !bdr = do
+              chunk <- Megaparsec.takeWhileP Nothing (/= q)
+              let bdr' = bdr <> TextBuilder.text chunk
+              Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
+            consumeEscapedQuote bdr = do
+              MegaparsecChar.char q
+              MegaparsecChar.char q
+              collectChunks (bdr <> TextBuilder.char q)
+            finish bdr = do
+              MegaparsecChar.char q
+              return (TextBuilder.run bdr)
+         in collectChunks mempty
   return tail
 
 atEnd :: Parser a -> Parser a
@@ -437,8 +436,8 @@ targetList = sep1 commaSeparator targetEl
 -- >>> testParser targetEl "a.b as c"
 -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
 targetEl =
-  label "target" $
-    asum
+  label "target"
+    $ asum
       [ do
           expr <- aExpr
           asum
@@ -522,8 +521,8 @@ windowDefinition = WindowDefinition <$> (colId <* space1 <* keyword "as" <* spac
 --             opt_sort_clause opt_frame_clause ')'
 -- @
 windowSpecification =
-  inParens $
-    asum
+  inParens
+    $ asum
       [ do
           a <- frameClause
           return (WindowSpecification Nothing Nothing Nothing (Just a)),
@@ -607,8 +606,8 @@ fromClause = keyword "from" *> endHead *> space1 *> fromList
 -- >>> testParser tableRef "a left join b on (a.i = b.i)"
 -- JoinTableRef (MethJoinedTable (QualJoinMeth...
 tableRef =
-  label "table reference" $
-    do
+  label "table reference"
+    $ do
       tr <- nonTrailingTableRef
       recur tr
   where
@@ -669,8 +668,8 @@ trailingTableRef tableRef =
   JoinTableRef <$> trailingJoinedTable tableRef <*> pure Nothing
 
 relationExpr =
-  label "relation expression" $
-    asum
+  label "relation expression"
+    $ asum
       [ do
           keyword "only"
           space1
@@ -1055,7 +1054,6 @@ bExpr = customizedBExpr cExpr
 
 customizedBExpr cExpr = suffixRec base suffix
   where
-    aExpr = customizedAExpr cExpr
     bExpr = customizedBExpr cExpr
     base =
       asum
@@ -1096,8 +1094,8 @@ customizedCExpr columnref =
       do
         keyword "array"
         space
-        join $
-          asum
+        join
+          $ asum
             [ fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
               fmap (fmap (ArrayCExpr . Left) . pure) selectWithParens
             ],
@@ -1162,8 +1160,8 @@ implicitRow = inParens $ do
     (c, d) -> ImplicitRow c d
 
 arrayExprCont =
-  inBracketsCont $
-    asum
+  inBracketsCont
+    $ asum
       [ ArrayExprListArrayExpr <$> sep1 commaSeparator (join arrayExprCont),
         ExprListArrayExpr <$> exprList,
         pure EmptyArrayExpr
@@ -1826,8 +1824,9 @@ ident = quotedName <|> keywordNameByPredicate (not . Predicate.keyword)
 -- @
 {-# NOINLINE colId #-}
 colId =
-  label "identifier" $
-    ident <|> keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+  label "identifier"
+    $ ident
+    <|> keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 {-# NOINLINE filteredColId #-}
 filteredColId =
@@ -1846,8 +1845,9 @@ filteredColId =
 --   |  reserved_keyword
 -- @
 colLabel =
-  label "column label" $
-    keywordNameFromSet KeywordSet.keyword <|> ident
+  label "column label"
+    $ keywordNameFromSet KeywordSet.keyword
+    <|> ident
 
 -- |
 -- >>> testParser qualifiedName "a.b"
@@ -1984,14 +1984,15 @@ attrName = colLabel
 keywordNameFromSet set = keywordNameByPredicate (Predicate.inSet set)
 
 keywordNameByPredicate predicate =
-  fmap UnquotedIdent $
-    filter
+  fmap UnquotedIdent
+    $ filter
       (\a -> "Reserved keyword " <> show a <> " used as an identifier. If that's what you intend, you have to wrap it in double quotes.")
       predicate
       anyKeyword
 
-anyKeyword = parse $
-  Megaparsec.label "keyword" $ do
+anyKeyword = parse
+  $ Megaparsec.label "keyword"
+  $ do
     firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
     remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
     return (Text.toLower (Text.cons firstChar remainder))
@@ -2042,20 +2043,20 @@ typename =
 arrayBounds = sep1 space (inBrackets (optional iconst))
 
 simpleTypename =
-  asum $
-    [ do
-        keyword "interval"
-        endHead
-        asum
-          [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
-            ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
-          ],
-      ConstDatetimeSimpleTypename <$> constDatetime,
-      NumericSimpleTypename <$> numeric,
-      BitSimpleTypename <$> bit,
-      CharacterSimpleTypename <$> character,
-      GenericTypeSimpleTypename <$> genericType
-    ]
+  asum
+    $ [ do
+          keyword "interval"
+          endHead
+          asum
+            [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
+              ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
+            ],
+        ConstDatetimeSimpleTypename <$> constDatetime,
+        NumericSimpleTypename <$> numeric,
+        BitSimpleTypename <$> bit,
+        CharacterSimpleTypename <$> character,
+        GenericTypeSimpleTypename <$> genericType
+      ]
 
 genericType = do
   a <- typeFunctionName

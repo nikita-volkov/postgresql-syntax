@@ -29,7 +29,7 @@ import Data.Either as Exports
 import Data.Fixed as Exports
 import Data.Foldable as Exports
 import Data.Function as Exports hiding (id, (.))
-import Data.Functor as Exports
+import Data.Functor as Exports hiding (unzip)
 import Data.Functor.Identity as Exports
 import Data.HashMap.Strict as Exports (HashMap)
 import Data.HashSet as Exports (HashSet)
@@ -72,23 +72,21 @@ import System.IO.Unsafe as Exports
 import System.Mem as Exports
 import System.Mem.StableName as Exports
 import System.Timeout as Exports
-import Text.ParserCombinators.ReadP as Exports (ReadP, ReadS, readP_to_S, readS_to_P)
-import Text.ParserCombinators.ReadPrec as Exports (ReadPrec, readP_to_Prec, readPrec_to_P, readPrec_to_S, readS_to_Prec)
 import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
 import Unsafe.Coerce as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, fail, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
 
-showAsText :: Show a => a -> Text
+showAsText :: (Show a) => a -> Text
 showAsText = show >>> fromString
 
 -- |
 -- Compose a monad, which attempts to extend a value, based on the following input.
 -- It does so recursively until the suffix alternative fails.
-suffixRec :: MonadPlus m => m a -> (a -> m a) -> m a
+suffixRec :: (MonadPlus m) => m a -> (a -> m a) -> m a
 suffixRec base suffix = base >>= extendMany suffix
 
-extendMany :: MonadPlus m => (a -> m a) -> a -> m a
+extendMany :: (MonadPlus m) => (a -> m a) -> a -> m a
 extendMany attempt = loop
   where
     loop !state =

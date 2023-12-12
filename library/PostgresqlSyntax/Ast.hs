@@ -5,7 +5,7 @@
 -- For reasoning see the docs of the parsing module of this project.
 module PostgresqlSyntax.Ast where
 
-import PostgresqlSyntax.Prelude hiding (Op, Order)
+import PostgresqlSyntax.Prelude
 
 -- * Statement
 
@@ -773,15 +773,15 @@ data TableRef
 -- @
 data RelationExpr
   = SimpleRelationExpr
+      -- | Name.
       QualifiedName
-      -- ^ Name.
+      -- | Is asterisk present?
       Bool
-      -- ^ Is asterisk present?
   | OnlyRelationExpr
+      -- | Name.
       QualifiedName
-      -- ^ Name.
+      -- | Are parentheses present?
       Bool
-      -- ^ Are parentheses present?
   deriving (Show, Generic, Eq, Ord)
 
 -- |
@@ -1981,13 +1981,13 @@ data IndirectionEl
 -- @
 data Typename
   = Typename
+      -- | SETOF
       Bool
-      -- ^ SETOF
       SimpleTypename
+      -- | Question mark
       Bool
-      -- ^ Question mark
+      -- | Array dimensions possibly followed by a question mark
       (Maybe (TypenameArrayDimensions, Bool))
-      -- ^ Array dimensions possibly followed by a question mark
   deriving (Show, Generic, Eq, Ord)
 
 -- |
