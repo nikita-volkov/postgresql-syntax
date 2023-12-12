@@ -1,9 +1,11 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module PostgresqlSyntax.Predicate where
 
 import qualified Data.HashSet as HashSet
 import qualified PostgresqlSyntax.CharSet as CharSet
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-import PostgresqlSyntax.Prelude hiding (expression)
+import PostgresqlSyntax.Prelude
 
 -- * Generic
 
@@ -23,6 +25,7 @@ oneOf = foldr (\a b c -> a c || b c) (const False)
 inSet :: (Eq a, Hashable a) => HashSet a -> a -> Bool
 inSet = flip HashSet.member
 
+hexDigit :: Char -> Bool
 hexDigit = inSet CharSet.hexDigit
 
 {-
@@ -58,8 +61,11 @@ symbolicBinOpChar = inSet CharSet.symbolicBinOp
 
 -- ** Op chars
 
+opChar :: Char -> Bool
 opChar = inSet CharSet.op
 
+prohibitedOpChar :: Char -> Bool
 prohibitedOpChar a = a == '+' || a == '-'
 
+prohibitionLiftingOpChar :: Char -> Bool
 prohibitionLiftingOpChar = inSet CharSet.prohibitionLiftingOp

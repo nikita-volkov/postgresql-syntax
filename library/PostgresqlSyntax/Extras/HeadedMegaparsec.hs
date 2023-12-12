@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-dodgy-imports -Wno-unused-imports #-}
+
 -- |
 -- Generic helpers for HeadedMegaparsec.
 module PostgresqlSyntax.Extras.HeadedMegaparsec where

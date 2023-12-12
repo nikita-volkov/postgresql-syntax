@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Validation where
 
-import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
-import qualified PostgresqlSyntax.KeywordSet as HashSet
+import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
-import PostgresqlSyntax.Prelude hiding (expression)
+import PostgresqlSyntax.Prelude
 
 {-
 The operator name is a sequence of up to NAMEDATALEN-1 (63 by default)
@@ -41,7 +40,7 @@ op a =
           if Text.isInfixOf "/*" a
             then Just ("Operator contains a prohibited \"/*\" sequence: " <> a)
             else
-              if Predicate.inSet HashSet.nonOp a
+              if Predicate.inSet KeywordSet.nonOp a
                 then Just ("Operator is not generic: " <> a)
                 else
                   if Text.find Predicate.prohibitionLiftingOpChar a & isJust

@@ -1,6 +1,7 @@
+{-# OPTIONS_GHC -Wno-missing-signatures -Wno-dodgy-imports #-}
+
 module PostgresqlSyntax.Rendering where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import PostgresqlSyntax.Ast
@@ -398,8 +399,8 @@ windowClause a = "WINDOW " <> commaNonEmpty windowDefinition a
 windowDefinition (WindowDefinition a b) = ident a <> " AS " <> windowSpecification b
 
 windowSpecification (WindowSpecification a b c d) =
-  inParens $
-    optLexemes
+  inParens
+    $ optLexemes
       [ fmap ident a,
         fmap partitionClause b,
         fmap sortClause c,
