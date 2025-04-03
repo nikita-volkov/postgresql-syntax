@@ -1,6 +1,10 @@
 {-# OPTIONS_GHC -Wno-missing-signatures -Wno-dodgy-imports #-}
 
-module PostgresqlSyntax.Rendering where
+module PostgresqlSyntax.Rendering
+  ( toText,
+    module PostgresqlSyntax.Rendering,
+  )
+where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
@@ -8,40 +12,37 @@ import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.Extras.TextBuilder
 import PostgresqlSyntax.Prelude hiding (aExpr, bit, fromList, many, option, sortBy, try)
-import Text.Builder hiding (char7, doubleDec, int64Dec, intDec, toText)
+import TextBuilder hiding (char7, doubleDec, int64Dec, intDec)
 
 -- * Execution
 
-toByteString :: Builder -> ByteString
+toByteString :: TextBuilder -> ByteString
 toByteString = Text.encodeUtf8 . toText
-
-toText :: Builder -> Text
-toText = run
 
 -- * Helpers
 
-commaNonEmpty :: (a -> Builder) -> NonEmpty a -> Builder
+commaNonEmpty :: (a -> TextBuilder) -> NonEmpty a -> TextBuilder
 commaNonEmpty = NonEmpty.intersperseFoldMap ", "
 
-spaceNonEmpty :: (a -> Builder) -> NonEmpty a -> Builder
+spaceNonEmpty :: (a -> TextBuilder) -> NonEmpty a -> TextBuilder
 spaceNonEmpty = NonEmpty.intersperseFoldMap " "
 
-lexemes :: [Builder] -> Builder
+lexemes :: [TextBuilder] -> TextBuilder
 lexemes = mconcat . intersperse " "
 
-optLexemes :: [Maybe Builder] -> Builder
+optLexemes :: [Maybe TextBuilder] -> TextBuilder
 optLexemes = lexemes . catMaybes
 
-inParens :: Builder -> Builder
+inParens :: TextBuilder -> TextBuilder
 inParens a = "(" <> a <> ")"
 
-inBrackets :: Builder -> Builder
+inBrackets :: TextBuilder -> TextBuilder
 inBrackets a = "[" <> a <> "]"
 
-prefixMaybe :: (a -> Builder) -> Maybe a -> Builder
+prefixMaybe :: (a -> TextBuilder) -> Maybe a -> TextBuilder
 prefixMaybe a = foldMap (flip mappend " " . a)
 
-suffixMaybe :: (a -> Builder) -> Maybe a -> Builder
+suffixMaybe :: (a -> TextBuilder) -> Maybe a -> TextBuilder
 suffixMaybe a = foldMap (mappend " " . a)
 
 -- * Statements
@@ -858,10 +859,10 @@ anyName (AnyName a b) = colId a <> foldMap attrs b
 
 -- * Types
 
-typename (Typename a b c d) =
+typename (Typename a b _ d) =
   bool "" "SETOF " a <> simpleTypename b <> foldMap typenameArrayDimensionsWithQuestionMark d
 
-typenameArrayDimensionsWithQuestionMark (a, b) =
+typenameArrayDimensionsWithQuestionMark (a, _) =
   typenameArrayDimensions a
 
 typenameArrayDimensions = \case

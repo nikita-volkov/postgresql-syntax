@@ -40,9 +40,9 @@ import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified PostgresqlSyntax.Validation as Validation
-import qualified Text.Builder as TextBuilder
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
+import qualified TextBuilder
 
 -- $setup
 -- >>> testParser parser = either putStr print . run parser
@@ -111,7 +111,7 @@ quotedString q = do
               collectChunks (bdr <> TextBuilder.char q)
             finish bdr = do
               MegaparsecChar.char q
-              return (TextBuilder.run bdr)
+              return (TextBuilder.toText bdr)
          in collectChunks mempty
   return tail
 
@@ -752,7 +752,7 @@ collateClause = keyword "collate" *> space1 *> endHead *> anyName
 funcAliasClause =
   asum
     [ do
-        keyword "as"
+        _ <- keyword "as"
         asum
           [ do
               space
