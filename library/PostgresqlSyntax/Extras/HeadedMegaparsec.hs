@@ -91,7 +91,7 @@ sepEnd1 :: (Ord err, Stream strm, Megaparsec.Token strm ~ Char) => HeadedParsec 
 sepEnd1 sepP endP elP = do
   headEl <- elP
   let loop !list = do
-        sepP
+        _ <- sepP
         asum
           [ do
               end <- endP

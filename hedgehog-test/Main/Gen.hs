@@ -822,7 +822,7 @@ sconst = text (Range.exponential 0 1000) unicode
 iconstOrFconst = choice [Left <$> iconst <|> Right <$> fconst]
 
 fconst =
-  filter (\a -> fromIntegral (round a) /= a)
+  filter (\a -> fromIntegral (round a :: Int) /= a)
     $ realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
 
 iconst = integral (Range.exponential 0 maxBound)
