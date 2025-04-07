@@ -12,7 +12,7 @@ import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.Extras.TextBuilder
 import PostgresqlSyntax.Prelude hiding (aExpr, bit, fromList, many, option, sortBy, try)
-import TextBuilder hiding (char7, doubleDec, int64Dec, intDec)
+import TextBuilder
 
 -- * Execution
 
