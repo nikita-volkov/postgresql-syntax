@@ -54,6 +54,9 @@ type Parser = HeadedParsec Void Text
 run :: Parser a -> Text -> Either String a
 run = Extras.run
 
+runWithPosError :: Parser a -> Text -> Either (NonEmpty (Int, String)) a
+runWithPosError = Extras.runParserWithErrorPos
+
 -- * Helpers
 
 commaSeparator :: Parser ()
