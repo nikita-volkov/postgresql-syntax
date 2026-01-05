@@ -1,9 +1,11 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main.Gen where
 
 import qualified Data.HashSet as HashSet
 import qualified Data.List as List
 import qualified Data.Text as Text
-import Hedgehog (Gen, MonadGen)
+import Hedgehog (Gen)
 import Hedgehog.Gen
 import qualified Hedgehog.Range as Range
 import PostgresqlSyntax.Ast
@@ -536,8 +538,8 @@ inExpr =
     ]
 
 arrayExpr =
-  small $
-    choice
+  small
+    $ choice
       [ ExprListArrayExpr <$> exprList,
         ArrayExprListArrayExpr <$> arrayExprList,
         pure EmptyArrayExpr
@@ -676,7 +678,7 @@ qualAllOp =
     ]
 
 op = do
-  a <- text (Range.exponential 1 7) (element "+-*/<>=~!@#%^&|`?")
+  a <- text (Range.exponential 1 7) (listElement "+-*/<>=~!@#%^&|`?")
   case Validation.op a of
     Nothing -> return a
     _ -> discard
@@ -739,8 +741,8 @@ aexprConst =
     [ IAexprConst <$> iconst,
       FAexprConst <$> fconst,
       SAexprConst <$> sconst,
-      BAexprConst <$> text (Range.exponential 1 100) (element "01"),
-      XAexprConst <$> text (Range.exponential 1 100) (element "0123456789abcdefABCDEF"),
+      BAexprConst <$> text (Range.exponential 1 100) (listElement "01"),
+      XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
       FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> sconst,
       ConstTypenameAexprConst <$> constTypename <*> sconst,
       StringIntervalAexprConst <$> sconst <*> maybe interval,
@@ -820,8 +822,8 @@ sconst = text (Range.exponential 0 1000) unicode
 iconstOrFconst = choice [Left <$> iconst <|> Right <$> fconst]
 
 fconst =
-  filter (\a -> fromIntegral (round a) /= a) $
-    realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
+  filter (\a -> fromIntegral (round a :: Int) /= a)
+    $ realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
 
 iconst = integral (Range.exponential 0 maxBound)
 
@@ -943,3 +945,8 @@ class_ = anyName
 ascDesc = enumBounded
 
 nullsOrder = enumBounded
+
+-- * Helpers
+
+listElement :: [a] -> Gen a
+listElement = element

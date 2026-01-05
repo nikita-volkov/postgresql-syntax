@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-dodgy-imports -Wno-unused-imports #-}
+
 -- |
 -- Generic helpers for HeadedMegaparsec.
 module PostgresqlSyntax.Extras.HeadedMegaparsec where
@@ -18,7 +20,19 @@ import qualified Text.Megaparsec.Char.Lexer as MegaparsecLexer
 -- * Executors
 
 run :: (Ord err, VisualStream strm, TraversableStream strm, Megaparsec.ShowErrorComponent err) => HeadedParsec err strm a -> strm -> Either String a
-run p = first Megaparsec.errorBundlePretty . Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
+run p = first Megaparsec.errorBundlePretty . runParser p
+
+-- |
+-- Run the parser but returns all the error messages separated, along with their offset in the parsed message.
+runParserWithErrorPos :: (Show (Megaparsec.Token strm), Show e, Ord e, VisualStream strm, TraversableStream strm, Megaparsec.ShowErrorComponent e) => HeadedParsec e strm a -> strm -> Either (NonEmpty (Int, String)) a
+runParserWithErrorPos p s = case runParser p s of
+  Left err -> Left (extractor <$> Megaparsec.bundleErrors err)
+  Right v -> Right v
+  where
+    extractor x = (Megaparsec.errorOffset x, Megaparsec.parseErrorPretty x)
+
+runParser :: (Ord e, VisualStream strm, TraversableStream strm) => HeadedParsec e strm a -> strm -> Either (Megaparsec.ParseErrorBundle strm e) a
+runParser p = Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
 
 -- * Primitives
 
@@ -89,7 +103,7 @@ sepEnd1 :: (Ord err, Stream strm, Megaparsec.Token strm ~ Char) => HeadedParsec 
 sepEnd1 sepP endP elP = do
   headEl <- elP
   let loop !list = do
-        sepP
+        _ <- sepP
         asum
           [ do
               end <- endP
