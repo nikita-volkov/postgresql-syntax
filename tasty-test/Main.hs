@@ -57,6 +57,13 @@ main =
                       "inet",
                       "json",
                       "jsonb"
+                    ],
+                  testParserOnAllInputs
+                    "sconst"
+                    Parsing.sconst
+                    [ "'it''s good'",
+                      "$$it's good$$",
+                      "$x$it's good$x$"
                     ]
                 ],
         testGroup "Error reporting"

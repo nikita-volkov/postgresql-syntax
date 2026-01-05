@@ -118,6 +118,23 @@ quotedString q = do
          in collectChunks mempty
   return tail
 
+-- |
+-- >>> testParser dollarQuotedSconst "$$it's good$$"
+-- "it's good"
+dollarQuotedSconst :: Parser Text
+dollarQuotedSconst = do
+  char '$'
+  quoteTag <- takeWhileP Nothing (/= '$')
+  let terminator = Megaparsec.chunk $ "$" <> quoteTag <> "$"
+  char '$'
+  endHead
+  tail <-
+    parse $ do
+      body <- many $ Megaparsec.notFollowedBy terminator *> Megaparsec.anySingle
+      terminator
+      return $ Text.pack body
+  return tail
+
 atEnd :: Parser a -> Parser a
 atEnd p = space *> p <* endHead <* space <* eof
 
@@ -1555,7 +1572,7 @@ iconst = decimal
 
 fconst = float
 
-sconst = quotedString '\''
+sconst = quotedString '\'' <|> dollarQuotedSconst
 
 constTypename =
   asum
