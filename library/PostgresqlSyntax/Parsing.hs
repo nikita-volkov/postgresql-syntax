@@ -59,6 +59,9 @@ runWithPosError = Extras.runParserWithErrorPos
 
 -- * Helpers
 
+inSpace :: Parser a -> Parser a
+inSpace p = space *> p <* space
+
 commaSeparator :: Parser ()
 commaSeparator = space *> char ',' *> endHead *> space
 

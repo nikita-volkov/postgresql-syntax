@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: postgresql-syntax
-version: 0.4.2
+version: 0.4.3
 category: Database, PostgreSQL, Parsing
 synopsis: PostgreSQL AST parsing and rendering
 description:
