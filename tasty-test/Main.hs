@@ -26,7 +26,17 @@ main =
                       \inner join edgenode.usere_provider as p\n\
                       \on u.id = p.user_id\n\
                       \inner join edgenode.provider_branch as b\n\
-                      \on b.provider_fk = p.provider_id"
+                      \on b.provider_fk = p.provider_id",
+                      -- FOR locking clause before LIMIT (PostgreSQL accepts both orderings)
+                      "select * from items for update limit 1",
+                      "select * from items limit 1 for update",
+                      "select * from items for share limit 10",
+                      "select * from items for no key update limit 1",
+                      "select * from items for key share limit 1",
+                      "select * from items for update of items nowait limit 1",
+                      "select * from items for update skip locked limit 1",
+                      "select * from items order by id for update limit 1",
+                      "select * from items for update offset 5 limit 10"
                     ],
                   testParserOnAllInputs
                     "typename"
