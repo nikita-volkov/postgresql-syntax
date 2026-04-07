@@ -336,9 +336,17 @@ selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 sharedSelectNoParens with = do
   select <- selectClause
   sort <- optional (space1 *> sortClause)
-  limit <- optional (space1 *> selectLimit)
-  forLocking <- optional (space1 *> forLockingClause)
+  (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
+  where
+    limitFirst = do
+      limit <- space1 *> selectLimit
+      forLocking <- optional (space1 *> forLockingClause)
+      pure (Just limit, forLocking)
+    forLockingFirst = do
+      forLocking <- space1 *> forLockingClause
+      limit <- optional (space1 *> selectLimit)
+      pure (limit, Just forLocking)
 
 -- |
 -- The one that doesn't start with \"WITH\".
