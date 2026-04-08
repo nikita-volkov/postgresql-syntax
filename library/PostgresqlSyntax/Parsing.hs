@@ -1157,7 +1157,9 @@ subType =
       AllSubType <$ keyword "all"
     ]
 
-inExpr = SelectInExpr <$> wrapToHead selectWithParens <|> ExprListInExpr <$> inParens exprList
+inExpr =
+  (ExprListInExpr <$> parse (Megaparsec.try (toParsec (inParens exprList))))
+    <|> (SelectInExpr <$> wrapToHead selectWithParens)
 
 symbolicBinOpExpr a bParser constr = do
   binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
