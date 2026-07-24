@@ -116,3 +116,22 @@ test-suite hedgehog-test
     hedgehog >=1.0.1 && <2,
     postgresql-syntax,
     rerebase >=1.6.1 && <2,
+
+benchmark keyword-bench
+  import: base-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+    bench
+    hedgehog-test
+
+  main-is: Main.hs
+  ghc-options: -O2
+  other-modules: Main.Gen
+  build-depends:
+    containers >=0.4 && <1,
+    criterion >=1.6 && <1.7,
+    headed-megaparsec >=0.2.0.1 && <0.3,
+    hedgehog >=1.0.1 && <2,
+    megaparsec >=9.2 && <10,
+    postgresql-syntax,
+    rerebase >=1.6.1 && <2,

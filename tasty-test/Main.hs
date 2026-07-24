@@ -99,6 +99,6 @@ main =
                     [ "select i :: int8 from auth.user as u\n\
                       \WHERE u.id IS NO NULL && TRUE"
                     ]
-                    "(53,\"offset=53:\\nexpecting white space\\n\")"
+                    "(51,\"offset=51:\\nexpecting white space\\n\")"
                 ]
       ]

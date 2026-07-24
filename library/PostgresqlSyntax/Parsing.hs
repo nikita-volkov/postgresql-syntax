@@ -2038,7 +2038,26 @@ anyKeyword = parse
     return (Text.toLower (Text.cons firstChar remainder))
 
 -- | Expected keyword
-keyword a = mfilter (a ==) anyKeyword
+--
+-- Wraps the head in 'Megaparsec.region' to pin the reported error offset to
+-- where this keyword check began. Without this, megaparsec >=9.8's stricter
+-- (and correct) '(<|>)' error-merging (fix for
+-- <https://github.com/mrkkrp/megaparsec/issues/412>) normalizes any error
+-- whose offset lands past the enclosing alternative's start back down to
+-- that start, discarding its \"expecting\" set unless the offset already
+-- matches exactly. Since every failed keyword branch consumes some
+-- identifier text before comparing, its offset always landed past the
+-- alternative's start, so wide 'asum'/'choice' chains of 'keyword' lost
+-- their combined expected-token sets under 9.8. Pinning the offset up front
+-- keeps every branch's offset aligned with the alternative's start, so
+-- their expected sets still union correctly.
+keyword a = parse $ do
+  off <- Megaparsec.getOffset
+  Megaparsec.region (Megaparsec.setErrorOffset off) $ do
+    firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    let parsedKeyword = Text.toLower (Text.cons firstChar remainder)
+    if a == parsedKeyword then return parsedKeyword else empty
 
 -- |
 -- Consume a keyphrase, ignoring case and types of spaces between words.

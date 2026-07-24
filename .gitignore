@@ -17,6 +17,7 @@
 
 # Unignore subtrees:
 !/.github/
+!/bench/
 !/hedgehog-test/
 !/library/
 !/references/
