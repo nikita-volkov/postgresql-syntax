@@ -11,17 +11,16 @@
 -- behave sitting inside a wide 'asum'\/'choice' of keyword alternatives.
 --
 -- Both implementations here pin the reported error offset via
--- 'Megaparsec.region' \/ 'Megaparsec.setErrorOffset', matching the fix
--- applied to the shipped 'PostgresqlSyntax.Parsing.keyword' to stay correct
--- under megaparsec >=9.8's stricter '(<|>)' error-merging. That fix is what
--- makes the rich variant produce complete "expecting ..." lists at all under
--- current megaparsec; see 'PostgresqlSyntax.Parsing.keyword''s haddock.
+-- 'Megaparsec.setOffset', matching the fix applied to the shipped
+-- 'PostgresqlSyntax.Parsing.keyword' to stay correct under megaparsec
+-- >=9.8's stricter '(<|>)' error-merging. That fix is what makes the rich
+-- variant produce complete "expecting ..." lists at all under current
+-- megaparsec; see 'PostgresqlSyntax.Parsing.keyword''s haddock.
 module Main where
 
 import Criterion.Main
 import qualified Data.Char as Char
 import qualified Data.HashSet as HashSet
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import HeadedMegaparsec (HeadedParsec, parse, toParsec)
@@ -54,9 +53,8 @@ anyKeywordRaw =
 cheapKeyword :: Text.Text -> HeadedParsec Void Text.Text Text.Text
 cheapKeyword expected = parse $ do
   off <- Megaparsec.getOffset
-  Megaparsec.region (Megaparsec.setErrorOffset off) $ do
-    parsed <- anyKeywordRaw
-    if expected == parsed then return parsed else empty
+  parsed <- anyKeywordRaw
+  if expected == parsed then return parsed else Megaparsec.setOffset off *> empty
 
 -- | PR #20-style implementation: fails with an explicit chunk expectation,
 -- so failed alternatives can be unioned into a readable "expecting one of
@@ -64,15 +62,16 @@ cheapKeyword expected = parse $ do
 richKeyword :: Text.Text -> HeadedParsec Void Text.Text Text.Text
 richKeyword expected = parse $ do
   off <- Megaparsec.getOffset
-  Megaparsec.region (Megaparsec.setErrorOffset off) $ do
-    parsed <- anyKeywordRaw
-    if expected == parsed then return parsed else chunkFailure expected parsed
+  parsed <- anyKeywordRaw
+  if expected == parsed then return parsed else Megaparsec.setOffset off *> chunkFailure expected parsed
   where
     chunkFailure expectedTxt givenTxt =
       Megaparsec.failure
         (Just (errorItemConverter givenTxt))
         (Set.fromList (pure (errorItemConverter expectedTxt)))
-    errorItemConverter t = Megaparsec.Tokens (Text.foldr NonEmpty.cons (pure ' ') t)
+    errorItemConverter t = Megaparsec.Tokens $ case Text.uncons t of
+      Just (h, rest) -> h :| Text.unpack rest
+      Nothing -> ' ' :| []
 
 runHeaded :: HeadedParsec Void Text.Text a -> Text.Text -> Either (Megaparsec.ParseErrorBundle Text.Text Void) a
 runHeaded p = Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
