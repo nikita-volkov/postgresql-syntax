@@ -1367,7 +1367,14 @@ trimList =
       ExprListTrimList <$> exprList
     ]
 
-funcApplication = inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
+-- |
+-- \"operator\" immediately followed by \"(\" is always parsed as the start
+-- of a qualified operator (@OPERATOR(...)@), never as a call to a function
+-- literally named \"operator\", mirroring how real PostgreSQL's grammar
+-- resolves the conflict between these two productions in favor of qual_op.
+funcApplication =
+  notFollowedBy (keyword "operator" *> space *> char '(')
+    *> inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
 
 funcApplicationParams =
   asum
