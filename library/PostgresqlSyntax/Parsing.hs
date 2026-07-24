@@ -30,7 +30,6 @@ module PostgresqlSyntax.Parsing where
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
 import qualified Data.HashSet as HashSet
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Ast
@@ -60,6 +59,9 @@ runWithPosError :: Parser a -> Text -> Either (NonEmpty (Megaparsec.SourcePos, S
 runWithPosError = Extras.runParserWithErrorPos
 
 -- * Helpers
+
+inSpace :: Parser a -> Parser a
+inSpace p = space *> p <* space
 
 commaSeparator :: Parser ()
 commaSeparator = space *> char ',' *> endHead *> space
@@ -118,6 +120,23 @@ quotedString q = do
               MegaparsecChar.char q
               return (TextBuilder.toText bdr)
          in collectChunks mempty
+  return tail
+
+-- |
+-- >>> testParser dollarQuotedSconst "$$it's good$$"
+-- "it's good"
+dollarQuotedSconst :: Parser Text
+dollarQuotedSconst = do
+  char '$'
+  quoteTag <- takeWhileP Nothing (/= '$')
+  let terminator = Megaparsec.chunk $ "$" <> quoteTag <> "$"
+  char '$'
+  endHead
+  tail <-
+    parse $ do
+      body <- many $ Megaparsec.notFollowedBy terminator *> Megaparsec.anySingle
+      terminator
+      return $ Text.pack body
   return tail
 
 atEnd :: Parser a -> Parser a
@@ -318,9 +337,17 @@ selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 sharedSelectNoParens with = do
   select <- selectClause
   sort <- optional (space1 *> sortClause)
-  limit <- optional (space1 *> selectLimit)
-  forLocking <- optional (space1 *> forLockingClause)
+  (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
+  where
+    limitFirst = do
+      limit <- space1 *> selectLimit
+      forLocking <- optional (space1 *> forLockingClause)
+      pure (Just limit, forLocking)
+    forLockingFirst = do
+      forLocking <- space1 *> forLockingClause
+      limit <- optional (space1 *> selectLimit)
+      pure (limit, Just forLocking)
 
 -- |
 -- The one that doesn't start with \"WITH\".
@@ -1131,7 +1158,9 @@ subType =
       AllSubType <$ keyword "all"
     ]
 
-inExpr = SelectInExpr <$> wrapToHead selectWithParens <|> ExprListInExpr <$> inParens exprList
+inExpr =
+  (ExprListInExpr <$> parse (Megaparsec.try (toParsec (inParens exprList))))
+    <|> (SelectInExpr <$> wrapToHead selectWithParens)
 
 symbolicBinOpExpr a bParser constr = do
   binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
@@ -1339,7 +1368,14 @@ trimList =
       ExprListTrimList <$> exprList
     ]
 
-funcApplication = inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
+-- |
+-- \"operator\" immediately followed by \"(\" is always parsed as the start
+-- of a qualified operator (@OPERATOR(...)@), never as a call to a function
+-- literally named \"operator\", mirroring how real PostgreSQL's grammar
+-- resolves the conflict between these two productions in favor of qual_op.
+funcApplication =
+  notFollowedBy (keyword "operator" *> space *> char '(')
+    *> inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
 
 funcApplicationParams =
   asum
@@ -1557,7 +1593,7 @@ iconst = decimal
 
 fconst = float
 
-sconst = quotedString '\''
+sconst = quotedString '\'' <|> dollarQuotedSconst
 
 constTypename =
   asum
@@ -2003,12 +2039,27 @@ anyKeyword = parse
     return (Text.toLower (Text.cons firstChar remainder))
 
 -- | Expected keyword
+--
+-- Captures the offset before consuming the token and restores it before
+-- failing, so a mismatch is reported at the keyword's start rather than
+-- past it. This also matters for megaparsec >=9.8's stricter (and correct)
+-- '(<|>)' error-merging (fix for
+-- <https://github.com/mrkkrp/megaparsec/issues/412>): it normalizes any
+-- error whose offset lands past the enclosing alternative's start back down
+-- to that start, discarding its \"expecting\" set unless the offset already
+-- matches exactly. Since every failed keyword branch consumes some
+-- identifier text before comparing, its offset always landed past the
+-- alternative's start, so wide 'asum'/'choice' chains of 'keyword' lost
+-- their combined expected-token sets under 9.8. Restoring the offset before
+-- failing keeps every branch's offset aligned with the alternative's start,
+-- so their expected sets still union correctly.
 keyword :: (Megaparsec.Tokens s ~ Text, Megaparsec.Token s ~ Char, Ord e, Megaparsec.Stream s) => Text -> HeadedParsec e s Text
 keyword expectedKeyword = do
+  offset <- parse Megaparsec.getOffset
   parsedTxt <- anyKeyword
   if expectedKeyword == parsedTxt
     then pure parsedTxt
-    else parse $ chunkFailure expectedKeyword parsedTxt
+    else parse (Megaparsec.setOffset offset *> chunkFailure expectedKeyword parsedTxt)
 
 -- |
 -- Consume a keyphrase, ignoring case and types of spaces between words.

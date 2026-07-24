@@ -879,8 +879,6 @@ keywordNotInSet = \set -> notInSet set $ do
 
 ident = identWithSet mempty
 
-typeName = identWithSet KeywordSet.typeFunctionName
-
 name = identWithSet KeywordSet.colId
 
 cursorName = name
@@ -915,7 +913,7 @@ colLabel = name
 
 attrName = colLabel
 
-typeFunctionName = name
+typeFunctionName = identWithSet KeywordSet.typeFunctionName
 
 funcName =
   choice
