@@ -1,4 +1,4 @@
-# Upcoming
+# v0.4.4.0
 
 ## Fixes
 
