@@ -1,3 +1,11 @@
+# Upcoming
+
+## Non-breaking
+
+- Derive `Data` for every AST type in `PostgresqlSyntax.Ast` (#6). Enables
+  generic (SYB-style) traversals and transformations over the syntax tree,
+  e.g. for expression normalization.
+
 # v0.4.4.0
 
 ## Fixes
