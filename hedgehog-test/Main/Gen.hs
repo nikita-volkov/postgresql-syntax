@@ -1,9 +1,11 @@
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+
 module Main.Gen where
 
 import qualified Data.HashSet as HashSet
 import qualified Data.List as List
 import qualified Data.Text as Text
-import Hedgehog (Gen, MonadGen)
+import Hedgehog (Gen)
 import Hedgehog.Gen
 import qualified Hedgehog.Range as Range
 import PostgresqlSyntax.Ast
@@ -13,9 +15,9 @@ import Prelude hiding (bit, bool, filter, fromList, maybe, sortBy)
 
 -- * Generic
 
-inSet _set = filter (flip HashSet.member _set)
+inSet set = filter (flip HashSet.member set)
 
-notInSet _set = filter (not . flip HashSet.member _set)
+notInSet set = filter (not . flip HashSet.member set)
 
 -- * Statements
 
@@ -97,16 +99,37 @@ selectStmt = Left <$> selectNoParens
 selectNoParens =
   frequency
     [ (90, SelectNoParens <$> maybe withClause <*> (Left <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
-      (10, SelectNoParens <$> fmap Just withClause <*> selectClause <*> fmap Just sortClause <*> fmap Just selectLimit <*> fmap Just forLockingClause)
+      (10, clausePlusSurroundingsSelectNoParens)
     ]
+
+-- |
+-- A 'SelectNoParens' with at least one of its surrounding clauses present.
+--
+-- The restriction matters for the @Right@ (parenthesised select) shape of the
+-- inner clause: @SelectNoParens Nothing (Right x) Nothing Nothing Nothing@
+-- renders to exactly the same text as @WithParensSelectWithParens x@, and the
+-- parser canonicalises that text to the latter — see the \"Canonical shape\"
+-- note on @PostgresqlSyntax.Parsing.selectWithParensBody@. So the degenerate
+-- combination is excluded here deliberately, rather than by accident of the
+-- generator's shape: it is the one tree in this family that the round-trip
+-- property cannot hold for.
+clausePlusSurroundingsSelectNoParens = do
+  clause <- selectClause
+  -- At least one surrounding clause, so the SelectNoParens wrapper is
+  -- load-bearing.
+  (with, sort, limit, forLocking) <-
+    filter
+      (\(a, b, c, d) -> any not [null a, null b, null c, null d])
+      ((,,,) <$> maybe withClause <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause)
+  return (SelectNoParens with clause sort limit forLocking)
 
 terminalSelectNoParens =
   SelectNoParens <$> pure Nothing <*> (Left <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
 
 -- ** selectWithParens
 
-selectWithParens = sized $ \_size ->
-  if _size <= 1
+selectWithParens = sized $ \size ->
+  if size <= 1
     then discard
     else
       frequency
@@ -144,8 +167,8 @@ tableSimpleSelect = TableSimpleSelect <$> relationExpr
 
 valuesSimpleSelect = ValuesSimpleSelect <$> valuesClause
 
-binSimpleSelect _leftSelect =
-  BinSimpleSelect <$> selectBinOp <*> pure _leftSelect <*> maybe allOrDistinct <*> small selectClause
+binSimpleSelect leftSelect =
+  BinSimpleSelect <$> selectBinOp <*> pure leftSelect <*> maybe allOrDistinct <*> small selectClause
 
 terminalSimpleSelect = pure (NormalSimpleSelect Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
 
@@ -523,8 +546,6 @@ cExpr =
       GroupingCExpr <$> exprList
     ]
 
--- **
-
 caseExpr = CaseExpr <$> maybe aExpr <*> whenClauseList <*> maybe aExpr
 
 whenClauseList = nonEmpty (Range.exponential 1 7) whenClause
@@ -538,8 +559,8 @@ inExpr =
     ]
 
 arrayExpr =
-  small $
-    choice
+  small
+    $ choice
       [ ExprListArrayExpr <$> exprList,
         ArrayExprListArrayExpr <$> arrayExprList,
         pure EmptyArrayExpr
@@ -678,7 +699,7 @@ qualAllOp =
     ]
 
 op = do
-  a <- text (Range.exponential 1 7) (element "+-*/<>=~!@#%^&|`?")
+  a <- text (Range.exponential 1 7) (listElement "+-*/<>=~!@#%^&|`?")
   case Validation.op a of
     Nothing -> return a
     _ -> discard
@@ -741,8 +762,8 @@ aexprConst =
     [ IAexprConst <$> iconst,
       FAexprConst <$> fconst,
       SAexprConst <$> sconst,
-      BAexprConst <$> text (Range.exponential 1 100) (element "01"),
-      XAexprConst <$> text (Range.exponential 1 100) (element "0123456789abcdefABCDEF"),
+      BAexprConst <$> text (Range.exponential 1 100) (listElement "01"),
+      XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
       FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> sconst,
       ConstTypenameAexprConst <$> constTypename <*> sconst,
       StringIntervalAexprConst <$> sconst <*> maybe interval,
@@ -822,8 +843,8 @@ sconst = text (Range.exponential 0 1000) unicode
 iconstOrFconst = choice [Left <$> iconst <|> Right <$> fconst]
 
 fconst =
-  filter (\a -> fromIntegral (round a) /= a) $
-    realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
+  filter (\a -> fromIntegral (round a :: Int) /= a)
+    $ realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
 
 iconst = integral (Range.exponential 0 maxBound)
 
@@ -879,8 +900,6 @@ keywordNotInSet = \set -> notInSet set $ do
 
 ident = identWithSet mempty
 
-typeName = identWithSet KeywordSet.typeFunctionName
-
 name = identWithSet KeywordSet.colId
 
 cursorName = name
@@ -915,7 +934,7 @@ colLabel = name
 
 attrName = colLabel
 
-typeFunctionName = name
+typeFunctionName = identWithSet KeywordSet.typeFunctionName
 
 funcName =
   choice
@@ -945,3 +964,8 @@ class_ = anyName
 ascDesc = enumBounded
 
 nullsOrder = enumBounded
+
+-- * Helpers
+
+listElement :: [a] -> Gen a
+listElement = element
