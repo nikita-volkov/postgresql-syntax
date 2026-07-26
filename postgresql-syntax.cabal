@@ -135,3 +135,15 @@ benchmark keyword-bench
     megaparsec >=9.2 && <10,
     postgresql-syntax,
     rerebase >=1.6.1 && <2,
+
+benchmark nesting-bench
+  import: base-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: nesting-bench
+  main-is: Main.hs
+  ghc-options: -O2 -threaded
+  build-depends:
+    clock >=0.8 && <1,
+    deepseq >=1.4 && <2,
+    postgresql-syntax,
+    rerebase >=1.6.1 && <2,

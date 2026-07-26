@@ -329,12 +329,68 @@ usingClause = do
 -- Reserved keyword "as" used as an identifier. If that's what you intend, you have to wrap it in double quotes.
 selectStmt = Left <$> selectNoParens <|> Right <$> selectWithParens
 
-selectWithParens = inParens (WithParensSelectWithParens <$> selectWithParens <|> NoParensSelectWithParens <$> selectNoParens)
+selectWithParens = inParens selectWithParensBody
+
+-- |
+-- The content of a @select_with_parens@, after the opening paren.
+--
+-- @gram.y@ gives two productions, @'(' select_with_parens ')'@ and
+-- @'(' select_no_parens ')'@, and they overlap: a @select_no_parens@ may
+-- itself be nothing but a @select_clause@, and a @select_clause@ may itself be
+-- a @select_with_parens@. Transcribed literally as two alternatives, that
+-- overlap makes every nested paren group get parsed twice — once down the
+-- @select_with_parens@ branch and once down the @select_no_parens@ branch —
+-- so the cost doubles with each level of nesting. That was the dominant term
+-- in the exponential blowup this parser used to exhibit on parenthesised
+-- input, including input that is not a select at all (the two branches both
+-- have to descend the whole nest before either can fail).
+--
+-- So the shared prefix is parsed once and classified afterwards.
+--
+-- ==== Canonical shape
+--
+-- Because the productions overlap, @((select 1))@ has two representations:
+-- @WithParensSelectWithParens@ wrapping the inner parenthesised select, or
+-- @NoParensSelectWithParens@ of a @SelectNoParens@ whose clause is that same
+-- inner parenthesised select. Both render back to the same text.
+--
+-- __The first is canonical.__ A parenthesised select with nothing else
+-- attached to it is a @WithParensSelectWithParens@; the
+-- @NoParensSelectWithParens@ form is produced only when the parens are
+-- actually carrying something — a set operation (@union@ and friends), a sort
+-- clause, a limit, or a locking clause. That is the collapse performed by the
+-- @case@ below, and it is what the property-test generators are aligned with.
+selectWithParensBody =
+  asum
+    [ do
+        a <- wrapToHead selectWithParens
+        b <- selectNoParensAfterClause Nothing (Right a)
+        return $ case b of
+          SelectNoParens Nothing (Right c) Nothing Nothing Nothing -> WithParensSelectWithParens c
+          _ -> NoParensSelectWithParens b,
+      NoParensSelectWithParens <$> unparenthesizedSelectNoParens
+    ]
 
 selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 
-sharedSelectNoParens with = do
-  select <- selectClause
+-- |
+-- 'selectNoParens' restricted to the forms that do not begin with @(@.
+--
+-- Used by 'selectWithParensBody', where the paren-leading form is already
+-- covered by the branch that shares the nested 'selectWithParens' parse.
+-- Admitting it here again is what would reintroduce the doubling.
+unparenthesizedSelectNoParens =
+  withSelectNoParens
+    <|> (baseSimpleSelect >>= selectNoParensAfterClause Nothing . Left)
+
+sharedSelectNoParens with = selectClauseBase >>= selectNoParensAfterClause with
+
+-- |
+-- The remainder of 'sharedSelectNoParens', resumed from an already parsed
+-- 'selectClauseBase'. Split out so that callers which have had to parse that
+-- base themselves can continue without parsing it again.
+selectNoParensAfterClause with clauseBase = do
+  select <- extendMany selectClauseSuffix clauseBase
   sort <- optional (space1 *> sortClause)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
@@ -365,14 +421,15 @@ withSelectNoParens = do
   space1
   sharedSelectNoParens (Just with)
 
-selectClause = suffixRec base suffix
-  where
-    base =
-      asum
-        [ Right <$> selectWithParens,
-          Left <$> baseSimpleSelect
-        ]
-    suffix a = Left <$> extensionSimpleSelect a
+selectClause = selectClauseBase >>= extendMany selectClauseSuffix
+
+selectClauseBase =
+  asum
+    [ Right <$> selectWithParens,
+      Left <$> baseSimpleSelect
+    ]
+
+selectClauseSuffix a = Left <$> extensionSimpleSelect a
 
 baseSimpleSelect =
   asum
@@ -997,7 +1054,6 @@ customizedAExpr cExpr = suffixRec base suffix
       asum
         [ DefaultAExpr <$ keyword "default",
           UniqueAExpr <$> (keyword "unique" *> space1 *> selectWithParens),
-          OverlapsAExpr <$> wrapToHead row <*> (space1 *> keyword "overlaps" *> space1 *> endHead *> row),
           qualOpExpr aExpr PrefixQualOpAExpr,
           PlusAExpr <$> plusedExpr aExpr,
           MinusAExpr <$> minusedExpr aExpr,
@@ -1006,7 +1062,8 @@ customizedAExpr cExpr = suffixRec base suffix
         ]
     suffix a =
       asum
-        [ do
+        [ overlapsSuffix a,
+          do
             space1
             b <- wrapToHead subqueryOp
             space1
@@ -1081,6 +1138,39 @@ customizedAExpr cExpr = suffixRec base suffix
           NotnullAExpr a <$ (space1 *> keyword "notnull")
         ]
 
+-- |
+-- The @OVERLAPS@ operator, as a suffix of an already parsed left operand.
+--
+-- @gram.y@ specifies it as @row OVERLAPS row@, and the straightforward
+-- transcription of that is to parse a @row@ speculatively in the base position
+-- of 'customizedAExpr'. That is what this parser replaces, and the reason it
+-- exists: a speculative @row@ parse consumes and then discards a whole
+-- parenthesised group, so every group in the input got parsed once for
+-- @OVERLAPS@ and again for the alternative that actually matched — one of the
+-- factors that made parsing exponential in nesting depth.
+--
+-- Instead we let the ordinary base parser consume the left operand exactly
+-- once and reinterpret its result here. The two 'CExpr' shapes below are
+-- precisely the two 'Row' shapes, so no input that used to parse stops
+-- parsing, and the constructed tree is identical.
+--
+-- >>> testParser aExpr "(1, 2) overlaps (3, 4)"
+-- OverlapsAExpr (ImplicitRowRow (ImplicitRow (CExprAExpr (AexprConstCExpr (IAexprConst 1)) :| []) (CExprAExpr (AexprConstCExpr (IAexprConst 2))))) (ImplicitRowRow (ImplicitRow (CExprAExpr (AexprConstCExpr (IAexprConst 3)) :| []) (CExprAExpr (AexprConstCExpr (IAexprConst 4)))))
+overlapsSuffix :: AExpr -> Parser AExpr
+overlapsSuffix a = do
+  b <- maybe empty pure (aExprRow a)
+  space1
+  keyword "overlaps"
+  endHead
+  space1
+  c <- row
+  return (OverlapsAExpr b c)
+  where
+    aExprRow = \case
+      CExprAExpr (ExplicitRowCExpr x) -> Just (ExplicitRowRow x)
+      CExprAExpr (ImplicitRowCExpr x) -> Just (ImplicitRowRow x)
+      _ -> Nothing
+
 bExpr = customizedBExpr cExpr
 
 customizedBExpr cExpr = suffixRec base suffix
@@ -1118,7 +1208,6 @@ customizedCExpr columnref =
   asum
     [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> indirection),
       CaseCExpr <$> caseExpr,
-      ImplicitRowCExpr <$> implicitRow,
       ExplicitRowCExpr <$> explicitRow,
       inParensWithClause (keyword "grouping") (GroupingCExpr <$> sep1 commaSeparator aExpr),
       keyword "exists" *> space *> (ExistsCExpr <$> selectWithParens),
@@ -1135,10 +1224,57 @@ customizedCExpr columnref =
         endHead
         b <- optional (space *> indirection)
         return (SelectWithParensCExpr a b),
-      InParensCExpr <$> (inParens aExpr <* endHead) <*> optional (space *> indirection),
+      parenthesizedExprCExpr,
       AexprConstCExpr <$> wrapToHead aexprConst,
       FuncCExpr <$> funcExpr,
       ColumnrefCExpr <$> columnref
+    ]
+
+-- |
+-- The two @cExpr@ forms that consist of an expression in parentheses:
+-- a parenthesised expression (@InParensCExpr@) and an implicit row
+-- (@ImplicitRowCExpr@).
+--
+-- They are parsed together, and deliberately so. Written as two alternatives
+-- of the surrounding 'asum' — which is how they used to be written — the
+-- implicit-row alternative parses the whole first expression of the group
+-- before it can discover that no comma follows, and then the parenthesised-
+-- expression alternative parses that same text over again. Nest that and the
+-- work doubles per level. Sharing the single @aExpr@ parse between the two and
+-- deciding on the character that follows it removes the duplication, which is
+-- what makes parsing linear rather than exponential in nesting depth.
+--
+-- The @(@ is not committed to with 'endHead' here: 'selectWithParens' is tried
+-- before this parser and other parenthesised forms exist elsewhere in the
+-- grammar, so the group must stay backtrackable. Commitment happens on the
+-- comma or the closing paren, once the form is unambiguous.
+--
+-- >>> testParser cExpr "(a + b)"
+-- InParensCExpr (SymbolicBinOpAExpr (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing))) (MathSymbolicExprBinOp PlusMathOp) (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing)))) Nothing
+--
+-- >>> testParser cExpr "(a, b)"
+-- ImplicitRowCExpr (ImplicitRow (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") Nothing)) :| []) (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "b") Nothing))))
+parenthesizedExprCExpr :: Parser CExpr
+parenthesizedExprCExpr = do
+  char '('
+  space
+  a <- aExpr
+  space
+  asum
+    [ do
+        char ','
+        endHead
+        space
+        b <- exprList
+        space
+        char ')'
+        return $ ImplicitRowCExpr $ case NonEmpty.consAndUnsnoc a b of
+          (c, d) -> ImplicitRow c d,
+      do
+        char ')'
+        endHead
+        b <- optional (space *> indirection)
+        return (InParensCExpr a b)
     ]
 
 subqueryOp =
