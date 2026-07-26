@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-dodgy-imports #-}
+
 module PostgresqlSyntax.Extras.NonEmpty where
 
 import Data.List.NonEmpty
@@ -9,7 +11,7 @@ import PostgresqlSyntax.Prelude hiding (cons, fromList, head, init, last, revers
 --
 -- >>> intersperseFoldMap ", " id (fromList ["a", "b", "c"])
 -- "a, b, c"
-intersperseFoldMap :: Monoid m => m -> (a -> m) -> NonEmpty a -> m
+intersperseFoldMap :: (Monoid m) => m -> (a -> m) -> NonEmpty a -> m
 intersperseFoldMap a b (c :| d) = b c <> foldMap (mappend a . b) d
 
 unsnoc :: NonEmpty a -> (Maybe (NonEmpty a), a)

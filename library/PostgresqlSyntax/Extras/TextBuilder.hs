@@ -1,16 +1,16 @@
 module PostgresqlSyntax.Extras.TextBuilder where
 
 import PostgresqlSyntax.Prelude
-import Text.Builder
+import TextBuilder
 
-char7 :: Char -> Builder
+char7 :: Char -> TextBuilder
 char7 = char
 
-intDec :: Int -> Builder
+intDec :: Int -> TextBuilder
 intDec = decimal
 
-int64Dec :: Int64 -> Builder
+int64Dec :: Int64 -> TextBuilder
 int64Dec = decimal
 
-doubleDec :: Double -> Builder
+doubleDec :: Double -> TextBuilder
 doubleDec = fromString . show

@@ -1,8 +1,7 @@
 module PostgresqlSyntax.KeywordSet where
 
 import Data.HashSet
-import qualified Data.Text as Text
-import PostgresqlSyntax.Prelude hiding (expression, fromList, toList)
+import PostgresqlSyntax.Prelude hiding (fromList, toList)
 
 {-# NOINLINE keyword #-}
 {-
@@ -36,6 +35,7 @@ lexicalBinOp :: HashSet Text
 lexicalBinOp = fromList ["and", "or"]
 
 {-# NOINLINE colId #-}
+colId :: HashSet Text
 colId = unions [unreservedKeyword, colNameKeyword]
 
 {-
@@ -45,6 +45,7 @@ type_function_name:
   | type_func_name_keyword
 -}
 {-# NOINLINE typeFunctionName #-}
+typeFunctionName :: HashSet Text
 typeFunctionName = unions [unreservedKeyword, typeFuncNameKeyword]
 
 -- |
@@ -57,7 +58,9 @@ typeFunctionName = unions [unreservedKeyword, typeFuncNameKeyword]
 --  * rather than the generic Op.
 --  */
 {-# NOINLINE nonOp #-}
+nonOp :: HashSet Text
 nonOp = fromList [">=", "<=", "=>", "<>", "!="] <> mathOp
 
 {-# NOINLINE mathOp #-}
+mathOp :: HashSet Text
 mathOp = fromList ["<>", ">=", "!=", "<=", "+", "-", "*", "/", "%", "^", "<", ">", "="]

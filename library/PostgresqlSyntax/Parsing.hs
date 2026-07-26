@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints -Wno-missing-signatures -Wno-dodgy-imports #-}
+
 -- |
 --
 -- Our parsing strategy is to port the original Postgres parser as closely as possible.
@@ -27,9 +29,7 @@ module PostgresqlSyntax.Parsing where
 
 import Control.Applicative.Combinators hiding (some)
 import Control.Applicative.Combinators.NonEmpty
-import qualified Data.Char as Char
 import qualified Data.HashSet as HashSet
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Ast
@@ -40,11 +40,9 @@ import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified PostgresqlSyntax.Validation as Validation
-import qualified Text.Builder as TextBuilder
-import Text.Megaparsec (Parsec, Stream)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
-import qualified Text.Megaparsec.Char.Lexer as MegaparsecLexer
+import qualified TextBuilder
 
 -- $setup
 -- >>> testParser parser = either putStr print . run parser
@@ -56,7 +54,13 @@ type Parser = HeadedParsec Void Text
 run :: Parser a -> Text -> Either String a
 run = Extras.run
 
+runWithPosError :: Parser a -> Text -> Either (NonEmpty (Int, String)) a
+runWithPosError = Extras.runParserWithErrorPos
+
 -- * Helpers
+
+inSpace :: Parser a -> Parser a
+inSpace p = space *> p <* space
 
 commaSeparator :: Parser ()
 commaSeparator = space *> char ',' *> endHead *> space
@@ -77,16 +81,16 @@ inParensCont :: Parser a -> Parser (Parser a)
 inParensCont p = char '(' *> endHead *> pure (space *> p <* endHead <* space <* char ')')
 
 inParensWithLabel :: (label -> content -> result) -> Parser label -> Parser content -> Parser result
-inParensWithLabel _result _labelParser _contentParser = do
-  _label <- wrapToHead _labelParser
+inParensWithLabel result labelParser contentParser = do
+  label <- wrapToHead labelParser
   space
   char '('
   endHead
   space
-  _content <- _contentParser
+  content <- contentParser
   space
   char ')'
-  pure (_result _label _content)
+  pure (result label content)
 
 inParensWithClause :: Parser clause -> Parser content -> Parser content
 inParensWithClause = inParensWithLabel (const id)
@@ -101,21 +105,38 @@ quotedString :: Char -> Parser Text
 quotedString q = do
   char q
   endHead
-  _tail <-
-    parse $
-      let collectChunks !bdr = do
-            chunk <- Megaparsec.takeWhileP Nothing (/= q)
-            let bdr' = bdr <> TextBuilder.text chunk
-            Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
-          consumeEscapedQuote bdr = do
-            MegaparsecChar.char q
-            MegaparsecChar.char q
-            collectChunks (bdr <> TextBuilder.char q)
-          finish bdr = do
-            MegaparsecChar.char q
-            return (TextBuilder.run bdr)
-       in collectChunks mempty
-  return _tail
+  tail <-
+    parse
+      $ let collectChunks !bdr = do
+              chunk <- Megaparsec.takeWhileP Nothing (/= q)
+              let bdr' = bdr <> TextBuilder.text chunk
+              Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
+            consumeEscapedQuote bdr = do
+              MegaparsecChar.char q
+              MegaparsecChar.char q
+              collectChunks (bdr <> TextBuilder.char q)
+            finish bdr = do
+              MegaparsecChar.char q
+              return (TextBuilder.toText bdr)
+         in collectChunks mempty
+  return tail
+
+-- |
+-- >>> testParser dollarQuotedSconst "$$it's good$$"
+-- "it's good"
+dollarQuotedSconst :: Parser Text
+dollarQuotedSconst = do
+  char '$'
+  quoteTag <- takeWhileP Nothing (/= '$')
+  let terminator = Megaparsec.chunk $ "$" <> quoteTag <> "$"
+  char '$'
+  endHead
+  tail <-
+    parse $ do
+      body <- many $ Megaparsec.notFollowedBy terminator *> Megaparsec.anySingle
+      terminator
+      return $ Text.pack body
+  return tail
 
 atEnd :: Parser a -> Parser a
 atEnd p = space *> p <* endHead <* space <* eof
@@ -312,14 +333,26 @@ selectWithParens = inParens (WithParensSelectWithParens <$> selectWithParens <|>
 
 selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 
-sharedSelectNoParens _with = do
-  _select <- case _with of
-    Just {} -> selectClause
+sharedSelectNoParens with = do
+  select <- case with of
+    -- Without a WITH clause the leading "(" of a parenthesized select clause is
+    -- indistinguishable from the "(" that 'cExprAfterOpeningParen' has already
+    -- consumed, so admitting it here would reintroduce the ambiguity that
+    -- factoring out that paren removes.
     Nothing -> selectClauseNoParens
-  _sort <- optional (space1 *> sortClause)
-  _limit <- optional (space1 *> selectLimit)
-  _forLocking <- optional (space1 *> forLockingClause)
-  return (SelectNoParens _with _select _sort _limit _forLocking)
+    Just _ -> selectClause
+  sort <- optional (space1 *> sortClause)
+  (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
+  return (SelectNoParens with select sort limit forLocking)
+  where
+    limitFirst = do
+      limit <- space1 *> selectLimit
+      forLocking <- optional (space1 *> forLockingClause)
+      pure (Just limit, forLocking)
+    forLockingFirst = do
+      forLocking <- space1 *> forLockingClause
+      limit <- optional (space1 *> selectLimit)
+      pure (limit, Just forLocking)
 
 -- |
 -- The one that doesn't start with \"WITH\".
@@ -334,9 +367,9 @@ sharedSelectNoParens _with = do
 simpleSelectNoParens = sharedSelectNoParens Nothing
 
 withSelectNoParens = do
-  _with <- wrapToHead withClause
+  with <- wrapToHead withClause
   space1
-  sharedSelectNoParens (Just _with)
+  sharedSelectNoParens (Just with)
 
 selectClause = suffixRec base suffix
   where
@@ -347,6 +380,8 @@ selectClause = suffixRec base suffix
         ]
     suffix a = Left <$> extensionSimpleSelect a
 
+-- |
+-- 'selectClause' without its parenthesized alternative.
 selectClauseNoParens = suffixRec base suffix
   where
     base = Left <$> baseSimpleSelect
@@ -358,14 +393,14 @@ baseSimpleSelect =
         keyword "select"
         notFollowedBy $ satisfy $ isAlphaNum
         endHead
-        _targeting <- optional (space1 *> targeting)
-        _intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> optTempTableName)
-        _fromClause <- optional (space1 *> fromClause)
-        _whereClause <- optional (space1 *> whereClause)
-        _groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator groupByItem)
-        _havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> aExpr)
-        _windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
-        return (NormalSimpleSelect _targeting _intoClause _fromClause _whereClause _groupClause _havingClause _windowClause),
+        targeting <- optional (space1 *> targeting)
+        intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> optTempTableName)
+        fromClause <- optional (space1 *> fromClause)
+        whereClause <- optional (space1 *> whereClause)
+        groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator groupByItem)
+        havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> aExpr)
+        windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator windowDefinition)
+        return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
       do
         keyword "table"
         space1
@@ -374,12 +409,12 @@ baseSimpleSelect =
       ValuesSimpleSelect <$> valuesClause
     ]
 
-extensionSimpleSelect _headSelectClause = do
-  _op <- space1 *> selectBinOp <* space1
+extensionSimpleSelect headSelectClause = do
+  op <- space1 *> selectBinOp <* space1
   endHead
-  _allOrDistinct <- optional (allOrDistinct <* space1)
-  _selectClause <- selectClause
-  return (BinSimpleSelect _op _headSelectClause _allOrDistinct _selectClause)
+  allOrDistinct <- optional (allOrDistinct <* space1)
+  selectClause <- selectClause
+  return (BinSimpleSelect op headSelectClause allOrDistinct selectClause)
 
 allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
 
@@ -397,27 +432,27 @@ valuesClause = do
     char '('
     endHead
     space
-    _a <- sep1 commaSeparator aExpr
+    a <- sep1 commaSeparator aExpr
     space
     char ')'
-    return _a
+    return a
 
 withClause = label "with clause" $ do
   keyword "with"
   space1
   endHead
-  _recursive <- option False (True <$ keyword "recursive" <* space1)
-  _cteList <- sep1 commaSeparator commonTableExpr
-  return (WithClause _recursive _cteList)
+  recursive <- option False (True <$ keyword "recursive" <* space1)
+  cteList <- sep1 commaSeparator commonTableExpr
+  return (WithClause recursive cteList)
 
 commonTableExpr = label "common table expression" $ do
-  _name <- colId <* space <* endHead
-  _nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
+  name <- colId <* space <* endHead
+  nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
   keyword "as"
   space1
-  _materialized <- optional (materialized <* space1)
-  _stmt <- inParens preparableStmt
-  return (CommonTableExpr _name _nameList _materialized _stmt)
+  materialized <- optional (materialized <* space1)
+  stmt <- inParens preparableStmt
+  return (CommonTableExpr name nameList materialized stmt)
 
 materialized =
   True <$ keyword "materialized"
@@ -435,9 +470,9 @@ targeting = distinct <|> allWithTargetList <|> all <|> normal
       keyword "distinct"
       space1
       endHead
-      _optOn <- optional (onExpressionsClause <* space1)
-      _targetList <- targetList
-      return (DistinctTargeting _optOn _targetList)
+      optOn <- optional (onExpressionsClause <* space1)
+      targetList <- targetList
+      return (DistinctTargeting optOn targetList)
 
 targetList = sep1 commaSeparator targetEl
 
@@ -445,18 +480,18 @@ targetList = sep1 commaSeparator targetEl
 -- >>> testParser targetEl "a.b as c"
 -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
 targetEl =
-  label "target" $
-    asum
+  label "target"
+    $ asum
       [ do
-          _expr <- aExpr
+          expr <- aExpr
           asum
             [ do
                 space1
                 asum
-                  [ AliasedExprTargetEl _expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
-                    ImplicitlyAliasedExprTargetEl _expr <$> ident
+                  [ AliasedExprTargetEl expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
+                    ImplicitlyAliasedExprTargetEl expr <$> ident
                   ],
-              pure (ExprTargetEl _expr)
+              pure (ExprTargetEl expr)
             ],
         AsteriskTargetEl <$ char '*'
       ]
@@ -530,8 +565,8 @@ windowDefinition = WindowDefinition <$> (colId <* space1 <* keyword "as" <* spac
 --             opt_sort_clause opt_frame_clause ')'
 -- @
 windowSpecification =
-  inParens $
-    asum
+  inParens
+    $ asum
       [ do
           a <- frameClause
           return (WindowSpecification Nothing Nothing Nothing (Just a)),
@@ -615,18 +650,18 @@ fromClause = keyword "from" *> endHead *> space1 *> fromList
 -- >>> testParser tableRef "a left join b on (a.i = b.i)"
 -- JoinTableRef (MethJoinedTable (QualJoinMeth...
 tableRef =
-  label "table reference" $
-    do
-      _tr <- nonTrailingTableRef
-      recur _tr
+  label "table reference"
+    $ do
+      tr <- nonTrailingTableRef
+      recur tr
   where
-    recur _tr =
+    recur tr =
       asum
         [ do
-            _tr2 <- wrapToHead (space1 *> trailingTableRef _tr)
+            tr2 <- wrapToHead (space1 *> trailingTableRef tr)
             endHead
-            recur _tr2,
-          pure _tr
+            recur tr2,
+          pure tr
         ]
 
 nonTrailingTableRef =
@@ -639,11 +674,11 @@ nonTrailingTableRef =
     ]
   where
     relationExprTableRef = do
-      _relationExpr <- relationExpr
+      relationExpr <- relationExpr
       endHead
-      _optAliasClause <- optional (space1 *> aliasClause)
-      _optTablesampleClause <- optional (space1 *> tablesampleClause)
-      return (RelationExprTableRef _relationExpr _optAliasClause _optTablesampleClause)
+      optAliasClause <- optional (space1 *> aliasClause)
+      optTablesampleClause <- optional (space1 *> tablesampleClause)
+      return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
 
     lateralTableRef = do
       keyword "lateral"
@@ -653,46 +688,46 @@ nonTrailingTableRef =
 
     nonLateralTableRef = lateralableTableRef False
 
-    lateralableTableRef _lateral =
+    lateralableTableRef lateral =
       asum
         [ do
             a <- funcTable
             b <- optional (space1 *> funcAliasClause)
-            return (FuncTableRef _lateral a b),
+            return (FuncTableRef lateral a b),
           do
-            _select <- selectWithParens
-            _optAliasClause <- optional $ space1 *> aliasClause
-            return (SelectTableRef _lateral _select _optAliasClause)
+            select <- selectWithParens
+            optAliasClause <- optional $ space1 *> aliasClause
+            return (SelectTableRef lateral select optAliasClause)
         ]
 
     inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable <*> pure Nothing
 
     joinedTableWithAliasTableRef = do
-      _joinedTable <- wrapToHead (inParens joinedTable)
+      joinedTable <- wrapToHead (inParens joinedTable)
       space1
-      _alias <- aliasClause
-      return (JoinTableRef _joinedTable (Just _alias))
+      alias <- aliasClause
+      return (JoinTableRef joinedTable (Just alias))
 
-trailingTableRef _tableRef =
-  JoinTableRef <$> trailingJoinedTable _tableRef <*> pure Nothing
+trailingTableRef tableRef =
+  JoinTableRef <$> trailingJoinedTable tableRef <*> pure Nothing
 
 relationExpr =
-  label "relation expression" $
-    asum
+  label "relation expression"
+    $ asum
       [ do
           keyword "only"
           space1
-          _name <- qualifiedName
-          return (OnlyRelationExpr _name False),
+          name <- qualifiedName
+          return (OnlyRelationExpr name False),
         inParensWithClause (keyword "only") qualifiedName <&> \a -> OnlyRelationExpr a True,
         do
-          _name <- qualifiedName
-          _asterisk <-
+          name <- qualifiedName
+          asterisk <-
             asum
               [ True <$ (space1 *> char '*'),
                 pure False
               ]
-          return (SimpleRelationExpr _name _asterisk)
+          return (SimpleRelationExpr name asterisk)
       ]
 
 relationExprOptAlias reservedKeywords = do
@@ -761,7 +796,7 @@ collateClause = keyword "collate" *> space1 *> endHead *> anyName
 funcAliasClause =
   asum
     [ do
-        keyword "as"
+        _ <- keyword "as"
         asum
           [ do
               space
@@ -804,18 +839,18 @@ joinedTable =
     head =
       asum
         [ do
-            _tr <- wrapToHead nonTrailingTableRef
+            tr <- wrapToHead nonTrailingTableRef
             space1
-            trailingJoinedTable _tr,
+            trailingJoinedTable tr,
           inParensJoinedTable
         ]
-    tail _jt =
+    tail jt =
       asum
         [ do
-            _jt2 <- wrapToHead (space1 *> trailingJoinedTable (JoinTableRef _jt Nothing))
+            jt2 <- wrapToHead (space1 *> trailingJoinedTable (JoinTableRef jt Nothing))
             endHead
-            tail _jt2,
-          pure _jt
+            tail jt2,
+          pure jt
         ]
 
 -- |
@@ -834,30 +869,30 @@ inParensJoinedTable = InParensJoinedTable <$> inParens joinedTable
 --   | table_ref NATURAL join_type JOIN table_ref
 --   | table_ref NATURAL JOIN table_ref
 -- @
-trailingJoinedTable _tr1 =
+trailingJoinedTable tr1 =
   asum
     [ do
         keyphrase "cross join"
         endHead
         space1
-        _tr2 <- nonTrailingTableRef
-        return (MethJoinedTable CrossJoinMeth _tr1 _tr2),
+        tr2 <- nonTrailingTableRef
+        return (MethJoinedTable CrossJoinMeth tr1 tr2),
       do
-        _jt <- joinTypedJoin
+        jt <- joinTypedJoin
         endHead
         space1
-        _tr2 <- tableRef
+        tr2 <- tableRef
         space1
-        _jq <- joinQual
-        return (MethJoinedTable (QualJoinMeth _jt _jq) _tr1 _tr2),
+        jq <- joinQual
+        return (MethJoinedTable (QualJoinMeth jt jq) tr1 tr2),
       do
         keyword "natural"
         endHead
         space1
-        _jt <- joinTypedJoin
+        jt <- joinTypedJoin
         space1
-        _tr2 <- nonTrailingTableRef
-        return (MethJoinedTable (NaturalJoinMeth _jt) _tr1 _tr2)
+        tr2 <- nonTrailingTableRef
+        return (MethJoinedTable (NaturalJoinMeth jt) tr1 tr2)
     ]
   where
     joinTypedJoin =
@@ -869,18 +904,18 @@ joinType =
     [ do
         keyword "full"
         endHead
-        _outer <- outerAfterSpace
-        return (FullJoinType _outer),
+        outer <- outerAfterSpace
+        return (FullJoinType outer),
       do
         keyword "left"
         endHead
-        _outer <- outerAfterSpace
-        return (LeftJoinType _outer),
+        outer <- outerAfterSpace
+        return (LeftJoinType outer),
       do
         keyword "right"
         endHead
-        _outer <- outerAfterSpace
-        return (RightJoinType _outer),
+        outer <- outerAfterSpace
+        return (RightJoinType outer),
       keyword "inner" $> InnerJoinType
     ]
   where
@@ -893,9 +928,9 @@ joinQual =
     ]
 
 aliasClause = do
-  (_as, _alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
-  _columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
-  return (AliasClause _as _alias _columnAliases)
+  (as, alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
+  columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
+  return (AliasClause as alias columnAliases)
 
 -- * Where
 
@@ -982,33 +1017,33 @@ customizedAExpr cExpr = suffixRec base suffix
           PlusAExpr <$> plusedExpr aExpr,
           MinusAExpr <$> minusedExpr aExpr,
           NotAExpr <$> (keyword "not" *> space1 *> aExpr),
-          CExprAExpr <$> cExprNoCommonPrefix,
-          char '(' *> space
+          CExprAExpr <$> cExprNoOpeningParen,
+          -- Everything that starts with "(" shares that prefix: an implicit-row
+          -- OVERLAPS, an implicit row, a parenthesized select and a
+          -- parenthesized expression. Consuming the paren once and branching
+          -- afterwards is what keeps nested parens from parsing exponentially.
+          char '('
+            *> space
             *> asum
-              [ CExprAExpr <$> cExprTailNoCommonPrefix,
+              [ CExprAExpr <$> cExprAfterOpeningParenNoAExpr,
                 do
                   a <- wrapToHead aExpr
                   asum
                     [ do
-                        b <- wrapToHead $ ImplicitRowRow <$> implicitRowTail a
+                        b <- wrapToHead (ImplicitRowRow <$> implicitRowAfterFirstExpr a)
                         space1
                         keyword "overlaps"
                         space1
                         endHead
                         c <- row
-                        return $ OverlapsAExpr b c,
-                      CExprAExpr . convertNestedParenSelect <$> cExprTailParenExpr a
+                        return (OverlapsAExpr b c),
+                      CExprAExpr . nestParenthesizedSelect <$> cExprAfterOpeningParenAExpr a
                     ]
               ]
         ]
     suffix a =
       asum
         [ typecastExpr a TypecastAExpr,
-          -- we could just use `base` instead of `aExpr` for the BinOp, would
-          -- lead to slightly different trees. I am not completely convinced that
-          -- `wrapHead` catches the case where you have a sequence of expressions
-          -- and operators followed by something that does not parse (my fear is
-          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
           space1
             *> asum
@@ -1020,8 +1055,7 @@ customizedAExpr cExpr = suffixRec base suffix
                   d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
                   return (SubqueryAExpr a b c d),
                 CollateAExpr a <$> (keyword "collate" *> space1 *> endHead *> anyName),
-                AtTimeZoneAExpr a
-                  <$> (keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+                AtTimeZoneAExpr a <$> (keyphrase "at time zone" *> space1 *> endHead *> aExpr),
                 AndAExpr a <$> (keyword "and" *> space1 *> endHead *> aExpr),
                 OrAExpr a <$> (keyword "or" *> space1 *> endHead *> aExpr),
                 do
@@ -1048,16 +1082,8 @@ customizedAExpr cExpr = suffixRec base suffix
                         TrueAExprReversableOp <$ keyword "true",
                         FalseAExprReversableOp <$ keyword "false",
                         UnknownAExprReversableOp <$ keyword "unknown",
-                        DistinctFromAExprReversableOp
-                          <$> ( keyword "distinct"
-                                  *> space1
-                                  *> keyword "from"
-                                  *> space1
-                                  *> endHead
-                                  *> aExpr
-                              ),
-                        OfAExprReversableOp
-                          <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                        DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> aExpr),
+                        OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
                         DocumentAExprReversableOp <$ keyword "document"
                       ]
                   return (ReversableOpAExpr a b c),
@@ -1084,20 +1110,18 @@ customizedAExpr cExpr = suffixRec base suffix
                   space
                   c <- InAExprReversableOp <$> inExpr
                   return (ReversableOpAExpr a b c),
-                IsnullAExpr a <$ (keyword "isnull"),
-                NotnullAExpr a <$ (keyword "notnull")
+                IsnullAExpr a <$ keyword "isnull",
+                NotnullAExpr a <$ keyword "notnull"
               ],
+          -- Kept last because it shares a prefix with the SubqueryAExpr branch
+          -- above and only wins when that one doesn't apply.
           SuffixQualOpAExpr a <$> (space *> qualOp)
-          -- TODO SuffixQualOpAExpr has a common prefix with SubqueryAExpr
-          -- so for now we rely on the order of the parsers here, which works well
-          -- enough.
         ]
 
 bExpr = customizedBExpr cExpr
 
 customizedBExpr cExpr = suffixRec base suffix
   where
-    aExpr = customizedAExpr cExpr
     bExpr = customizedBExpr cExpr
     base =
       asum
@@ -1109,11 +1133,6 @@ customizedBExpr cExpr = suffixRec base suffix
     suffix a =
       asum
         [ typecastExpr a TypecastBExpr,
-          -- we could just use `base` instead of `bExpr` for the BinOp, would
-          -- lead to slightly different trees. I am not completely convinced that
-          -- `wrapHead` catches the case where you have a sequence of expressions
-          -- and operators followed by something that does not parse (my fear is
-          -- that it would repeatedly fail for each level).
           symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
           do
             space1
@@ -1123,29 +1142,33 @@ customizedBExpr cExpr = suffixRec base suffix
             b <- trueIfPresent (keyword "not" *> space1)
             c <-
               asum
-                [ DistinctFromBExprIsOp
-                    <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
-                  OfBExprIsOp
-                    <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
+                [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
+                  OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens typeList),
                   DocumentBExprIsOp <$ keyword "document"
                 ]
             return (IsOpBExpr a b c)
         ]
 
 cExpr :: Parser CExpr
-cExpr = asum [cExprNoCommonPrefix, char '(' *> space *> cExprTailParen]
+cExpr = asum [cExprNoOpeningParen, char '(' *> space *> cExprAfterOpeningParen]
 
-cExprNoCommonPrefix :: Parser CExpr
-cExprNoCommonPrefix =
+-- |
+-- The alternatives of 'cExpr' that do not begin with an opening parenthesis
+-- and thus share no prefix with 'cExprAfterOpeningParen'.
+cExprNoOpeningParen :: Parser CExpr
+cExprNoOpeningParen =
   asum
     [ cExprCommon,
-      FuncCExpr <$> funcExprNoCommonPrefix,
+      FuncCExpr <$> funcExprNoColId,
       do
         a <- wrapToHead colId
         endHead
-        asum [FuncCExpr <$> funcExprTail a, ColumnrefCExpr <$> columnrefCont a]
+        asum [FuncCExpr <$> funcExprAfterColId a, ColumnrefCExpr <$> columnrefAfterColId a]
     ]
 
+-- |
+-- The alternatives of 'cExpr' shared by 'cExpr' and 'customizedCExpr',
+-- none of which begins with an opening parenthesis or a 'colId'.
 cExprCommon :: Parser CExpr
 cExprCommon =
   asum
@@ -1157,38 +1180,41 @@ cExprCommon =
       do
         keyword "array"
         space
-        join $
-          asum
+        join
+          $ asum
             [ fmap (fmap (ArrayCExpr . Right)) arrayExprCont,
               fmap (fmap (ArrayCExpr . Left) . pure) selectWithParens
             ],
       AexprConstCExpr <$> wrapToHead aexprConst
     ]
 
--- cExpr following a '('
-cExprTailParen :: Parser CExpr
-cExprTailParen =
+-- |
+-- Continuation of 'cExpr' after its opening parenthesis and the following space
+-- have been consumed.
+cExprAfterOpeningParen :: Parser CExpr
+cExprAfterOpeningParen =
   asum
-    [ cExprTailNoCommonPrefix,
+    [ cExprAfterOpeningParenNoAExpr,
       do
         a <- aExpr
         endHead
-        cExprTailParenExpr a
+        cExprAfterOpeningParenAExpr a
     ]
 
--- the part of the tail-parser of a cExpr after a '(' that does not have a
--- @aExpr@ prefix.
-cExprTailNoCommonPrefix :: Parser CExpr
-cExprTailNoCommonPrefix = do
+-- |
+-- The branches of 'cExprAfterOpeningParen' which do not start with an 'aExpr'.
+cExprAfterOpeningParenNoAExpr :: Parser CExpr
+cExprAfterOpeningParenNoAExpr = do
   a <- selectNoParens <* endHead <* space <* char ')'
   b <- optional (space *> indirection)
   return (SelectWithParensCExpr (NoParensSelectWithParens a) b)
 
--- cExpr following a '(' plus an @aExpr@.
-cExprTailParenExpr :: AExpr -> Parser CExpr
-cExprTailParenExpr a =
+-- |
+-- Continuation of 'cExprAfterOpeningParen' after its leading 'aExpr'.
+cExprAfterOpeningParenAExpr :: AExpr -> Parser CExpr
+cExprAfterOpeningParenAExpr a =
   asum
-    [ ImplicitRowCExpr <$> implicitRowTail a,
+    [ ImplicitRowCExpr <$> implicitRowAfterFirstExpr a,
       InParensCExpr a <$> (space *> char ')' *> optional (space *> indirection))
     ]
 
@@ -1196,30 +1222,29 @@ customizedCExpr :: Parser Columnref -> Parser CExpr
 customizedCExpr columnref =
   asum
     [ cExprCommon,
-      char '(' *> space *> cExprTailParen,
+      char '(' *> space *> cExprAfterOpeningParen,
       FuncCExpr <$> funcExpr,
       ColumnrefCExpr <$> columnref
     ]
 
-openParenAExpr :: Parser AExpr
-openParenAExpr = char '(' *> space *> aExpr <* endHead
-
-convertNestedParenSelect :: CExpr -> CExpr
-convertNestedParenSelect cExpr = case go cExpr of
-  Left x -> SelectWithParensCExpr x Nothing
-  Right x -> x
+-- |
+-- Restore the tree shape that the parens-collapsing in 'cExprAfterOpeningParen'
+-- flattens away.
+--
+-- Since a select in parens is now parsed as 'InParensCExpr' wrapping a
+-- 'SelectWithParensCExpr', turn such nestings back into
+-- 'WithParensSelectWithParens'.
+nestParenthesizedSelect :: CExpr -> CExpr
+nestParenthesizedSelect = either (flip SelectWithParensCExpr Nothing) id . go
   where
     go :: CExpr -> Either SelectWithParens CExpr
-    go (InParensCExpr (CExprAExpr e) ind) = case go e of
-      Left select -> case ind of
-        Nothing -> Left $ WithParensSelectWithParens select
-        Just {} ->
-          Right $ SelectWithParensCExpr (WithParensSelectWithParens select) ind
-      Right x -> Right $ InParensCExpr (CExprAExpr x) ind
+    go (InParensCExpr (CExprAExpr e) indirection) = case go e of
+      Left select -> case indirection of
+        Nothing -> Left (WithParensSelectWithParens select)
+        Just _ -> Right (SelectWithParensCExpr (WithParensSelectWithParens select) indirection)
+      Right x -> Right (InParensCExpr (CExprAExpr x) indirection)
     go (SelectWithParensCExpr a Nothing) = Left a
     go x = Right x
-
--- *
 
 subqueryOp =
   asum
@@ -1237,21 +1262,23 @@ subType =
       AllSubType <$ keyword "all"
     ]
 
-inExpr = SelectInExpr <$> wrapToHead selectWithParens <|> ExprListInExpr <$> inParens exprList
+inExpr =
+  (ExprListInExpr <$> parse (Megaparsec.try (toParsec (inParens exprList))))
+    <|> (SelectInExpr <$> wrapToHead selectWithParens)
 
-symbolicBinOpExpr _a _bParser _constr = do
-  _binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
-  _b <- _bParser
-  return (_constr _a _binOp _b)
+symbolicBinOpExpr a bParser constr = do
+  binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
+  b <- bParser
+  return (constr a binOp b)
 
 typecastExpr :: a -> (a -> Typename -> a) -> HeadedParsec Void Text a
-typecastExpr _prefix _constr = do
+typecastExpr prefix constr = do
   space
   string "::"
   endHead
   space
-  _type <- typename
-  return (_constr _prefix _type)
+  type' <- typename
+  return (constr prefix type')
 
 plusedExpr expr = char '+' *> space *> expr
 
@@ -1263,29 +1290,22 @@ row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 
 explicitRow = keyword "row" *> space *> inParens (optional exprList)
 
-implicitRow = inParens (wrapToHead aExpr >>= implicitRowTailInner)
+implicitRow = inParens (wrapToHead aExpr >>= implicitRowAfterFirstExprInner)
 
--- implicitRow = inParens $ do
---   a <- wrapToHead aExpr
---   commaSeparator
---   b <- exprList
---   return $ case NonEmpty.consAndUnsnoc a b of
---     (c, d) -> ImplicitRow c d
+-- |
+-- Continuation of 'implicitRow' after its opening parenthesis and first expression.
+implicitRowAfterFirstExpr :: AExpr -> Parser ImplicitRow
+implicitRowAfterFirstExpr a = implicitRowAfterFirstExprInner a <* space <* char ')'
 
--- the "tail" of the @implicitRow@ parser, i.e. the parser after the initial
--- "( $EXPR" part.
-implicitRowTail :: AExpr -> Parser ImplicitRow
-implicitRowTail a = implicitRowTailInner a <* space <* char ')'
-
-implicitRowTailInner a = do
+implicitRowAfterFirstExprInner a = do
   commaSeparator
   b <- exprList
   return $ case NonEmpty.consAndUnsnoc a b of
     (c, d) -> ImplicitRow c d
 
 arrayExprCont =
-  inBracketsCont $
-    asum
+  inBracketsCont
+    $ asum
       [ ArrayExprListArrayExpr <$> sep1 commaSeparator (join arrayExprCont),
         ExprListArrayExpr <$> exprList,
         pure EmptyArrayExpr
@@ -1295,23 +1315,23 @@ caseExpr = label "case expression" $ do
   keyword "case"
   space1
   endHead
-  _arg <- optional (aExpr <* space1)
-  _whenClauses <- sep1 space1 whenClause
+  arg <- optional (aExpr <* space1)
+  whenClauses <- sep1 space1 whenClause
   space1
-  _default <- optional elseClause
+  default' <- optional elseClause
   keyword "end"
-  pure $ CaseExpr _arg _whenClauses _default
+  pure $ CaseExpr arg whenClauses default'
 
 whenClause = do
   keyword "when"
   space1
   endHead
-  _a <- aExpr
+  a <- aExpr
   space1
   keyword "then"
   space1
-  _b <- aExpr
-  return (WhenClause _a _b)
+  b <- aExpr
+  return (WhenClause a b)
 
 elseClause = do
   keyword "else"
@@ -1322,24 +1342,26 @@ elseClause = do
   return a
 
 funcExpr :: Parser FuncExpr
-funcExpr = funcExprNoCommonPrefix <|> (wrapToHead colId >>= funcExprTail)
+funcExpr = funcExprNoColId <|> (wrapToHead colId >>= funcExprAfterColId)
 
-funcExprNoCommonPrefix :: Parser FuncExpr
-funcExprNoCommonPrefix =
+-- |
+-- The alternatives of 'funcExpr' that do not begin with a 'colId'.
+funcExprNoColId :: Parser FuncExpr
+funcExprNoColId =
   asum
     [ SubexprFuncExpr <$> funcExprCommonSubexpr,
-      do
-        app <- funcApplicationNoCommonPrefix
-        appFuncExprTail app
+      funcApplicationNoColId >>= applicationFuncExpr
     ]
 
-funcExprTail :: Ident -> HeadedParsec Void Text FuncExpr
-funcExprTail ident = do
-  a <- wrapToHead $ funcApplicationTailIdent ident
+-- |
+-- Continuation of 'funcExpr' after its leading 'colId'.
+funcExprAfterColId :: Ident -> Parser FuncExpr
+funcExprAfterColId ident = do
+  a <- wrapToHead (funcApplicationAfterColId ident)
   endHead
-  appFuncExprTail a
+  applicationFuncExpr a
 
-appFuncExprTail a = do
+applicationFuncExpr a = do
   b <- optional (space1 *> withinGroupClause)
   c <- optional (space1 *> filterClause)
   d <- optional (space1 *> overClause)
@@ -1399,7 +1421,7 @@ funcExprCommonSubexpr =
       inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> exprList)
     ]
   where
-    labeledIconst _label = keyword _label *> endHead *> optional (space *> inParens iconst)
+    labeledIconst label = keyword label *> endHead *> optional (space *> inParens iconst)
 
 extractList = ExtractList <$> extractArg <*> (space1 *> keyword "from" *> space1 *> aExpr)
 
@@ -1470,22 +1492,32 @@ trimList =
       ExprListTrimList <$> exprList
     ]
 
-funcApplication = inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
+-- |
+-- \"operator\" immediately followed by \"(\" is always parsed as the start
+-- of a qualified operator (@OPERATOR(...)@), never as a call to a function
+-- literally named \"operator\", mirroring how real PostgreSQL's grammar
+-- resolves the conflict between these two productions in favor of qual_op.
+funcApplication =
+  notFollowedBy (keyword "operator" *> space *> char '(')
+    *> inParensWithLabel FuncApplication funcName (optional funcApplicationParams)
 
-funcApplicationNoCommonPrefix :: Parser FuncApplication
-funcApplicationNoCommonPrefix = do
-  label <- wrapToHead funcNameNoCommonPrefix
-  funcApplicationContFuncName label
+-- |
+-- The alternative of 'funcApplication' whose name is not a 'colId'.
+--
+-- This is the only branch that can reach the @OPERATOR(...)@ ambiguity, since
+-- the 'colId' branch of 'funcName' requires an indirection after the name.
+funcApplicationNoColId :: Parser FuncApplication
+funcApplicationNoColId =
+  notFollowedBy (keyword "operator" *> space *> char '(')
+    *> (wrapToHead funcNameNoColId >>= funcApplicationAfterFuncName)
 
--- the tail of the @funcApplication@ parser after the initial @Ident@ parser.
-funcApplicationTailIdent :: Ident -> Parser FuncApplication
-funcApplicationTailIdent ident = do
-  label <- funcNameTail ident
-  funcApplicationContFuncName label
+-- |
+-- Continuation of 'funcApplication' after its leading 'colId'.
+funcApplicationAfterColId :: Ident -> Parser FuncApplication
+funcApplicationAfterColId ident = funcNameAfterColId ident >>= funcApplicationAfterFuncName
 
-funcApplicationContFuncName ::
-  FuncName -> HeadedParsec Void Text FuncApplication
-funcApplicationContFuncName label = do
+funcApplicationAfterFuncName :: FuncName -> Parser FuncApplication
+funcApplicationAfterFuncName name = do
   space
   char '('
   endHead
@@ -1493,7 +1525,7 @@ funcApplicationContFuncName label = do
   content <- optional funcApplicationParams
   space
   char ')'
-  pure (FuncApplication label content)
+  pure (FuncApplication name content)
 
 funcApplicationParams =
   asum
@@ -1504,26 +1536,26 @@ funcApplicationParams =
     ]
 
 normalFuncApplicationParams = do
-  _optAllOrDistinct <- optional (allOrDistinct <* space1)
-  _argList <- sep1 commaSeparator funcArgExpr
+  optAllOrDistinct <- optional (allOrDistinct <* space1)
+  argList <- sep1 commaSeparator funcArgExpr
   endHead
-  _optSortClause <- optional (space1 *> sortClause)
-  return (NormalFuncApplicationParams _optAllOrDistinct _argList _optSortClause)
+  optSortClause <- optional (space1 *> sortClause)
+  return (NormalFuncApplicationParams optAllOrDistinct argList optSortClause)
 
 singleVariadicFuncApplicationParams = do
   keyword "variadic"
   space1
   endHead
-  _arg <- funcArgExpr
-  _optSortClause <- optional (space1 *> sortClause)
-  return (VariadicFuncApplicationParams Nothing _arg _optSortClause)
+  arg <- funcArgExpr
+  optSortClause <- optional (space1 *> sortClause)
+  return (VariadicFuncApplicationParams Nothing arg optSortClause)
 
 listVariadicFuncApplicationParams = do
-  (_argList, _) <- wrapToHead $ sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr
+  (argList, _) <- wrapToHead $ sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr
   endHead
-  _arg <- funcArgExpr
-  _optSortClause <- optional (space1 *> sortClause)
-  return (VariadicFuncApplicationParams (Just _argList) _arg _optSortClause)
+  arg <- funcArgExpr
+  optSortClause <- optional (space1 *> sortClause)
+  return (VariadicFuncApplicationParams (Just argList) arg optSortClause)
 
 starFuncApplicationParams = space *> char '*' *> endHead *> space $> StarFuncApplicationParams
 
@@ -1711,7 +1743,7 @@ iconst = decimal
 
 fconst = float
 
-sconst = quotedString '\''
+sconst = quotedString '\'' <|> dollarQuotedSconst
 
 constTypename =
   asum
@@ -1823,11 +1855,11 @@ intervalSecond = do
 selectLimit =
   asum
     [ do
-        _a <- limitClause
-        LimitOffsetSelectLimit _a <$> (space1 *> offsetClause) <|> pure (LimitSelectLimit _a),
+        a <- limitClause
+        LimitOffsetSelectLimit a <$> (space1 *> offsetClause) <|> pure (LimitSelectLimit a),
       do
-        _a <- offsetClause
-        OffsetLimitSelectLimit _a <$> (space1 *> limitClause) <|> pure (OffsetSelectLimit _a)
+        a <- offsetClause
+        OffsetLimitSelectLimit a <$> (space1 *> limitClause) <|> pure (OffsetSelectLimit a)
     ]
 
 -- |
@@ -1844,31 +1876,31 @@ limitClause =
       keyword "limit"
       endHead
       space1
-      _a <- selectLimitValue
-      _b <- optional $ do
+      a <- selectLimitValue
+      b <- optional $ do
         commaSeparator
         aExpr
-      return (LimitLimitClause _a _b)
+      return (LimitLimitClause a b)
   )
     <|> ( do
             keyword "fetch"
             endHead
             space1
-            _a <- firstOrNext
+            a <- firstOrNext
             space1
             asum
               [ do
-                  _b <- rowOrRows
+                  b <- rowOrRows
                   space1
                   keyword "only"
-                  return (FetchOnlyLimitClause _a Nothing _b),
+                  return (FetchOnlyLimitClause a Nothing b),
                 do
-                  _b <- selectFetchFirstValue
+                  b <- selectFetchFirstValue
                   space1
-                  _c <- rowOrRows
+                  c <- rowOrRows
                   space1
                   keyword "only"
-                  return (FetchOnlyLimitClause _a (Just _b) _c)
+                  return (FetchOnlyLimitClause a (Just b) c)
               ]
         )
 
@@ -1902,7 +1934,7 @@ firstOrNext =
     <|> True <$ keyword "next"
 
 selectFetchFirstValue =
-  ExprSelectFetchFirstValue . convertNestedParenSelect <$> cExpr
+  ExprSelectFetchFirstValue . nestParenthesizedSelect <$> cExpr
     <|> NumSelectFetchFirstValue <$> (plusOrMinus <* endHead <* space) <*> iconstOrFconst
 
 plusOrMinus = False <$ char '+' <|> True <$ char '-'
@@ -1938,10 +1970,10 @@ forLockingClause = readOnly <|> items
 --   | EMPTY
 -- @
 forLockingItem = do
-  _strength <- forLockingStrength
-  _rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
-  _nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
-  return (ForLockingItem _strength _rels _nowaitOrSkip)
+  strength <- forLockingStrength
+  rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
+  nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
+  return (ForLockingItem strength rels nowaitOrSkip)
 
 -- |
 -- ==== References
@@ -1983,14 +2015,15 @@ ident = quotedName <|> keywordNameByPredicate (not . Predicate.keyword)
 -- @
 {-# NOINLINE colId #-}
 colId =
-  label "identifier" $
-    ident <|> keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+  label "identifier"
+    $ ident
+    <|> keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 {-# NOINLINE filteredColId #-}
 filteredColId =
-  let _originalSet = KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword
-      _filteredSet = foldr HashSet.delete _originalSet
-   in \_reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (_filteredSet _reservedKeywords)
+  let originalSet = KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword
+      filteredSet = foldr HashSet.delete originalSet
+   in \reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (filteredSet reservedKeywords)
 
 -- |
 -- ==== References
@@ -2003,8 +2036,9 @@ filteredColId =
 --   |  reserved_keyword
 -- @
 colLabel =
-  label "column label" $
-    keywordNameFromSet KeywordSet.keyword <|> ident
+  label "column label"
+    $ keywordNameFromSet KeywordSet.keyword
+    <|> ident
 
 -- |
 -- >>> testParser qualifiedName "a.b"
@@ -2026,22 +2060,23 @@ qualifiedName =
 
 columnref = customizedColumnref colId
 
-columnrefCont = customizedColumnrefCont
-
-filteredColumnref _keywords = customizedColumnref (filteredColId _keywords)
+filteredColumnref keywords = customizedColumnref (filteredColId keywords)
 
 customizedColumnref colId = do
   a <- wrapToHead colId
   endHead
-  customizedColumnrefCont a
+  columnrefAfterColId a
 
-customizedColumnrefCont a = do
+-- |
+-- Continuation of 'columnref' after its leading 'colId'.
+columnrefAfterColId :: Ident -> Parser Columnref
+columnrefAfterColId a = do
   b <- optional (space *> indirection)
   return (Columnref a b)
 
 anyName = customizedAnyName colId
 
-filteredAnyName _keywords = customizedAnyName (filteredColId _keywords)
+filteredAnyName keywords = customizedAnyName (filteredColId keywords)
 
 customizedAnyName colId = do
   a <- wrapToHead colId
@@ -2063,14 +2098,18 @@ cursorName = name
 --   | ColId indirection
 -- @
 funcName =
-  (wrapToHead colId >>= funcNameTail) <|> TypeFuncName <$> typeFunctionName
+  (wrapToHead colId >>= funcNameAfterColId)
+    <|> funcNameNoColId
 
--- the tail of the @funcName@ parser after the head consisting of an @Ident@.
-funcNameTail :: Ident -> HeadedParsec Void Text FuncName
-funcNameTail a = IndirectedFuncName a <$> (space *> indirection)
+-- |
+-- Continuation of 'funcName' after its leading 'colId'.
+funcNameAfterColId :: Ident -> Parser FuncName
+funcNameAfterColId a = IndirectedFuncName a <$> (space *> indirection)
 
-funcNameNoCommonPrefix :: HeadedParsec Void Text FuncName
-funcNameNoCommonPrefix = TypeFuncName <$> typeFunctionName
+-- |
+-- The alternative of 'funcName' that is not a 'colId'.
+funcNameNoColId :: Parser FuncName
+funcNameNoColId = TypeFuncName <$> typeFunctionName
 
 -- |
 -- ==== References
@@ -2116,29 +2155,29 @@ indirectionEl =
         char '['
         endHead
         space
-        _a <-
+        a <-
           asum
             [ do
                 char ':'
                 endHead
                 space
-                _b <- optional aExpr
-                return (SliceIndirectionEl Nothing _b),
+                b <- optional aExpr
+                return (SliceIndirectionEl Nothing b),
               do
-                _a <- aExpr
+                a <- aExpr
                 asum
                   [ do
                       space
                       char ':'
                       space
-                      _b <- optional aExpr
-                      return (SliceIndirectionEl (Just _a) _b),
-                    return (ExprIndirectionEl _a)
+                      b <- optional aExpr
+                      return (SliceIndirectionEl (Just a) b),
+                    return (ExprIndirectionEl a)
                   ]
             ]
         space
         char ']'
-        return _a
+        return a
     ]
 
 -- |
@@ -2149,31 +2188,43 @@ indirectionEl =
 -- @
 attrName = colLabel
 
-keywordNameFromSet _set = keywordNameByPredicate (Predicate.inSet _set)
+keywordNameFromSet set = keywordNameByPredicate (Predicate.inSet set)
 
-keywordNameByPredicate _predicate =
-  fmap UnquotedIdent $
-    filter
+keywordNameByPredicate predicate =
+  fmap UnquotedIdent
+    $ filter
       (\a -> "Reserved keyword " <> show a <> " used as an identifier. If that's what you intend, you have to wrap it in double quotes.")
-      _predicate
+      predicate
       anyKeyword
 
-anyKeyword = parse $
-  Megaparsec.label "keyword" $ do
-    _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
-    _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
-    return (Text.toLower (Text.cons _firstChar _remainder))
+anyKeyword = parse
+  $ Megaparsec.label "keyword"
+  $ do
+    firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    return (Text.toLower (Text.cons firstChar remainder))
 
 -- | Expected keyword
--- keyword a = mfilter (a ==) anyKeyword
-keyword a = parse $
-  Megaparsec.label "keyword" $ do
-    _firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
-    guard (Char.toLower _firstChar == Text.head a)
-    _remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
-    let r = Text.toLower (Text.cons _firstChar _remainder)
-    guard (r == a)
-    return r
+--
+-- Wraps the head in 'Megaparsec.region' to pin the reported error offset to
+-- where this keyword check began. Without this, megaparsec >=9.8's stricter
+-- (and correct) '(<|>)' error-merging (fix for
+-- <https://github.com/mrkkrp/megaparsec/issues/412>) normalizes any error
+-- whose offset lands past the enclosing alternative's start back down to
+-- that start, discarding its \"expecting\" set unless the offset already
+-- matches exactly. Since every failed keyword branch consumes some
+-- identifier text before comparing, its offset always landed past the
+-- alternative's start, so wide 'asum'/'choice' chains of 'keyword' lost
+-- their combined expected-token sets under 9.8. Pinning the offset up front
+-- keeps every branch's offset aligned with the alternative's start, so
+-- their expected sets still union correctly.
+keyword a = parse $ do
+  off <- Megaparsec.getOffset
+  Megaparsec.region (Megaparsec.setErrorOffset off) $ do
+    firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+    remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+    let parsedKeyword = Text.toLower (Text.cons firstChar remainder)
+    if a == parsedKeyword then return parsedKeyword else empty
 
 -- |
 -- Consume a keyphrase, ignoring case and types of spaces between words.
@@ -2218,20 +2269,20 @@ typename =
 arrayBounds = sep1 space (inBrackets (optional iconst))
 
 simpleTypename =
-  asum $
-    [ do
-        keyword "interval"
-        endHead
-        asum
-          [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
-            ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
-          ],
-      ConstDatetimeSimpleTypename <$> constDatetime,
-      NumericSimpleTypename <$> numeric,
-      BitSimpleTypename <$> bit,
-      CharacterSimpleTypename <$> character,
-      GenericTypeSimpleTypename <$> genericType
-    ]
+  asum
+    $ [ do
+          keyword "interval"
+          endHead
+          asum
+            [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
+              ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
+            ],
+        ConstDatetimeSimpleTypename <$> constDatetime,
+        NumericSimpleTypename <$> numeric,
+        BitSimpleTypename <$> bit,
+        CharacterSimpleTypename <$> character,
+        GenericTypeSimpleTypename <$> genericType
+      ]
 
 genericType = do
   a <- typeFunctionName
