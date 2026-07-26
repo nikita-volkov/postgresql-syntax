@@ -141,7 +141,10 @@ benchmark nesting-bench
   type: exitcode-stdio-1.0
   hs-source-dirs: nesting-bench
   main-is: Main.hs
-  ghc-options: -O2 -threaded
+  ghc-options:
+    -O2
+    -threaded
+
   build-depends:
     clock >=0.8 && <1,
     deepseq >=1.4 && <2,
