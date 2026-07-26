@@ -2,6 +2,7 @@ module PostgresqlSyntax.Prelude
   ( module Exports,
     showAsText,
     suffixRec,
+    extendMany,
   )
 where
 

@@ -21,6 +21,7 @@
 !/bench/
 !/hedgehog-test/
 !/library/
+!/nesting-bench/
 !/references/
 !/tasty-test/
 !/docs/

@@ -99,8 +99,29 @@ selectStmt = Left <$> selectNoParens
 selectNoParens =
   frequency
     [ (90, SelectNoParens <$> maybe withClause <*> (Left <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
-      (10, SelectNoParens <$> fmap Just withClause <*> selectClause <*> fmap Just sortClause <*> fmap Just selectLimit <*> fmap Just forLockingClause)
+      (10, clausePlusSurroundingsSelectNoParens)
     ]
+
+-- |
+-- A 'SelectNoParens' with at least one of its surrounding clauses present.
+--
+-- The restriction matters for the @Right@ (parenthesised select) shape of the
+-- inner clause: @SelectNoParens Nothing (Right x) Nothing Nothing Nothing@
+-- renders to exactly the same text as @WithParensSelectWithParens x@, and the
+-- parser canonicalises that text to the latter — see the \"Canonical shape\"
+-- note on @PostgresqlSyntax.Parsing.selectWithParensBody@. So the degenerate
+-- combination is excluded here deliberately, rather than by accident of the
+-- generator's shape: it is the one tree in this family that the round-trip
+-- property cannot hold for.
+clausePlusSurroundingsSelectNoParens = do
+  clause <- selectClause
+  -- At least one surrounding clause, so the SelectNoParens wrapper is
+  -- load-bearing.
+  (with, sort, limit, forLocking) <-
+    filter
+      (\(a, b, c, d) -> any not [null a, null b, null c, null d])
+      ((,,,) <$> maybe withClause <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause)
+  return (SelectNoParens with clause sort limit forLocking)
 
 terminalSelectNoParens =
   SelectNoParens <$> pure Nothing <*> (Left <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
