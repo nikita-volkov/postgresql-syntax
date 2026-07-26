@@ -333,14 +333,18 @@ selectWithParens = inParens (WithParensSelectWithParens <$> selectWithParens <|>
 
 selectNoParens = withSelectNoParens <|> simpleSelectNoParens
 
-sharedSelectNoParens with = do
-  select <- case with of
-    -- Without a WITH clause the leading "(" of a parenthesized select clause is
-    -- indistinguishable from the "(" that 'cExprAfterOpeningParen' has already
-    -- consumed, so admitting it here would reintroduce the ambiguity that
-    -- factoring out that paren removes.
-    Nothing -> selectClauseNoParens
-    Just _ -> selectClause
+-- |
+-- 'selectNoParens' restricted to not begin with an opening parenthesis.
+--
+-- For use where that parenthesis has already been consumed, so that admitting
+-- it again would reintroduce the ambiguity that consuming it once removes.
+selectNoParensNoLeadingParen =
+  withSelectNoParens <|> sharedCustomizedSelectNoParens selectClauseNoParens Nothing
+
+sharedSelectNoParens = sharedCustomizedSelectNoParens selectClause
+
+sharedCustomizedSelectNoParens selectClause with = do
+  select <- selectClause
   sort <- optional (space1 *> sortClause)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
@@ -1205,7 +1209,7 @@ cExprAfterOpeningParen =
 -- The branches of 'cExprAfterOpeningParen' which do not start with an 'aExpr'.
 cExprAfterOpeningParenNoAExpr :: Parser CExpr
 cExprAfterOpeningParenNoAExpr = do
-  a <- selectNoParens <* endHead <* space <* char ')'
+  a <- selectNoParensNoLeadingParen <* endHead <* space <* char ')'
   b <- optional (space *> indirection)
   return (SelectWithParensCExpr (NoParensSelectWithParens a) b)
 
