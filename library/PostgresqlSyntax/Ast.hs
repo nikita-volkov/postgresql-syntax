@@ -31,6 +31,20 @@
 -- extracted, see Ast/OptOrdinality.hs
 -- extracted, see Ast/OverrideKind.hs
 -- extracted, see Ast/Attrs.hs
+-- extracted, see Ast/AnyOperator.hs
+-- extracted, see Ast/QualOp.hs
+-- extracted, see Ast/QualAllOp.hs
+-- extracted, see Ast/SubqueryOp.hs
+-- extracted, see Ast/SymbolicExprBinOp.hs
+-- extracted, see Ast/SelectBinOp.hs
+-- extracted, see Ast/SubType.hs
+-- extracted, see Ast/TrimModifier.hs
+-- extracted, see Ast/WindowExclusionClause.hs
+-- extracted, see Ast/Xconst.hs
+-- extracted, see Ast/TypenameArrayDimensions.hs
+-- extracted, see Ast/VerbalExprBinOp.hs
+-- extracted, see Ast/AnyName.hs
+-- extracted, see Ast/AliasClause.hs
 module PostgresqlSyntax.Ast
   ( module PostgresqlSyntax.Ast,
     module PostgresqlSyntax.Ast.Ident,
@@ -59,10 +73,27 @@ module PostgresqlSyntax.Ast
     module PostgresqlSyntax.Ast.OptOrdinality,
     module PostgresqlSyntax.Ast.OverrideKind,
     module PostgresqlSyntax.Ast.Attrs,
+    module PostgresqlSyntax.Ast.AnyOperator,
+    module PostgresqlSyntax.Ast.QualOp,
+    module PostgresqlSyntax.Ast.QualAllOp,
+    module PostgresqlSyntax.Ast.SubqueryOp,
+    module PostgresqlSyntax.Ast.SymbolicExprBinOp,
+    module PostgresqlSyntax.Ast.SelectBinOp,
+    module PostgresqlSyntax.Ast.SubType,
+    module PostgresqlSyntax.Ast.TrimModifier,
+    module PostgresqlSyntax.Ast.WindowExclusionClause,
+    module PostgresqlSyntax.Ast.Xconst,
+    module PostgresqlSyntax.Ast.TypenameArrayDimensions,
+    module PostgresqlSyntax.Ast.VerbalExprBinOp,
+    module PostgresqlSyntax.Ast.AnyName,
+    module PostgresqlSyntax.Ast.AliasClause,
   )
 where
 
+import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.AllOp
+import PostgresqlSyntax.Ast.AnyName
+import PostgresqlSyntax.Ast.AnyOperator
 import PostgresqlSyntax.Ast.ArrayBounds
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.Attrs
@@ -86,8 +117,19 @@ import PostgresqlSyntax.Ast.Op
 import PostgresqlSyntax.Ast.OptOrdinality
 import PostgresqlSyntax.Ast.OptVarying
 import PostgresqlSyntax.Ast.OverrideKind
+import PostgresqlSyntax.Ast.QualAllOp
+import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.Sconst
+import PostgresqlSyntax.Ast.SelectBinOp
+import PostgresqlSyntax.Ast.SubqueryOp
+import PostgresqlSyntax.Ast.SubType
+import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Timezone
+import PostgresqlSyntax.Ast.TrimModifier
+import PostgresqlSyntax.Ast.TypenameArrayDimensions
+import PostgresqlSyntax.Ast.VerbalExprBinOp
+import PostgresqlSyntax.Ast.WindowExclusionClause
+import PostgresqlSyntax.Ast.Xconst
 import PostgresqlSyntax.Prelude
 
 -- * Statement
@@ -418,16 +460,6 @@ data TargetEl
 -- |
 -- ==== References
 -- @
---   |  select_clause UNION all_or_distinct select_clause
---   |  select_clause INTERSECT all_or_distinct select_clause
---   |  select_clause EXCEPT all_or_distinct select_clause
--- @
-data SelectBinOp = UnionSelectBinOp | IntersectSelectBinOp | ExceptSelectBinOp
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- with_clause:
 --   |  WITH cte_list
 --   |  WITH_LA cte_list
@@ -594,23 +626,6 @@ data FrameBound
   | CurrentRowFrameBound
   | PrecedingFrameBound AExpr
   | FollowingFrameBound AExpr
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- opt_window_exclusion_clause:
---   |  EXCLUDE CURRENT_P ROW
---   |  EXCLUDE GROUP_P
---   |  EXCLUDE TIES
---   |  EXCLUDE NO OTHERS
---   |  EMPTY
--- @
-data WindowExclusionClause
-  = CurrentRowWindowExclusionClause
-  | GroupWindowExclusionClause
-  | TiesWindowExclusionClause
-  | NoOthersWindowExclusionClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
@@ -930,18 +945,6 @@ type CollateClause = AnyName
 -- |
 -- ==== References
 -- @
--- alias_clause:
---   |  AS ColId '(' name_list ')'
---   |  AS ColId
---   |  ColId '(' name_list ')'
---   |  ColId
--- @
-data AliasClause = AliasClause Bool ColId (Maybe NameList)
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- func_alias_clause:
 --   | alias_clause
 --   | AS '(' TableFuncElementList ')'
@@ -1200,17 +1203,6 @@ data InExpr
   = SelectInExpr SelectWithParens
   | ExprListInExpr ExprList
   deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- sub_type:
---   | ANY
---   | SOME
---   | ALL
--- @
-data SubType = AnySubType | SomeSubType | AllSubType
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References
@@ -1484,16 +1476,6 @@ type SubstrFor = AExpr
 -- |
 -- ==== References
 -- @
---   | TRIM '(' BOTH trim_list ')'
---   | TRIM '(' LEADING trim_list ')'
---   | TRIM '(' TRAILING trim_list ')'
--- @
-data TrimModifier = BothTrimModifier | LeadingTrimModifier | TrailingTrimModifier
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
-
--- |
--- ==== References
--- @
 -- trim_list:
 --   | a_expr FROM expr_list
 --   | FROM expr_list
@@ -1590,8 +1572,6 @@ data FuncArgExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Constants
-
-type Xconst = Text
 
 -- |
 -- AexprConst:
@@ -1754,16 +1734,6 @@ data Columnref = Columnref ColId (Maybe Indirection)
 -- |
 -- ==== References
 -- @
--- any_name:
---   | ColId
---   | ColId attrs
--- @
-data AnyName = AnyName ColId (Maybe Attrs)
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- func_name:
 --   | type_function_name
 --   | ColId indirection
@@ -1857,19 +1827,6 @@ data Typename
 -- |
 -- ==== References
 -- @
--- Part of the Typename specification responsible for the choice between the following:
---   | opt_array_bounds
---   | ARRAY '[' Iconst ']'
---   | ARRAY
--- @
-data TypenameArrayDimensions
-  = BoundsTypenameArrayDimensions ArrayBounds
-  | ExplicitTypenameArrayDimensions (Maybe Iconst)
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- SimpleTypename:
 --   | GenericType
 --   | Numeric
@@ -1931,54 +1888,6 @@ type TypeList = NonEmpty Typename
 -- |
 -- ==== References
 -- @
--- qual_Op:
---   | Op
---   | OPERATOR '(' any_operator ')'
--- @
-data QualOp
-  = OpQualOp Op
-  | OperatorQualOp AnyOperator
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- qual_all_Op:
---   | all_Op
---   | OPERATOR '(' any_operator ')'
--- @
-data QualAllOp
-  = AllQualAllOp AllOp
-  | AnyQualAllOp AnyOperator
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- any_operator:
---   | all_Op
---   | ColId '.' any_operator
--- @
-data AnyOperator
-  = AllOpAnyOperator AllOp
-  | QualifiedAnyOperator ColId AnyOperator
-  deriving (Show, Generic, Eq, Ord, Data)
-
-
-data SymbolicExprBinOp
-  = MathSymbolicExprBinOp MathOp
-  | QualSymbolicExprBinOp QualOp
-  deriving (Show, Generic, Eq, Ord, Data)
-
-data VerbalExprBinOp
-  = LikeVerbalExprBinOp
-  | IlikeVerbalExprBinOp
-  | SimilarToVerbalExprBinOp
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
-
--- |
--- ==== References
--- @
 --   | a_expr IS NULL_P
 --   | a_expr IS TRUE_P
 --   | a_expr IS FALSE_P
@@ -2017,24 +1926,6 @@ data BExprIsOp
   = DistinctFromBExprIsOp BExpr
   | OfBExprIsOp TypeList
   | DocumentBExprIsOp
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- subquery_Op:
---   | all_Op
---   | OPERATOR '(' any_operator ')'
---   | LIKE
---   | NOT_LA LIKE
---   | ILIKE
---   | NOT_LA ILIKE
--- @
-data SubqueryOp
-  = AllSubqueryOp AllOp
-  | AnySubqueryOp AnyOperator
-  | LikeSubqueryOp Bool
-  | IlikeSubqueryOp Bool
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- * Indexes

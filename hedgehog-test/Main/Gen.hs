@@ -763,7 +763,7 @@ aexprConst =
       FAexprConst . Fconst <$> fconst,
       SAexprConst . Sconst <$> sconst,
       BAexprConst . Bconst <$> text (Range.exponential 1 100) (listElement "01"),
-      XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
+      XAexprConst . Xconst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
       FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> (Sconst <$> sconst),
       ConstTypenameAexprConst <$> constTypename <*> (Sconst <$> sconst),
       StringIntervalAexprConst <$> (Sconst <$> sconst) <*> maybe interval,

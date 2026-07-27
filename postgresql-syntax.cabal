@@ -74,7 +74,10 @@ library
     PostgresqlSyntax.Validation
 
   other-modules:
+    PostgresqlSyntax.Ast.AliasClause
     PostgresqlSyntax.Ast.AllOp
+    PostgresqlSyntax.Ast.AnyName
+    PostgresqlSyntax.Ast.AnyOperator
     PostgresqlSyntax.Ast.ArrayBounds
     PostgresqlSyntax.Ast.AscDesc
     PostgresqlSyntax.Ast.Attrs
@@ -99,8 +102,19 @@ library
     PostgresqlSyntax.Ast.OptOrdinality
     PostgresqlSyntax.Ast.OptVarying
     PostgresqlSyntax.Ast.OverrideKind
+    PostgresqlSyntax.Ast.QualAllOp
+    PostgresqlSyntax.Ast.QualOp
     PostgresqlSyntax.Ast.Sconst
+    PostgresqlSyntax.Ast.SelectBinOp
+    PostgresqlSyntax.Ast.SubqueryOp
+    PostgresqlSyntax.Ast.SubType
+    PostgresqlSyntax.Ast.SymbolicExprBinOp
     PostgresqlSyntax.Ast.Timezone
+    PostgresqlSyntax.Ast.TrimModifier
+    PostgresqlSyntax.Ast.TypenameArrayDimensions
+    PostgresqlSyntax.Ast.VerbalExprBinOp
+    PostgresqlSyntax.Ast.WindowExclusionClause
+    PostgresqlSyntax.Ast.Xconst
     PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty

@@ -33,6 +33,7 @@ import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Ast
+import PostgresqlSyntax.Ast.Internal (qualOpExpr, symbolicBinOpExpr)
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
@@ -448,20 +449,13 @@ baseSimpleSelect =
     ]
 
 extensionSimpleSelect headSelectClause = do
-  op <- space1 *> selectBinOp <* space1
+  op <- space1 *> parser <* space1
   endHead
   allOrDistinct <- optional (allOrDistinct <* space1)
   selectClause <- selectClause
   return (BinSimpleSelect op headSelectClause allOrDistinct selectClause)
 
 allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
-
-selectBinOp =
-  asum
-    [ keyword "union" $> UnionSelectBinOp,
-      keyword "intersect" $> IntersectSelectBinOp,
-      keyword "except" $> ExceptSelectBinOp
-    ]
 
 valuesClause = do
   keyword "values"
@@ -640,7 +634,7 @@ partitionByClause = keyphrase "partition by" *> space1 *> endHead *> sep1 commaS
 frameClause = do
   a <- parser <* space1 <* endHead
   b <- frameExtent
-  c <- optional (space1 *> windowExclusionClause)
+  c <- optional (space1 *> parser)
   return (FrameClause a b c)
 
 frameExtent =
@@ -664,12 +658,6 @@ frameBound =
       a <- aExpr
       space1
       PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
-
-windowExclusionClause =
-  CurrentRowWindowExclusionClause <$ keyphrase "exclude current row"
-    <|> GroupWindowExclusionClause <$ keyphrase "exclude group"
-    <|> TiesWindowExclusionClause <$ keyphrase "exclude ties"
-    <|> NoOthersWindowExclusionClause <$ keyphrase "exclude no others"
 
 -- * Table refs
 
@@ -707,7 +695,7 @@ nonTrailingTableRef =
     relationExprTableRef = do
       relationExpr <- relationExpr
       endHead
-      optAliasClause <- optional (space1 *> aliasClause)
+      optAliasClause <- optional (space1 *> parser)
       optTablesampleClause <- optional (space1 *> tablesampleClause)
       return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
 
@@ -727,7 +715,7 @@ nonTrailingTableRef =
             return (FuncTableRef lateral a b),
           do
             select <- selectWithParens
-            optAliasClause <- optional $ space1 *> aliasClause
+            optAliasClause <- optional $ space1 *> parser
             return (SelectTableRef lateral select optAliasClause)
         ]
 
@@ -736,7 +724,7 @@ nonTrailingTableRef =
     joinedTableWithAliasTableRef = do
       joinedTable <- wrapToHead (inParens joinedTable)
       space1
-      alias <- aliasClause
+      alias <- parser
       return (JoinTableRef joinedTable (Just alias))
 
 trailingTableRef tableRef =
@@ -820,7 +808,7 @@ tableFuncElement = do
   c <- optional (space1 *> collateClause)
   return (TableFuncElement a b c)
 
-collateClause = keyword "collate" *> space1 *> endHead *> anyName
+collateClause = keyword "collate" *> space1 *> endHead *> parser
 
 funcAliasClause =
   asum
@@ -934,11 +922,6 @@ joinQual =
       keyword "on" *> space1 *> aExpr <&> OnJoinQual
     ]
 
-aliasClause = do
-  (as, alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
-  columnAliases <- optional (space1 *> inParens (NameList <$> sep1 commaSeparator colId))
-  return (AliasClause as alias columnAliases)
-
 -- * Where
 
 whereClause = keyword "where" *> space1 *> endHead *> aExpr
@@ -976,7 +959,7 @@ sortBy = do
         keyword "using"
         space1
         endHead
-        b <- qualAllOp
+        b <- parser
         c <- optional (space1 *> parser)
         return (UsingSortBy a b c),
       do
@@ -1028,28 +1011,23 @@ customizedAExpr cExpr = suffixRec base suffix
         [ overlapsSuffix a,
           do
             space1
-            b <- wrapToHead subqueryOp
+            b <- wrapToHead parser
             space1
-            c <- wrapToHead subType
+            c <- wrapToHead parser
             space
             d <- Left <$> wrapToHead selectWithParens <|> Right <$> inParens aExpr
             return (SubqueryAExpr a b c d),
           typecastExpr a TypecastAExpr,
-          CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> anyName),
+          CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> parser),
           AtTimeZoneAExpr a <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
           symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (space *> qualOp),
+          SuffixQualOpAExpr a <$> (space *> parser),
           AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
           OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
           do
             space1
             b <- trueIfPresent (keyword "not" *> space1)
-            c <-
-              asum
-                [ LikeVerbalExprBinOp <$ keyword "like",
-                  IlikeVerbalExprBinOp <$ keyword "ilike",
-                  SimilarToVerbalExprBinOp <$ keyphrase "similar to"
-                ]
+            c <- parser
             space1
             endHead
             d <- aExpr
@@ -1240,30 +1218,9 @@ parenthesizedExprCExpr = do
         return (InParensCExpr a b)
     ]
 
-subqueryOp =
-  asum
-    [ AnySubqueryOp <$> (keyword "operator" *> space *> endHead *> inParens anyOperator),
-      do
-        a <- trueIfPresent (keyword "not" *> space1)
-        LikeSubqueryOp a <$ keyword "like" <|> IlikeSubqueryOp a <$ keyword "ilike",
-      AllSubqueryOp <$> parser
-    ]
-
-subType =
-  asum
-    [ AnySubType <$ keyword "any",
-      SomeSubType <$ keyword "some",
-      AllSubType <$ keyword "all"
-    ]
-
 inExpr =
   (ExprListInExpr <$> parse (Megaparsec.try (toParsec (inParens exprList))))
     <|> (SelectInExpr <$> wrapToHead selectWithParens)
-
-symbolicBinOpExpr a bParser constr = do
-  binOp <- label "binary operator" (space *> wrapToHead symbolicExprBinOp <* space)
-  b <- bParser
-  return (constr a binOp b)
 
 typecastExpr :: a -> (a -> Typename -> a) -> HeadedParsec Void Text a
 typecastExpr prefix constr = do
@@ -1277,8 +1234,6 @@ typecastExpr prefix constr = do
 plusedExpr expr = char '+' *> space *> expr
 
 minusedExpr expr = char '-' *> space *> expr
-
-qualOpExpr expr constr = constr <$> wrapToHead qualOp <*> (space *> expr)
 
 row = ExplicitRowRow <$> explicitRow <|> ImplicitRowRow <$> implicitRow
 
@@ -1388,7 +1343,7 @@ funcExprCommonSubexpr =
       inParensWithClause (keyword "position") (PositionFuncExprCommonSubexpr <$> optional positionList),
       inParensWithClause (keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional substrList),
       inParensWithClause (keyword "treat") (TreatFuncExprCommonSubexpr <$> aExpr <*> (space1 *> keyword "as" *> space1 *> typename)),
-      inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (trimModifier <* space1) <*> trimList),
+      inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* space1) <*> trimList),
       inParensWithClause (keyword "nullif") (NullIfFuncExprCommonSubexpr <$> aExpr <*> (commaSeparator *> aExpr)),
       inParensWithClause (keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> exprList),
       inParensWithClause (keyword "greatest") (GreatestFuncExprCommonSubexpr <$> exprList),
@@ -1441,11 +1396,6 @@ substrListFromFor =
 substrFrom = keyword "from" *> space1 *> endHead *> aExpr
 
 substrFor = keyword "for" *> space1 *> endHead *> aExpr
-
-trimModifier =
-  BothTrimModifier <$ keyword "both"
-    <|> LeadingTrimModifier <$ keyword "leading"
-    <|> TrailingTrimModifier <$ keyword "trailing"
 
 trimList =
   asum
@@ -1527,29 +1477,7 @@ funcArgExpr =
 
 -- * Ops
 
-symbolicExprBinOp =
-  QualSymbolicExprBinOp <$> qualOp
-    <|> MathSymbolicExprBinOp <$> parser
-
 lexicalExprBinOp = asum $ fmap keyphrase $ ["and", "or", "is distinct from", "is not distinct from"]
-
-qualOp =
-  asum
-    [ OpQualOp <$> parser,
-      OperatorQualOp <$> inParensWithClause (keyword "operator") anyOperator
-    ]
-
-qualAllOp =
-  asum
-    [ AnyQualAllOp <$> (keyword "operator" *> space *> inParens (endHead *> anyOperator)),
-      AllQualAllOp <$> parser
-    ]
-
-anyOperator =
-  asum
-    [ AllOpAnyOperator <$> parser,
-      QualifiedAnyOperator <$> colId <*> (space *> char '.' *> space *> anyOperator)
-    ]
 
 -- * Constants
 
@@ -1618,12 +1546,7 @@ aexprConst =
       either IAexprConst FAexprConst <$> (Right <$> parser <|> Left <$> parser),
       SAexprConst <$> parser,
       BAexprConst <$> parser,
-      label "hex literal" $ do
-        string' "x'"
-        endHead
-        a <- takeWhile1P (Just "Hex digit") Predicate.hexDigit
-        char '\''
-        return (XAexprConst a),
+      XAexprConst <$> parser,
       wrapToHead $ do
         a <- funcName
         space
@@ -1879,8 +1802,6 @@ customizedColumnref colId = do
   b <- optional (space *> indirection)
   return (Columnref a b)
 
-anyName = customizedAnyName colId
-
 filteredAnyName keywords = customizedAnyName (filteredColId keywords)
 
 customizedAnyName colId = do
@@ -2044,18 +1965,9 @@ typename =
     c <- trueIfPresent (space *> char '?')
     asum
       [ do
-          space1
-          keyword "array"
-          endHead
-          d <- optional (space *> inBrackets parser)
-          e <- trueIfPresent (space *> char '?')
-          return (Typename a b c (Just (ExplicitTypenameArrayDimensions d, e))),
-        do
-          space
           d <- parser
-          endHead
           e <- trueIfPresent (space *> char '?')
-          return (Typename a b c (Just (BoundsTypenameArrayDimensions d, e))),
+          return (Typename a b c (Just (d, e))),
         return (Typename a b c Nothing)
       ]
 
@@ -2101,6 +2013,6 @@ indexElemDef =
     <|> FuncIndexElemDef <$> funcExprWindowless
     <|> IdIndexElemDef <$> colId
 
-collate = keyword "collate" *> space1 *> endHead *> anyName
+collate = keyword "collate" *> space1 *> endHead *> parser
 
 class_ = filteredAnyName ["asc", "desc", "nulls"]

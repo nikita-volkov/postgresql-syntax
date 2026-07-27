@@ -1,0 +1,38 @@
+module PostgresqlSyntax.Ast.QualAllOp where
+
+import HeadedMegaparsec hiding (string)
+import PostgresqlSyntax.Ast.AllOp
+import PostgresqlSyntax.Ast.AnyOperator
+import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+
+-- |
+-- ==== References
+-- @
+-- qual_all_Op:
+--   | all_Op
+--   | OPERATOR '(' any_operator ')'
+-- @
+data QualAllOp
+  = AllQualAllOp AllOp
+  | AnyQualAllOp AnyOperator
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst QualAllOp where
+  toTextBuilder = \case
+    AllQualAllOp a -> toTextBuilder a
+    AnyQualAllOp a -> "OPERATOR (" <> toTextBuilder a <> ")"
+  parser =
+    asum
+      [ AnyQualAllOp <$> (keyword "operator" *> space *> inParens (endHead *> parser)),
+        AllQualAllOp <$> parser
+      ]
+
+instance Arbitrary QualAllOp where
+  arbitrary =
+    oneof
+      [ AllQualAllOp <$> arbitrary,
+        AnyQualAllOp <$> arbitrary
+      ]

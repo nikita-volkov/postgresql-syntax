@@ -1,0 +1,36 @@
+module PostgresqlSyntax.Ast.VerbalExprBinOp where
+
+import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+
+-- |
+-- ==== References
+-- @
+--   | LIKE
+--   | NOT_LA LIKE
+--   | ILIKE
+--   | NOT_LA ILIKE
+--   | SIMILAR TO
+--   | NOT_LA SIMILAR TO
+-- @
+data VerbalExprBinOp
+  = LikeVerbalExprBinOp
+  | IlikeVerbalExprBinOp
+  | SimilarToVerbalExprBinOp
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
+
+instance IsAst VerbalExprBinOp where
+  toTextBuilder = \case
+    LikeVerbalExprBinOp -> "LIKE"
+    IlikeVerbalExprBinOp -> "ILIKE"
+    SimilarToVerbalExprBinOp -> "SIMILAR TO"
+  parser =
+    asum
+      [ LikeVerbalExprBinOp <$ keyword "like",
+        IlikeVerbalExprBinOp <$ keyword "ilike",
+        SimilarToVerbalExprBinOp <$ keyphrase "similar to"
+      ]
+
+instance Arbitrary VerbalExprBinOp where
+  arbitrary = elements [minBound .. maxBound]

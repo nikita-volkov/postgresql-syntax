@@ -235,12 +235,7 @@ simpleSelect = \case
       ]
   ValuesSimpleSelect a -> valuesClause a
   TableSimpleSelect a -> "TABLE " <> relationExpr a
-  BinSimpleSelect a b c d -> selectClause b <> " " <> selectBinOp a <> foldMap (mappend " " . allOrDistinct) c <> " " <> selectClause d
-
-selectBinOp = \case
-  UnionSelectBinOp -> "UNION"
-  IntersectSelectBinOp -> "INTERSECT"
-  ExceptSelectBinOp -> "EXCEPT"
+  BinSimpleSelect a b c d -> selectClause b <> " " <> toTextBuilder a <> foldMap (mappend " " . allOrDistinct) c <> " " <> selectClause d
 
 targeting = \case
   NormalTargeting a -> targetList a
@@ -282,7 +277,7 @@ tableRef = \case
   RelationExprTableRef a b c ->
     optLexemes
       [ Just (relationExpr a),
-        fmap aliasClause b,
+        fmap toTextBuilder b,
         fmap tablesampleClause c
       ]
   FuncTableRef a b c ->
@@ -295,10 +290,10 @@ tableRef = \case
     optLexemes
       [ if a then Just "LATERAL" else Nothing,
         Just (selectWithParens b),
-        fmap aliasClause c
+        fmap toTextBuilder c
       ]
   JoinTableRef a b -> case b of
-    Just c -> inParens (joinedTable a) <> " " <> aliasClause c
+    Just c -> inParens (joinedTable a) <> " " <> toTextBuilder c
     Nothing -> joinedTable a
 
 relationExpr = \case
@@ -328,17 +323,10 @@ tableFuncElementList = commaNonEmpty tableFuncElement
 
 tableFuncElement (TableFuncElement a b c) = colId a <> " " <> typename b <> suffixMaybe collateClause c
 
-collateClause a = "COLLATE " <> anyName a
-
-aliasClause (AliasClause a b c) =
-  optLexemes
-    [ if a then Just "AS" else Nothing,
-      Just (toTextBuilder b),
-      fmap (inParens . toTextBuilder) c
-    ]
+collateClause a = "COLLATE " <> toTextBuilder a
 
 funcAliasClause = \case
-  AliasFuncAliasClause a -> aliasClause a
+  AliasFuncAliasClause a -> toTextBuilder a
   AsFuncAliasClause a -> "AS (" <> tableFuncElementList a <> ")"
   AsColIdFuncAliasClause a b -> "AS " <> colId a <> " (" <> tableFuncElementList b <> ")"
   ColIdFuncAliasClause a b -> colId a <> " (" <> tableFuncElementList b <> ")"
@@ -398,7 +386,7 @@ frameClause (FrameClause a b c) =
   optLexemes
     [ Just (toTextBuilder a),
       Just (frameExtent b),
-      fmap windowExclusionCause c
+      fmap toTextBuilder c
     ]
 
 frameExtent = \case
@@ -412,18 +400,12 @@ frameBound = \case
   PrecedingFrameBound a -> aExpr a <> " PRECEDING"
   FollowingFrameBound a -> aExpr a <> " FOLLOWING"
 
-windowExclusionCause = \case
-  CurrentRowWindowExclusionClause -> "EXCLUDE CURRENT ROW"
-  GroupWindowExclusionClause -> "EXCLUDE GROUP"
-  TiesWindowExclusionClause -> "EXCLUDE TIES"
-  NoOthersWindowExclusionClause -> "EXCLUDE NO OTHERS"
-
 -- * Order By
 
 sortClause a = "ORDER BY " <> commaNonEmpty sortBy a
 
 sortBy = \case
-  UsingSortBy a b c -> aExpr a <> " USING " <> qualAllOp b <> suffixMaybe toTextBuilder c
+  UsingSortBy a b c -> aExpr a <> " USING " <> toTextBuilder b <> suffixMaybe toTextBuilder c
   AscDescSortBy a b c -> aExpr a <> suffixMaybe toTextBuilder b <> suffixMaybe toTextBuilder c
 
 -- * Values
@@ -437,22 +419,22 @@ exprList = commaNonEmpty aExpr
 aExpr = \case
   CExprAExpr a -> cExpr a
   TypecastAExpr a b -> aExpr a <> " :: " <> typename b
-  CollateAExpr a b -> aExpr a <> " COLLATE " <> anyName b
+  CollateAExpr a b -> aExpr a <> " COLLATE " <> toTextBuilder b
   AtTimeZoneAExpr a b -> aExpr a <> " AT TIME ZONE " <> aExpr b
   PlusAExpr a -> "+ " <> aExpr a
   MinusAExpr a -> "- " <> aExpr a
-  SymbolicBinOpAExpr a b c -> aExpr a <> " " <> symbolicExprBinOp b <> " " <> aExpr c
-  PrefixQualOpAExpr a b -> qualOp a <> " " <> aExpr b
-  SuffixQualOpAExpr a b -> aExpr a <> " " <> qualOp b
+  SymbolicBinOpAExpr a b c -> aExpr a <> " " <> toTextBuilder b <> " " <> aExpr c
+  PrefixQualOpAExpr a b -> toTextBuilder a <> " " <> aExpr b
+  SuffixQualOpAExpr a b -> aExpr a <> " " <> toTextBuilder b
   AndAExpr a b -> aExpr a <> " AND " <> aExpr b
   OrAExpr a b -> aExpr a <> " OR " <> aExpr b
   NotAExpr a -> "NOT " <> aExpr a
-  VerbalExprBinOpAExpr a b c d e -> aExpr a <> " " <> verbalExprBinOp b c <> " " <> aExpr d <> foldMap (mappend " ESCAPE " . aExpr) e
+  VerbalExprBinOpAExpr a b c d e -> aExpr a <> " " <> bool "" "NOT " b <> toTextBuilder c <> " " <> aExpr d <> foldMap (mappend " ESCAPE " . aExpr) e
   ReversableOpAExpr a b c -> aExpr a <> " " <> aExprReversableOp b c
   IsnullAExpr a -> aExpr a <> " ISNULL"
   NotnullAExpr a -> aExpr a <> " NOTNULL"
   OverlapsAExpr a b -> row a <> " OVERLAPS " <> row b
-  SubqueryAExpr a b c d -> aExpr a <> " " <> subqueryOp b <> " " <> subType c <> " " <> either selectWithParens (inParens . aExpr) d
+  SubqueryAExpr a b c d -> aExpr a <> " " <> toTextBuilder b <> " " <> toTextBuilder c <> " " <> either selectWithParens (inParens . aExpr) d
   UniqueAExpr a -> "UNIQUE " <> selectWithParens a
   DefaultAExpr -> "DEFAULT"
 
@@ -461,8 +443,8 @@ bExpr = \case
   TypecastBExpr a b -> bExpr a <> " :: " <> typename b
   PlusBExpr a -> "+ " <> bExpr a
   MinusBExpr a -> "- " <> bExpr a
-  SymbolicBinOpBExpr a b c -> bExpr a <> " " <> symbolicExprBinOp b <> " " <> bExpr c
-  QualOpBExpr a b -> qualOp a <> " " <> bExpr b
+  SymbolicBinOpBExpr a b c -> bExpr a <> " " <> toTextBuilder b <> " " <> bExpr c
+  QualOpBExpr a b -> toTextBuilder a <> " " <> bExpr b
   IsOpBExpr a b c -> bExpr a <> " " <> bExprIsOp b c
 
 cExpr = \case
@@ -493,39 +475,11 @@ aExprReversableOp a = \case
   InAExprReversableOp b -> bool "" "NOT " a <> "IN " <> inExpr b
   DocumentAExprReversableOp -> bool "IS " "IS NOT " a <> "DOCUMENT"
 
-verbalExprBinOp a =
-  mappend (bool "" "NOT " a) . \case
-    LikeVerbalExprBinOp -> "LIKE"
-    IlikeVerbalExprBinOp -> "ILIKE"
-    SimilarToVerbalExprBinOp -> "SIMILAR TO"
-
-subqueryOp = \case
-  AllSubqueryOp a -> toTextBuilder a
-  AnySubqueryOp a -> "OPERATOR " <> inParens (anyOperator a)
-  LikeSubqueryOp a -> bool "" "NOT " a <> "LIKE"
-  IlikeSubqueryOp a -> bool "" "NOT " a <> "ILIKE"
-
 bExprIsOp a =
   mappend (bool "IS " "IS NOT " a) . \case
     DistinctFromBExprIsOp b -> "DISTINCT FROM " <> bExpr b
     OfBExprIsOp a -> "OF " <> inParens (typeList a)
     DocumentBExprIsOp -> "DOCUMENT"
-
-symbolicExprBinOp = \case
-  MathSymbolicExprBinOp a -> toTextBuilder a
-  QualSymbolicExprBinOp a -> qualOp a
-
-qualOp = \case
-  OpQualOp a -> toTextBuilder a
-  OperatorQualOp a -> "OPERATOR (" <> anyOperator a <> ")"
-
-qualAllOp = \case
-  AllQualAllOp a -> toTextBuilder a
-  AnyQualAllOp a -> "OPERATOR (" <> anyOperator a <> ")"
-
-anyOperator = \case
-  AllOpAnyOperator a -> toTextBuilder a
-  QualifiedAnyOperator a b -> colId a <> "." <> anyOperator b
 
 inExpr = \case
   SelectInExpr a -> selectWithParens a
@@ -631,7 +585,7 @@ funcExprCommonSubexpr = \case
   PositionFuncExprCommonSubexpr a -> "POSITION (" <> foldMap positionList a <> ")"
   SubstringFuncExprCommonSubexpr a -> "SUBSTRING (" <> foldMap substrList a <> ")"
   TreatFuncExprCommonSubexpr a b -> "TREAT (" <> aExpr a <> " AS " <> typename b <> ")"
-  TrimFuncExprCommonSubexpr a b -> "TRIM (" <> prefixMaybe trimModifier a <> trimList b <> ")"
+  TrimFuncExprCommonSubexpr a b -> "TRIM (" <> prefixMaybe toTextBuilder a <> trimList b <> ")"
   NullIfFuncExprCommonSubexpr a b -> "NULLIF (" <> aExpr a <> ", " <> aExpr b <> ")"
   CoalesceFuncExprCommonSubexpr a -> "COALESCE (" <> exprList a <> ")"
   GreatestFuncExprCommonSubexpr a -> "GREATEST (" <> exprList a <> ")"
@@ -659,11 +613,6 @@ substrFrom a = "FROM " <> aExpr a
 
 substrFor a = "FOR " <> aExpr a
 
-trimModifier = \case
-  BothTrimModifier -> "BOTH"
-  LeadingTrimModifier -> "LEADING"
-  TrailingTrimModifier -> "TRAILING"
-
 trimList = \case
   ExprFromExprListTrimList a b -> aExpr a <> " FROM " <> exprList b
   FromExprListTrimList a -> "FROM " <> exprList a
@@ -676,7 +625,7 @@ aexprConst = \case
   FAexprConst a -> toTextBuilder a
   SAexprConst a -> toTextBuilder a
   BAexprConst a -> toTextBuilder a
-  XAexprConst a -> "X'" <> text a <> "'"
+  XAexprConst a -> toTextBuilder a
   FuncAexprConst a b c -> funcName a <> foldMap (inParens . funcAexprConstArgList) b <> " " <> toTextBuilder c
   ConstTypenameAexprConst a b -> constTypename a <> " " <> toTextBuilder b
   StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder a <> suffixMaybe toTextBuilder b
@@ -746,19 +695,13 @@ funcName = \case
   TypeFuncName a -> typeFunctionName a
   IndirectedFuncName a b -> colId a <> indirection b
 
-anyName (AnyName a b) = colId a <> foldMap toTextBuilder b
-
 -- * Types
 
 typename (Typename a b _ d) =
   bool "" "SETOF " a <> simpleTypename b <> foldMap typenameArrayDimensionsWithQuestionMark d
 
 typenameArrayDimensionsWithQuestionMark (a, _) =
-  typenameArrayDimensions a
-
-typenameArrayDimensions = \case
-  BoundsTypenameArrayDimensions a -> toTextBuilder a
-  ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (inBrackets . toTextBuilder) a
+  toTextBuilder a
 
 simpleTypename = \case
   GenericTypeSimpleTypename a -> genericType a
@@ -773,11 +716,6 @@ genericType (GenericType a b c) = typeFunctionName a <> foldMap toTextBuilder b 
 typeModifiers = inParens . exprList
 
 typeList = commaNonEmpty typename
-
-subType = \case
-  AnySubType -> "ANY"
-  SomeSubType -> "SOME"
-  AllSubType -> "ALL"
 
 -- * Indexes
 
@@ -795,6 +733,6 @@ indexElemDef = \case
   FuncIndexElemDef a -> funcExprWindownless a
   ExprIndexElemDef a -> inParens (aExpr a)
 
-collate = mappend "COLLATE " . anyName
+collate = mappend "COLLATE " . toTextBuilder
 
-class_ = anyName
+class_ = toTextBuilder
