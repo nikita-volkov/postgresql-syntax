@@ -1,6 +1,5 @@
 module PostgresqlSyntax.Prelude
   ( module Exports,
-    showAsText,
     suffixRec,
     extendMany,
   )
@@ -76,11 +75,9 @@ import System.Timeout as Exports
 import Test.QuickCheck as Exports (Arbitrary (..), Gen, choose, elements, listOf, oneof, sized, vectorOf)
 import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
+import TextBuilder as Exports (TextBuilder)
 import Unsafe.Coerce as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, fail, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
-
-showAsText :: (Show a) => a -> Text
-showAsText = show >>> fromString
 
 -- |
 -- Compose a monad, which attempts to extend a value, based on the following input.
