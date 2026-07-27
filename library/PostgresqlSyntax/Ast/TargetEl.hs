@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -67,6 +68,14 @@ instance Qc.Arbitrary TargetEl where
     Qc.oneof
       [ pure AsteriskTargetEl,
         AliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-        ImplicitlyAliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        -- | Unlike 'AliasedExprTargetEl' (separated from its alias by the
+        -- reserved @AS@ keyword) or 'ExprTargetEl' (followed only by a
+        -- comma\/end of list, neither valid @a_expr@ continuations), the
+        -- expr here is followed directly by a bare alias identifier with
+        -- nothing but a space — exactly the hazard
+        -- 'PostgresqlSyntax.Ast.AExpr.isBoundedAExprOperand' guards
+        -- against (e.g. a trailing 'PostgresqlSyntax.Ast.AExpr.SuffixQualOpAExpr'
+        -- would otherwise swallow the alias as its own operand instead).
+        ImplicitlyAliasedExprTargetEl <$> AExpr.safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
         ExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

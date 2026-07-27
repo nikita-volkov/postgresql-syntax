@@ -25,8 +25,12 @@ instance IsAst SelectStmt where
   parser = NoParensSelectStmt <$> parser <|> WithParensSelectStmt <$> parser
 
 instance Qc.Arbitrary SelectStmt where
-  arbitrary =
-    Qc.oneof
-      [ NoParensSelectStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
-        WithParensSelectStmt <$> Qc.scale (`div` 2) Qc.arbitrary
-      ]
+  -- | @WithParensSelectStmt@ is unreachable via this type's own @parser@:
+  -- @NoParensSelectStmt@'s alternative is tried first, and
+  -- 'PostgresqlSyntax.Ast.SelectClause' (reachable from any
+  -- @select_no_parens@ with every other clause absent) always accepts a
+  -- parenthesized select too — so any @'(' select ')'@ text always parses
+  -- as @NoParensSelectStmt (SelectNoParens Nothing (WithParensSelectClause
+  -- _) Nothing Nothing Nothing)@, never as a bare @WithParensSelectStmt@.
+  -- Generating the latter would therefore never round-trip.
+  arbitrary = NoParensSelectStmt <$> Qc.scale (`div` 2) Qc.arbitrary

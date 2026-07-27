@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.AExpr where
 
 import PostgresqlSyntax.IsAst (IsAst)
-import PostgresqlSyntax.Prelude (Data, Eq, Ord, Parser, Show, Text)
-import Test.QuickCheck (Arbitrary)
+import PostgresqlSyntax.Prelude (Bool, Data, Eq, Ord, Parser, Show, Text)
+import Test.QuickCheck (Arbitrary, Gen)
 
 data AExpr
 
@@ -23,3 +23,9 @@ instance Arbitrary AExpr
 -- "PostgresqlSyntax.Ast.SortBy", which must not let @a_expr@ swallow a
 -- keyword (@USING@\/@ASC@\/@DESC@\/@NULLS@) that is meant to terminate it.
 filteredParser :: [Text] -> Parser AExpr
+
+-- | See "PostgresqlSyntax.Ast.AExpr" for the full documentation.
+isBoundedAExprOperand :: AExpr -> Bool
+
+-- | See "PostgresqlSyntax.Ast.AExpr" for the full documentation.
+safeAExprOperand :: Gen AExpr -> Gen AExpr

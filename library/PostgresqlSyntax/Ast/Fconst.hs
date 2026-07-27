@@ -19,6 +19,10 @@ instance IsAst Fconst where
   parser = Fconst <$> Parser.float
 
 instance Qc.Arbitrary Fconst where
+  -- | Parsed via 'Parser.float' (unsigned — the sign, when present, is a
+  -- separate unary @AExpr@\/@BExpr@ operator applied outside this type), so
+  -- it must never be negative, mirroring
+  -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
   arbitrary =
-    Fconst
+    Fconst . abs
       <$> (Qc.arbitrary `Qc.suchThat` (\a -> fromIntegral (round a :: Int) /= a))

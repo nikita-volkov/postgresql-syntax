@@ -36,7 +36,14 @@ instance IsAst JoinedTable where
   parser =
     InParensJoinedTable
       <$> inParens parser
-      <|> (MethJoinedTable <$> parser <*> parser <*> (Parser.space1 *> parser))
+      <|> ( do
+              b <- parser
+              Parser.space1
+              a <- parser
+              Parser.space1
+              c <- parser
+              return (MethJoinedTable a b c)
+          )
 
 instance Qc.Arbitrary JoinedTable where
   arbitrary =

@@ -1,6 +1,8 @@
 module PostgresqlSyntax.Ast.AExpr
   ( AExpr (..),
     filteredParser,
+    isBoundedAExprOperand,
+    safeAExprOperand,
   )
 where
 
