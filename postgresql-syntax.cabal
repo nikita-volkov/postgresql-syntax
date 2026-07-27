@@ -68,12 +68,10 @@ library
   hs-source-dirs: library
   exposed-modules:
     PostgresqlSyntax
-    PostgresqlSyntax.Ast
-    PostgresqlSyntax.IsAst
-    PostgresqlSyntax.KeywordSet
-    PostgresqlSyntax.Validation
 
   other-modules:
+    PostgresqlSyntax.Ast
+    PostgresqlSyntax.IsAst
     PostgresqlSyntax.Ast.AExpr
     PostgresqlSyntax.Ast.AexprConst
     PostgresqlSyntax.Ast.AExprReversableOp
@@ -220,8 +218,10 @@ library
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
+    PostgresqlSyntax.KeywordSet
     PostgresqlSyntax.Predicate
     PostgresqlSyntax.Prelude
+    PostgresqlSyntax.Validation
 
   build-depends:
     base >=4.12 && <5,

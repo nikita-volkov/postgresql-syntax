@@ -34,6 +34,12 @@ runParserWithErrorPos p s = case runParser p s of
 runParser :: (Ord e, VisualStream strm, TraversableStream strm) => HeadedParsec e strm a -> strm -> Either (Megaparsec.ParseErrorBundle strm e) a
 runParser p = Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
 
+-- |
+-- Require the given parser to consume all remaining input (after optional
+-- surrounding whitespace), asserting the parse reaches end-of-input.
+totally :: (Ord err, Stream strm, Megaparsec.Token strm ~ Char) => HeadedParsec err strm a -> HeadedParsec err strm a
+totally p = space *> p <* HeadedMegaparsec.endHead <* space <* eof
+
 -- * Primitives
 
 -- |

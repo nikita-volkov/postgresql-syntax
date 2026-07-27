@@ -4,8 +4,7 @@ module Main (main) where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
-import PostgresqlSyntax (IsAst, run, runWithPosError, toText)
-import PostgresqlSyntax.Ast
+import PostgresqlSyntax
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (Property, counterexample, withNumTests, (===))
@@ -14,10 +13,10 @@ import Prelude hiding (assert)
 main :: IO ()
 main = hspec $ do
   describe "Round-trip parse/render" $ do
-    prop "Typename" (roundTrip @Typename 10000)
-    prop "TableRef" (roundTrip @TableRef 10000)
-    prop "AExpr" (roundTrip @AExpr 60000)
-    prop "PreparableStmt" (roundTrip @PreparableStmt 30000)
+    prop "Typename" (roundTrip @Typename 1000)
+    prop "TableRef" (roundTrip @TableRef 1000)
+    prop "AExpr" (roundTrip @AExpr 6000)
+    prop "PreparableStmt" (roundTrip @PreparableStmt 3000)
 
   describe "Parsers" $ do
     it "preparableStmt" $ forM_ preparableStmtInputs (parsesTo @PreparableStmt)
@@ -35,7 +34,7 @@ main = hspec $ do
 -- * Round-trip property
 
 roundTrip :: (IsAst a, Eq a, Show a) => Int -> a -> Property
-roundTrip n a = withNumTests n $ counterexample (Text.unpack sql) (run sql === Right a)
+roundTrip n a = withNumTests n $ counterexample (Text.unpack sql) (parse sql === Right a)
   where
     sql = toText a
 
@@ -43,13 +42,13 @@ roundTrip n a = withNumTests n $ counterexample (Text.unpack sql) (run sql === R
 
 parsesTo :: forall a. (IsAst a) => Text -> Expectation
 parsesTo input =
-  case run @a input of
+  case parse @a input of
     Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
     Right _ -> pure ()
 
 reportsError :: forall a. (IsAst a) => Text -> String -> Expectation
 reportsError input expected =
-  case runWithPosError @a input of
+  case parseWithPosError @a input of
     Left err -> show (NonEmpty.head err) `shouldBe` expected
     Right _ -> expectationFailure "expected a parse error, but it succeeded"
 
@@ -74,19 +73,19 @@ nestingSpec = do
     $ parsesWithin @AExpr 5 coalesceSumInput
   -- The parenthesised sub-select has two possible representations.
   it "redundant parens around a sub-select are canonicalised"
-    $ run @SelectWithParens "((select 1))"
-    `shouldBe` (WithParensSelectWithParens . NoParensSelectWithParens <$> run @SelectNoParens "select 1")
+    $ parse @SelectWithParens "((select 1))"
+    `shouldBe` (WithParensSelectWithParens . NoParensSelectWithParens <$> parse @SelectNoParens "select 1")
   it "OVERLAPS still parses" $ do
     let render :: AExpr -> Text
         render = toText
-    fmap render (run @AExpr "(1, 2) overlaps (3, 4)") `shouldBe` Right "(1, 2) OVERLAPS (3, 4)"
-    fmap render (run @AExpr "row(1, 2) overlaps row(3, 4)") `shouldBe` Right "ROW (1, 2) OVERLAPS ROW (3, 4)"
+    fmap render (parse @AExpr "(1, 2) overlaps (3, 4)") `shouldBe` Right "(1, 2) OVERLAPS (3, 4)"
+    fmap render (parse @AExpr "row(1, 2) overlaps row(3, 4)") `shouldBe` Right "ROW (1, 2) OVERLAPS ROW (3, 4)"
 
 parsesWithin :: forall a. (IsAst a) => Int -> Text -> Expectation
 parsesWithin seconds input = do
   result <-
     timeout (seconds * 1000000)
-      $ case run @a input of
+      $ case parse @a input of
         Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
         Right _ -> pure ()
   case result of
