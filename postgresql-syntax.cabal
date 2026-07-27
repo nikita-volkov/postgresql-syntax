@@ -67,10 +67,10 @@ library
   import: base-settings
   hs-source-dirs: library
   exposed-modules:
+    PostgresqlSyntax
     PostgresqlSyntax.Ast
+    PostgresqlSyntax.IsAst
     PostgresqlSyntax.KeywordSet
-    PostgresqlSyntax.Parsing
-    PostgresqlSyntax.Rendering
     PostgresqlSyntax.Validation
 
   other-modules:
@@ -220,7 +220,6 @@ library
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
-    PostgresqlSyntax.IsAst
     PostgresqlSyntax.Predicate
     PostgresqlSyntax.Prelude
 
