@@ -51,8 +51,17 @@ instance IsAst ConstDatetime where
       ]
 
 instance Qc.Arbitrary ConstDatetime where
+  -- | The precision here is parsed via 'Parser.decimal' (unsigned), so it
+  -- must never be negative — mirroring
+  -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
   arbitrary =
     Qc.oneof
-      [ TimestampConstDatetime <$> Qc.arbitrary <*> Qc.arbitrary,
-        TimeConstDatetime <$> Qc.arbitrary <*> Qc.arbitrary
+      [ TimestampConstDatetime <$> nonNegativeMaybeInt64 <*> Qc.arbitrary,
+        TimeConstDatetime <$> nonNegativeMaybeInt64 <*> Qc.arbitrary
       ]
+    where
+      nonNegativeMaybeInt64 = Qc.oneof [pure Nothing, Just <$> nonNegativeInt64]
+      nonNegativeInt64 = Qc.sized (\n -> Qc.choose (0, cap n))
+      cap n
+        | n >= 62 = maxBound
+        | otherwise = 2 ^ n

@@ -28,4 +28,12 @@ instance IsAst ConstCharacter where
   parser = ConstCharacter <$> (parser <* Parser.endHead) <*> optional (Parser.space *> inParens Parser.decimal)
 
 instance Qc.Arbitrary ConstCharacter where
-  arbitrary = ConstCharacter <$> arbitrary <*> arbitrary
+  -- | The length here is parsed via 'Parser.decimal' (unsigned), so it must
+  -- never be negative — mirroring 'PostgresqlSyntax.Ast.IntervalSecond'\'s
+  -- own @nonNegative@.
+  arbitrary = ConstCharacter <$> arbitrary <*> Qc.oneof [pure Nothing, Just <$> nonNegativeInt64]
+    where
+      nonNegativeInt64 = Qc.sized (\n -> Qc.choose (0, cap n))
+      cap n
+        | n >= 62 = maxBound
+        | otherwise = 2 ^ n

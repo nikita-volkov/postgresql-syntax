@@ -151,10 +151,13 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
     Qc.oneof
       [ CollationForFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
         pure CurrentDateFuncExprCommonSubexpr,
-        CurrentTimeFuncExprCommonSubexpr <$> Qc.arbitrary,
-        CurrentTimestampFuncExprCommonSubexpr <$> Qc.arbitrary,
-        LocalTimeFuncExprCommonSubexpr <$> Qc.arbitrary,
-        LocalTimestampFuncExprCommonSubexpr <$> Qc.arbitrary,
+        -- | The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so
+        -- it must never be negative — mirroring
+        -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
+        CurrentTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+        CurrentTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+        LocalTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+        LocalTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
         pure CurrentRoleFuncExprCommonSubexpr,
         pure CurrentUserFuncExprCommonSubexpr,
         pure SessionUserFuncExprCommonSubexpr,
@@ -173,3 +176,9 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
         GreatestFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
         LeastFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary
       ]
+    where
+      nonNegativeMaybeInt64 = Qc.oneof [pure Nothing, Just <$> nonNegativeInt64]
+      nonNegativeInt64 = Qc.sized (\n -> Qc.choose (0, cap n))
+      cap n
+        | n >= 62 = maxBound
+        | otherwise = 2 ^ n

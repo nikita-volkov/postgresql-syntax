@@ -119,26 +119,68 @@ data AExpr
 instance IsAst AExpr where
   toTextBuilder = \case
     CExprAExpr a -> toTextBuilder a
-    TypecastAExpr a b -> toTextBuilder a <> " :: " <> toTextBuilder b
-    CollateAExpr a b -> toTextBuilder a <> " COLLATE " <> toTextBuilder b
-    AtTimeZoneAExpr a b -> toTextBuilder a <> " AT TIME ZONE " <> toTextBuilder b
+    TypecastAExpr a b -> renderOperand a <> " :: " <> toTextBuilder b
+    CollateAExpr a b -> renderOperand a <> " COLLATE " <> toTextBuilder b
+    AtTimeZoneAExpr a b -> renderOperand a <> " AT TIME ZONE " <> toTextBuilder b
     PlusAExpr a -> "+ " <> toTextBuilder a
     MinusAExpr a -> "- " <> toTextBuilder a
-    SymbolicBinOpAExpr a b c -> toTextBuilder a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
+    SymbolicBinOpAExpr a b c -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
     PrefixQualOpAExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
-    SuffixQualOpAExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
-    AndAExpr a b -> toTextBuilder a <> " AND " <> toTextBuilder b
-    OrAExpr a b -> toTextBuilder a <> " OR " <> toTextBuilder b
+    SuffixQualOpAExpr a b -> renderOperand a <> " " <> toTextBuilder b
+    AndAExpr a b -> renderOperand a <> " AND " <> toTextBuilder b
+    OrAExpr a b -> renderOperand a <> " OR " <> toTextBuilder b
     NotAExpr a -> "NOT " <> toTextBuilder a
-    VerbalExprBinOpAExpr a b c d e -> toTextBuilder a <> " " <> bool "" "NOT " b <> toTextBuilder c <> " " <> toTextBuilder d <> foldMap (mappend " ESCAPE " . toTextBuilder) e
-    ReversableOpAExpr a b c -> toTextBuilder a <> " " <> renderAExprReversableOp b c
-    IsnullAExpr a -> toTextBuilder a <> " ISNULL"
-    NotnullAExpr a -> toTextBuilder a <> " NOTNULL"
+    VerbalExprBinOpAExpr a b c d e -> renderOperand a <> " " <> bool "" "NOT " b <> toTextBuilder c <> " " <> renderVerbalRhs e d <> foldMap (mappend " ESCAPE " . toTextBuilder) e
+    ReversableOpAExpr a b c -> renderOperand a <> " " <> renderAExprReversableOp b c
+    IsnullAExpr a -> renderOperand a <> " ISNULL"
+    NotnullAExpr a -> renderOperand a <> " NOTNULL"
     OverlapsAExpr a b -> toTextBuilder a <> " OVERLAPS " <> toTextBuilder b
-    SubqueryAExpr a b c d -> toTextBuilder a <> " " <> toTextBuilder b <> " " <> toTextBuilder c <> " " <> either toTextBuilder (renderInParens . toTextBuilder) d
+    SubqueryAExpr a b c d -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c <> " " <> either toTextBuilder (renderInParens . toTextBuilder) d
     UniqueAExpr a -> "UNIQUE " <> toTextBuilder a
     DefaultAExpr -> "DEFAULT"
     where
+      -- |
+      -- Renders an operand sitting in the left\/accumulator position of a
+      -- suffix production (the @a@ that 'customizedParser'\'s @suffixRec@
+      -- threads through). Every alternative in @suffix@ parses its
+      -- right-hand operand via an unrestricted recursive @a_expr@ call, so
+      -- rendering it plainly always reconstructs the same shape on reparse.
+      -- The *left* position is different: control only returns to
+      -- @suffixRec@'s loop after a __bounded__ production — one that
+      -- doesn't itself end in an unrestricted recursive @a_expr@. A value
+      -- shaped like 'PlusAExpr'\/'MinusAExpr'\/'NotAExpr'\/
+      -- 'PrefixQualOpAExpr'\/'AtTimeZoneAExpr'\/'SymbolicBinOpAExpr'\/
+      -- 'AndAExpr'\/'OrAExpr'\/'VerbalExprBinOpAExpr', or a 'ReversableOpAExpr'
+      -- whose 'PostgresqlSyntax.Ast.AExprReversableOp' ends in one too, is
+      -- unbounded — placed there bare, it would greedily re-absorb whatever
+      -- follows on reparse (e.g. rendering @SymbolicBinOpAExpr (NotAExpr x)
+      -- op y@ plainly as @NOT x op y@ reparses as @NotAExpr (SymbolicBinOpAExpr
+      -- x op y)@). Parenthesizing it, via the existing @'(' a_expr ')'@
+      -- 'PostgresqlSyntax.Ast.CExpr' production, keeps rendering correct for
+      -- any 'AExpr' value, whether or not the parser itself could have
+      -- produced it in that position.
+      renderOperand a
+        | isBoundedAExprOperand a = toTextBuilder a
+        | otherwise = renderInParens (toTextBuilder a)
+      -- |
+      -- The @d@ operand of a @LIKE@\/@ILIKE@\/@SIMILAR TO@ production, when
+      -- it has a trailing @ESCAPE@ clause of its own (@e@). Since @d@ is
+      -- parsed via an unrestricted recursive @a_expr@, rendered bare it
+      -- could itself end in a dangling operator or an escape-less
+      -- 'VerbalExprBinOpAExpr' — either of which would, on reparse, greedily
+      -- swallow the text meant for *this* production's own @ESCAPE@ (an
+      -- operand identifier in the first case, its own inner escape clause in
+      -- the second). Parenthesizing @d@ whenever @e@ is present rules that
+      -- out, the same way @renderOperand@ does for the left position.
+      renderVerbalRhs e d = case e of
+        Nothing -> toTextBuilder d
+        -- | Already explicitly parenthesized (as the 'Qc.Arbitrary'
+        -- instance below always arranges whenever it generates an escape
+        -- clause) — render as-is instead of adding a second, redundant
+        -- layer of parens.
+        Just _
+          | CExprAExpr (CExpr.InParensCExpr _ _) <- d -> toTextBuilder d
+          | otherwise -> renderInParens (toTextBuilder d)
       -- |
       -- Distinct from 'PostgresqlSyntax.Ast.AExprReversableOp'\'s own
       -- @toTextBuilder@ (which bakes in the "positive" @IS@\/@BETWEEN@\/@IN@
@@ -281,6 +323,59 @@ overlapsSuffix a = do
 filteredParser :: [Text] -> Parser AExpr
 filteredParser excluded = customizedParser (CExpr.customizedParser (filteredColIdLike UnquotedIdent parser excluded))
 
+-- |
+-- Whether the given 'AExpr' is safe to place in the left\/accumulator
+-- position of a suffix production without parenthesizing it — see
+-- @renderOperand@ in the 'IsAst' instance above for why that position is
+-- special. A shape is bounded when parsing it can never end in an
+-- unrestricted recursive @a_expr@ call, i.e. control is guaranteed to
+-- return to @suffixRec@'s loop once it's done, __and__ nothing that could
+-- follow (a keyword introducing the next suffix, e.g. @AT@ of @AT TIME
+-- ZONE@, or an @ESCAPE@ clause external to this value entirely) could be
+-- mistaken for the start of a fresh operand.
+--
+-- 'SuffixQualOpAExpr' fails that second half: since its trailing @qual_Op@
+-- has no operand of its own yet, @suffixRec@'s loop tries
+-- @symbolicBinOpExpr@ again on whatever follows — and if that's a bare word
+-- that isn't reserved (like @AT@), it gets swallowed as this "postfix"
+-- operator's operand instead of being left for the keyword that was
+-- actually meant to follow. E.g. @x +# AT TIME ZONE y@, meant as
+-- @AtTimeZoneAExpr (SuffixQualOpAExpr x (+#)) y@, reparses instead as
+-- @SymbolicBinOpAExpr x (+#) (CExprAExpr (ColumnrefCExpr "AT"))@ followed by
+-- leftover, unparseable @TIME ZONE y@.
+isBoundedAExprOperand :: AExpr -> Bool
+isBoundedAExprOperand = \case
+  PlusAExpr {} -> False
+  MinusAExpr {} -> False
+  NotAExpr {} -> False
+  PrefixQualOpAExpr {} -> False
+  SuffixQualOpAExpr {} -> False
+  AtTimeZoneAExpr {} -> False
+  SymbolicBinOpAExpr {} -> False
+  AndAExpr {} -> False
+  OrAExpr {} -> False
+  VerbalExprBinOpAExpr {} -> False
+  ReversableOpAExpr _ _ c -> case c of
+    DistinctFromAExprReversableOp {} -> False
+    BetweenAExprReversableOp {} -> False
+    BetweenSymmetricAExprReversableOp {} -> False
+    _ -> True
+  _ -> True
+
+-- |
+-- A generator for the left\/accumulator position of a suffix production
+-- (see 'isBoundedAExprOperand'): whatever the given generator produces gets
+-- wrapped in an explicit @'(' a_expr ')'@ (via 'CExpr.InParensCExpr') when
+-- it wouldn't otherwise be reachable there, so the result always round-trips
+-- through 'parser'.
+safeAExprOperand :: Qc.Gen AExpr -> Qc.Gen AExpr
+safeAExprOperand gen = do
+  a <- gen
+  pure
+    $ if isBoundedAExprOperand a
+      then a
+      else CExprAExpr (CExpr.InParensCExpr a Nothing)
+
 instance Qc.Arbitrary AExpr where
   arbitrary =
     Qc.sized $ \n ->
@@ -290,22 +385,36 @@ instance Qc.Arbitrary AExpr where
           Qc.oneof
             [ CExprAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
               pure DefaultAExpr,
-              TypecastAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-              CollateAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-              AtTimeZoneAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              TypecastAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
+              CollateAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
+              AtTimeZoneAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
               PlusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
               MinusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              SymbolicBinOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SymbolicBinOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
               PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              SuffixQualOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-              AndAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              OrAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SuffixQualOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
+              AndAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
+              OrAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
               NotAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              VerbalExprBinOpAExpr <$> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
-              ReversableOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              IsnullAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              NotnullAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ( do
+                  a <- safeAExprOperand (Qc.scale (`div` 4) Qc.arbitrary)
+                  b <- Qc.arbitrary
+                  c <- Qc.arbitrary
+                  e <- Qc.scale (`div` 4) Qc.arbitrary
+                  -- | See @renderVerbalRhs@ in the 'IsAst' instance above:
+                  -- whenever there's an escape clause, @d@ must be
+                  -- parenthesized up front so the generated value already
+                  -- matches what parsing the (necessarily parenthesized)
+                  -- rendering reconstructs.
+                  d <- case e of
+                    Nothing -> Qc.scale (`div` 4) Qc.arbitrary
+                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.scale (`div` 4) Qc.arbitrary
+                  pure (VerbalExprBinOpAExpr a b c d e)
+              ),
+              ReversableOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              IsnullAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary),
+              NotnullAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary),
               OverlapsAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              SubqueryAExpr <$> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
+              SubqueryAExpr <$> safeAExprOperand (Qc.scale (`div` 4) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
               UniqueAExpr <$> Qc.scale (`div` 2) Qc.arbitrary
             ]

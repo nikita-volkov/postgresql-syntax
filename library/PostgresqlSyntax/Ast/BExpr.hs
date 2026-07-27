@@ -59,13 +59,26 @@ data BExpr
 instance IsAst BExpr where
   toTextBuilder = \case
     CExprBExpr a -> toTextBuilder a
-    TypecastBExpr a b -> toTextBuilder a <> " :: " <> toTextBuilder b
+    TypecastBExpr a b -> renderOperand a <> " :: " <> toTextBuilder b
     PlusBExpr a -> "+ " <> toTextBuilder a
     MinusBExpr a -> "- " <> toTextBuilder a
-    SymbolicBinOpBExpr a b c -> toTextBuilder a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
+    SymbolicBinOpBExpr a b c -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
     QualOpBExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
-    IsOpBExpr a b c -> toTextBuilder a <> " " <> renderBExprIsOp b c
+    IsOpBExpr a b c -> renderOperand a <> " " <> renderBExprIsOp b c
     where
+      -- | See 'PostgresqlSyntax.Ast.AExpr'\'s @renderOperand@ for the
+      -- rationale — same left\/accumulator-position hazard, mirrored here
+      -- for 'BExpr'\'s own (smaller) suffix grammar. Unlike 'AExpr', there's
+      -- no @'(' b_expr ')'@ production to fall back on, so parenthesizing
+      -- reinterprets the operand as an @a_expr@ via
+      -- 'PostgresqlSyntax.Ast.CExpr'\'s @'(' a_expr ')'@ instead — still
+      -- valid, semantically-equivalent SQL, just not the same 'BExpr' shape
+      -- on reparse (only relevant to hand-constructed values; the
+      -- 'Qc.Arbitrary' instance below never generates an operand needing
+      -- this fallback).
+      renderOperand a
+        | isBoundedBExprOperand a = toTextBuilder a
+        | otherwise = renderInParens (toTextBuilder a)
       renderBExprIsOp a =
         mappend (bool "IS " "IS NOT " a) . \case
           DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder b
@@ -100,6 +113,36 @@ instance IsAst BExpr where
               return (IsOpBExpr a b c)
           ]
 
+-- |
+-- Whether the given 'BExpr' is safe to place in the left\/accumulator
+-- position of a suffix production without parenthesizing it — see
+-- 'IsAst' 'BExpr'\'s @renderOperand@. Mirrors
+-- 'PostgresqlSyntax.Ast.AExpr.isBoundedAExprOperand'.
+isBoundedBExprOperand :: BExpr -> Bool
+isBoundedBExprOperand = \case
+  PlusBExpr {} -> False
+  MinusBExpr {} -> False
+  QualOpBExpr {} -> False
+  SymbolicBinOpBExpr {} -> False
+  IsOpBExpr _ _ c -> case c of
+    DistinctFromBExprIsOp {} -> False
+    _ -> True
+  _ -> True
+
+-- |
+-- A generator for the left\/accumulator position of a suffix production
+-- (see 'isBoundedBExprOperand'). Unlike
+-- 'PostgresqlSyntax.Ast.AExpr.safeAExprOperand', 'BExpr' has no
+-- parenthesizing escape hatch of its own (see @renderOperand@ above), so an
+-- unbounded draw is simply replaced by an always-bounded 'CExprBExpr'
+-- instead of wrapped.
+safeBExprOperand :: Qc.Gen BExpr -> Qc.Gen BExpr
+safeBExprOperand gen = do
+  a <- gen
+  if isBoundedBExprOperand a
+    then pure a
+    else CExprBExpr <$> Qc.arbitrary
+
 instance Qc.Arbitrary BExpr where
   arbitrary =
     Qc.sized $ \n ->
@@ -108,10 +151,10 @@ instance Qc.Arbitrary BExpr where
         else
           Qc.oneof
             [ CExprBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              TypecastBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+              TypecastBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
               PlusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
               MinusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              SymbolicBinOpBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SymbolicBinOpBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
               QualOpBExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              IsOpBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+              IsOpBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

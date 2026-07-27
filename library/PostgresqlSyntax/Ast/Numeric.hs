@@ -81,10 +81,18 @@ instance Qc.Arbitrary Numeric where
         pure SmallintNumeric,
         pure BigintNumeric,
         pure RealNumeric,
-        FloatNumeric <$> Qc.arbitrary,
+        -- | The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so,
+        -- unlike a plain 'Int64', it must never be negative — mirroring
+        -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
+        FloatNumeric <$> Qc.oneof [pure Nothing, Just <$> nonNegativeInt64],
         pure DoublePrecisionNumeric,
         DecimalNumeric <$> Qc.arbitrary,
         DecNumeric <$> Qc.arbitrary,
         NumericNumeric <$> Qc.arbitrary,
         pure BooleanNumeric
       ]
+    where
+      nonNegativeInt64 = Qc.sized (\n -> Qc.choose (0, cap n))
+      cap n
+        | n >= 62 = maxBound
+        | otherwise = 2 ^ n
