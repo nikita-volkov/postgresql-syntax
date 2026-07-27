@@ -74,6 +74,7 @@ library
     PostgresqlSyntax.Validation
 
   other-modules:
+    PostgresqlSyntax.Ast.Internal
     PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
