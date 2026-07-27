@@ -74,46 +74,147 @@ library
     PostgresqlSyntax.Validation
 
   other-modules:
+    PostgresqlSyntax.Ast.AExpr
+    PostgresqlSyntax.Ast.AExprReversableOp
+    PostgresqlSyntax.Ast.AexprConst
     PostgresqlSyntax.Ast.AliasClause
     PostgresqlSyntax.Ast.AllOp
     PostgresqlSyntax.Ast.AnyName
     PostgresqlSyntax.Ast.AnyOperator
     PostgresqlSyntax.Ast.ArrayBounds
+    PostgresqlSyntax.Ast.ArrayExpr
+    PostgresqlSyntax.Ast.ArrayExprList
     PostgresqlSyntax.Ast.AscDesc
     PostgresqlSyntax.Ast.Attrs
+    PostgresqlSyntax.Ast.BExpr
+    PostgresqlSyntax.Ast.BExprIsOp
     PostgresqlSyntax.Ast.Bconst
+    PostgresqlSyntax.Ast.Bit
+    PostgresqlSyntax.Ast.CExpr
+    PostgresqlSyntax.Ast.CallStmt
+    PostgresqlSyntax.Ast.CaseExpr
     PostgresqlSyntax.Ast.Character
+    PostgresqlSyntax.Ast.Columnref
+    PostgresqlSyntax.Ast.CommonTableExpr
+    PostgresqlSyntax.Ast.ConfExpr
     PostgresqlSyntax.Ast.ConstCharacter
     PostgresqlSyntax.Ast.ConstDatetime
+    PostgresqlSyntax.Ast.ConstTypename
+    PostgresqlSyntax.Ast.DeleteStmt
+    PostgresqlSyntax.Ast.ExplicitRow
+    PostgresqlSyntax.Ast.ExprList
     PostgresqlSyntax.Ast.ExtractArg
+    PostgresqlSyntax.Ast.ExtractList
     PostgresqlSyntax.Ast.Fconst
+    PostgresqlSyntax.Ast.ForLockingClause
+    PostgresqlSyntax.Ast.ForLockingItem
     PostgresqlSyntax.Ast.ForLockingStrength
+    PostgresqlSyntax.Ast.FrameBound
+    PostgresqlSyntax.Ast.FrameClause
     PostgresqlSyntax.Ast.FrameClauseMode
+    PostgresqlSyntax.Ast.FrameExtent
+    PostgresqlSyntax.Ast.FuncAliasClause
+    PostgresqlSyntax.Ast.FuncApplication
+    PostgresqlSyntax.Ast.FuncApplicationParams
+    PostgresqlSyntax.Ast.FuncArgExpr
+    PostgresqlSyntax.Ast.FuncConstArgs
+    PostgresqlSyntax.Ast.FuncExpr
+    PostgresqlSyntax.Ast.FuncExprCommonSubexpr
+    PostgresqlSyntax.Ast.FuncExprWindowless
+    PostgresqlSyntax.Ast.FuncName
+    PostgresqlSyntax.Ast.FuncTable
+    PostgresqlSyntax.Ast.GenericType
+    PostgresqlSyntax.Ast.GroupByItem
     PostgresqlSyntax.Ast.Iconst
     PostgresqlSyntax.Ast.Ident
+    PostgresqlSyntax.Ast.ImplicitRow
+    PostgresqlSyntax.Ast.InExpr
+    PostgresqlSyntax.Ast.IndexElem
+    PostgresqlSyntax.Ast.IndexElemDef
+    PostgresqlSyntax.Ast.IndexParams
+    PostgresqlSyntax.Ast.Indirection
+    PostgresqlSyntax.Ast.IndirectionEl
+    PostgresqlSyntax.Ast.InsertColumnItem
+    PostgresqlSyntax.Ast.InsertColumnList
+    PostgresqlSyntax.Ast.InsertRest
+    PostgresqlSyntax.Ast.InsertStmt
+    PostgresqlSyntax.Ast.InsertTarget
     PostgresqlSyntax.Ast.Internal
     PostgresqlSyntax.Ast.Interval
     PostgresqlSyntax.Ast.IntervalSecond
+    PostgresqlSyntax.Ast.JoinMeth
+    PostgresqlSyntax.Ast.JoinQual
     PostgresqlSyntax.Ast.JoinType
+    PostgresqlSyntax.Ast.JoinedTable
+    PostgresqlSyntax.Ast.LimitClause
     PostgresqlSyntax.Ast.MathOp
     PostgresqlSyntax.Ast.NameList
     PostgresqlSyntax.Ast.NullsOrder
+    PostgresqlSyntax.Ast.Numeric
+    PostgresqlSyntax.Ast.OffsetClause
+    PostgresqlSyntax.Ast.OnConflict
+    PostgresqlSyntax.Ast.OnConflictDo
     PostgresqlSyntax.Ast.Op
     PostgresqlSyntax.Ast.OptOrdinality
+    PostgresqlSyntax.Ast.OptTempTableName
     PostgresqlSyntax.Ast.OptVarying
+    PostgresqlSyntax.Ast.OverClause
+    PostgresqlSyntax.Ast.OverlayList
     PostgresqlSyntax.Ast.OverrideKind
+    PostgresqlSyntax.Ast.PositionList
+    PostgresqlSyntax.Ast.PreparableStmt
     PostgresqlSyntax.Ast.QualAllOp
     PostgresqlSyntax.Ast.QualOp
+    PostgresqlSyntax.Ast.QualifiedName
+    PostgresqlSyntax.Ast.RelationExpr
+    PostgresqlSyntax.Ast.RelationExprOptAlias
+    PostgresqlSyntax.Ast.Row
+    PostgresqlSyntax.Ast.RowsfromItem
+    PostgresqlSyntax.Ast.RowsfromList
     PostgresqlSyntax.Ast.Sconst
     PostgresqlSyntax.Ast.SelectBinOp
-    PostgresqlSyntax.Ast.SubqueryOp
+    PostgresqlSyntax.Ast.SelectClause
+    PostgresqlSyntax.Ast.SelectFetchFirstValue
+    PostgresqlSyntax.Ast.SelectLimit
+    PostgresqlSyntax.Ast.SelectLimitValue
+    PostgresqlSyntax.Ast.SelectNoParens
+    PostgresqlSyntax.Ast.SelectStmt
+    PostgresqlSyntax.Ast.SelectWithParens
+    PostgresqlSyntax.Ast.SetClause
+    PostgresqlSyntax.Ast.SetClauseList
+    PostgresqlSyntax.Ast.SetTarget
+    PostgresqlSyntax.Ast.SetTargetList
+    PostgresqlSyntax.Ast.SimpleSelect
+    PostgresqlSyntax.Ast.SimpleTypename
+    PostgresqlSyntax.Ast.SortBy
+    PostgresqlSyntax.Ast.SortClause
     PostgresqlSyntax.Ast.SubType
+    PostgresqlSyntax.Ast.SubqueryOp
+    PostgresqlSyntax.Ast.SubstrList
+    PostgresqlSyntax.Ast.SubstrListFromFor
     PostgresqlSyntax.Ast.SymbolicExprBinOp
+    PostgresqlSyntax.Ast.TableFuncElement
+    PostgresqlSyntax.Ast.TableFuncElementList
+    PostgresqlSyntax.Ast.TableRef
+    PostgresqlSyntax.Ast.TablesampleClause
+    PostgresqlSyntax.Ast.TargetEl
+    PostgresqlSyntax.Ast.TargetList
+    PostgresqlSyntax.Ast.Targeting
     PostgresqlSyntax.Ast.Timezone
+    PostgresqlSyntax.Ast.TrimList
     PostgresqlSyntax.Ast.TrimModifier
+    PostgresqlSyntax.Ast.TypeList
+    PostgresqlSyntax.Ast.Typename
     PostgresqlSyntax.Ast.TypenameArrayDimensions
+    PostgresqlSyntax.Ast.UpdateStmt
     PostgresqlSyntax.Ast.VerbalExprBinOp
+    PostgresqlSyntax.Ast.WhenClause
+    PostgresqlSyntax.Ast.WhenClauseList
+    PostgresqlSyntax.Ast.WhereOrCurrentClause
+    PostgresqlSyntax.Ast.WindowDefinition
     PostgresqlSyntax.Ast.WindowExclusionClause
+    PostgresqlSyntax.Ast.WindowSpecification
+    PostgresqlSyntax.Ast.WithClause
     PostgresqlSyntax.Ast.Xconst
     PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
@@ -192,3 +293,4 @@ benchmark nesting-bench
     clock >=0.8 && <1,
     postgresql-syntax,
     rerebase >=1.6.1 && <2,
+

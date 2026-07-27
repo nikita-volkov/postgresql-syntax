@@ -5,6 +5,7 @@ import HeadedMegaparsec
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.TextBuilder (char7)
 import PostgresqlSyntax.IsAst
+import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, try)
 import Test.QuickCheck (frequency, suchThat)
@@ -25,6 +26,55 @@ instance IsAst Ident where
   parser = quotedName <|> keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
     where
       quotedName = filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
+
+-- |
+-- ==== References
+-- @
+-- ColId:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+-- @
+--
+-- Most grammar positions that hold an identifier (column\/table\/alias
+-- names, ...) are actually @ColId@, not bare @IDENT@ — this is the
+-- permissive variant that most 'Ident'-typed fields elsewhere in
+-- "PostgresqlSyntax.Ast" should parse with, since 'Ident'\'s own generic
+-- 'parser' only accepts the strict @IDENT@ token (no keyword fallback).
+colId :: Parser Ident
+colId =
+  label "identifier"
+    $ parser
+    <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+
+-- |
+-- ==== References
+-- @
+-- ColLabel:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+--   |  type_func_name_keyword
+--   |  reserved_keyword
+-- @
+colLabel :: Parser Ident
+colLabel =
+  label "column label"
+    $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
+    <|> parser
+
+-- |
+-- ==== References
+-- @
+-- type_function_name:
+--   | IDENT
+--   | unreserved_keyword
+--   | type_func_name_keyword
+-- @
+typeFunctionName :: Parser Ident
+typeFunctionName =
+  keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
+    <|> parser
 
 instance Arbitrary Ident where
   arbitrary =

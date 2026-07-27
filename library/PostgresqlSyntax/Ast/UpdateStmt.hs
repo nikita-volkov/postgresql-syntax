@@ -1,0 +1,73 @@
+module PostgresqlSyntax.Ast.UpdateStmt where
+
+import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
+import HeadedMegaparsec
+import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
+import PostgresqlSyntax.Ast.SetClauseList
+import PostgresqlSyntax.Ast.TableRef
+import PostgresqlSyntax.Ast.TargetList
+import PostgresqlSyntax.Ast.WhereOrCurrentClause
+import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
+import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import Test.QuickCheck (scale)
+
+-- |
+-- ==== References
+-- @
+-- UpdateStmt:
+--   | opt_with_clause UPDATE relation_expr_opt_alias
+--       SET set_clause_list
+--       from_clause
+--       where_or_current_clause
+--       returning_clause
+-- @
+--
+-- @from_clause@\/@returning_clause@ are bare aliases to @NonEmpty
+-- 'PostgresqlSyntax.Ast.TableRef'@\/'PostgresqlSyntax.Ast.TargetList'.
+data UpdateStmt = UpdateStmt (Maybe WithClause) RelationExprOptAlias SetClauseList (Maybe (NonEmpty TableRef)) (Maybe WhereOrCurrentClause) (Maybe TargetList)
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst UpdateStmt where
+  toTextBuilder (UpdateStmt a b c d e f) =
+    prefixMaybe toTextBuilder a
+      <> "UPDATE "
+      <> toTextBuilder b
+      <> " "
+      <> "SET "
+      <> toTextBuilder c
+      <> suffixMaybe fromClause d
+      <> suffixMaybe toTextBuilder e
+      <> suffixMaybe returningClause f
+    where
+      fromClause a' = "FROM " <> commaNonEmpty toTextBuilder a'
+      returningClause = mappend "RETURNING " . toTextBuilder
+  parser = do
+    a <- optional (wrapToHead parser <* space1)
+    keyword "update"
+    space1
+    endHead
+    b <- RelationExprOptAlias.customizedParser ["set"]
+    space1
+    keyword "set"
+    space1
+    c <- parser
+    d <- optional (space1 *> fromClause)
+    e <- optional (space1 *> parser)
+    f <- optional (space1 *> returningClause)
+    return (UpdateStmt a b c d e f)
+    where
+      fromClause = keyword "from" *> endHead *> space1 *> sep1 commaSeparator parser
+      returningClause = keyword "returning" *> space1 *> endHead *> parser
+
+instance Arbitrary UpdateStmt where
+  arbitrary =
+    UpdateStmt
+      <$> scale (`div` 6) arbitrary
+      <*> arbitrary
+      <*> scale (`div` 2) arbitrary
+      <*> scale (`div` 4) arbitrary
+      <*> scale (`div` 4) arbitrary
+      <*> scale (`div` 4) arbitrary

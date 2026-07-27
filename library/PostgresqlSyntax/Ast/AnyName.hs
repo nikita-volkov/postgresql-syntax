@@ -40,3 +40,10 @@ instance IsAst AnyName where
 
 instance Arbitrary AnyName where
   arbitrary = AnyName <$> arbitrary <*> arbitrary
+
+-- | 'parser', but rejecting the given words when they'd otherwise be
+-- accepted as the leading identifier — needed by
+-- "PostgresqlSyntax.Ast.IndexElem"'s @opt_class@ position, mirroring the
+-- pre-extraction @filteredAnyName@.
+filteredParser :: [Text] -> Parser AnyName
+filteredParser excluded = AnyName <$> (wrapToHead (filteredColIdLike UnquotedIdent parser excluded) <* endHead) <*> optional (space *> parser)

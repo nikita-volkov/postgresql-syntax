@@ -8,7 +8,7 @@ import qualified Data.Text as Text
 import Hedgehog (Gen)
 import Hedgehog.Gen
 import qualified Hedgehog.Range as Range
-import PostgresqlSyntax.Ast
+import PostgresqlSyntax.Ast hiding (colId, colLabel, typeFunctionName)
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Validation as Validation
 import Prelude hiding (Op, bit, bool, filter, fromList, maybe, sortBy)
@@ -48,9 +48,9 @@ insertRest =
 
 overrideKind = enumBounded
 
-insertColumnList = nonEmpty (Range.exponential 1 7) insertColumnItem
+insertColumnList = InsertColumnList <$> nonEmpty (Range.exponential 1 7) insertColumnItem
 
-insertColumnItem = InsertColumnItem <$> colId <*> maybe indirection
+insertColumnItem = InsertColumnItem <$> colId <*> maybe (Indirection <$> indirection)
 
 onConflict = OnConflict <$> maybe confExpr <*> onConflictDo
 
@@ -72,7 +72,7 @@ returningClause = targetList
 
 updateStmt = UpdateStmt <$> maybe withClause <*> relationExprOptAlias <*> setClauseList <*> maybe fromClause <*> maybe whereOrCurrentClause <*> maybe returningClause
 
-setClauseList = nonEmpty (Range.exponential 1 10) setClause
+setClauseList = SetClauseList <$> nonEmpty (Range.exponential 1 10) setClause
 
 setClause =
   choice
@@ -80,9 +80,9 @@ setClause =
       TargetListSetClause <$> setTargetList <*> aExpr
     ]
 
-setTarget = SetTarget <$> colId <*> maybe indirection
+setTarget = SetTarget <$> colId <*> maybe (Indirection <$> indirection)
 
-setTargetList = nonEmpty (Range.exponential 1 10) setTarget
+setTargetList = SetTargetList <$> nonEmpty (Range.exponential 1 10) setTarget
 
 -- * Delete
 
@@ -92,13 +92,13 @@ usingClause = fromList
 
 -- * Select
 
-selectStmt = Left <$> selectNoParens
+selectStmt = NoParensSelectStmt <$> selectNoParens
 
 -- ** selectNoParens
 
 selectNoParens =
   frequency
-    [ (90, SelectNoParens <$> maybe withClause <*> (Left <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
+    [ (90, SelectNoParens <$> maybe withClause <*> (SimpleSelectSelectClause <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
       (10, clausePlusSurroundingsSelectNoParens)
     ]
 
@@ -109,7 +109,7 @@ selectNoParens =
 -- inner clause: @SelectNoParens Nothing (Right x) Nothing Nothing Nothing@
 -- renders to exactly the same text as @WithParensSelectWithParens x@, and the
 -- parser canonicalises that text to the latter — see the \"Canonical shape\"
--- note on @PostgresqlSyntax.Parsing.selectWithParensBody@. So the degenerate
+-- note on @PostgresqlSyntax.Ast.SelectWithParens@. So the degenerate
 -- combination is excluded here deliberately, rather than by accident of the
 -- generator's shape: it is the one tree in this family that the round-trip
 -- property cannot hold for.
@@ -124,7 +124,7 @@ clausePlusSurroundingsSelectNoParens = do
   return (SelectNoParens with clause sort limit forLocking)
 
 terminalSelectNoParens =
-  SelectNoParens <$> pure Nothing <*> (Left <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
+  SelectNoParens <$> pure Nothing <*> (SimpleSelectSelectClause <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
 
 -- ** selectWithParens
 
@@ -143,11 +143,11 @@ terminalSelectWithParens = NoParensSelectWithParens <$> terminalSelectNoParens
 
 selectClause =
   choice
-    [ Left <$> simpleSelect,
-      Right <$> small selectWithParens
+    [ SimpleSelectSelectClause <$> simpleSelect,
+      WithParensSelectClause <$> small selectWithParens
     ]
 
-nonTrailingSelectClause = Left <$> nonTrailingSimpleSelect
+nonTrailingSelectClause = SimpleSelectSelectClause <$> nonTrailingSimpleSelect
 
 -- ** simpleSelect
 
@@ -178,10 +178,10 @@ targeting =
   choice
     [ NormalTargeting <$> targetList,
       AllTargeting <$> maybe targetList,
-      DistinctTargeting <$> maybe (nonEmpty (Range.exponential 1 8) aExpr) <*> targetList
+      DistinctTargeting <$> maybe (ExprList <$> nonEmpty (Range.exponential 1 8) aExpr) <*> targetList
     ]
 
-targetList = nonEmpty (Range.exponential 1 8) targetEl
+targetList = TargetList <$> nonEmpty (Range.exponential 1 8) targetEl
 
 targetEl =
   choice
@@ -242,7 +242,7 @@ relationExpr =
 
 relationExprOptAlias = RelationExprOptAlias <$> relationExpr <*> maybe ((,) <$> bool <*> colId)
 
-tablesampleClause = TablesampleClause <$> funcName <*> exprList <*> maybe repeatableClause
+tablesampleClause = TablesampleClause <$> funcName <*> (ExprList <$> exprList) <*> maybe repeatableClause
 
 repeatableClause = aExpr
 
@@ -254,13 +254,13 @@ funcTable =
 
 rowsfromItem = RowsfromItem <$> funcExprWindowless <*> maybe colDefList
 
-rowsfromList = nonEmpty (Range.exponential 1 8) rowsfromItem
+rowsfromList = RowsfromList <$> nonEmpty (Range.exponential 1 8) rowsfromItem
 
 colDefList = tableFuncElementList
 
 optOrdinality = bool
 
-tableFuncElementList = nonEmpty (Range.exponential 1 7) tableFuncElement
+tableFuncElementList = TableFuncElementList <$> nonEmpty (Range.exponential 1 7) tableFuncElement
 
 tableFuncElement = TableFuncElement <$> colId <*> typename <*> maybe collateClause
 
@@ -311,8 +311,8 @@ groupByItem =
   choice
     [ ExprGroupByItem <$> aExpr,
       pure EmptyGroupingSetGroupByItem,
-      RollupGroupByItem <$> nonEmpty (Range.exponential 1 8) aExpr,
-      CubeGroupByItem <$> nonEmpty (Range.exponential 1 8) aExpr,
+      RollupGroupByItem . ExprList <$> nonEmpty (Range.exponential 1 8) aExpr,
+      CubeGroupByItem . ExprList <$> nonEmpty (Range.exponential 1 8) aExpr,
       GroupingSetsGroupByItem <$> nonEmpty (Range.exponential 1 3) groupByItem
     ]
 
@@ -336,7 +336,7 @@ windowClause = nonEmpty (Range.exponential 1 8) windowDefinition
 
 windowDefinition = WindowDefinition <$> name <*> windowSpecification
 
-windowSpecification = WindowSpecification <$> maybe name <*> maybe (nonEmpty (Range.exponential 1 8) nonSuffixOpAExpr) <*> maybe sortClause <*> maybe frameClause
+windowSpecification = WindowSpecification <$> maybe name <*> maybe (ExprList <$> nonEmpty (Range.exponential 1 8) nonSuffixOpAExpr) <*> maybe sortClause <*> maybe frameClause
 
 frameClause = FrameClause <$> frameClauseMode <*> frameExtent <*> maybe windowExclusionClause
 
@@ -361,11 +361,11 @@ windowExclusionClause = element [CurrentRowWindowExclusionClause, GroupWindowExc
 
 -- * Values Clause
 
-valuesClause = nonEmpty (Range.exponential 1 8) (nonEmpty (Range.exponential 1 8) aExpr)
+valuesClause = nonEmpty (Range.exponential 1 8) (ExprList <$> nonEmpty (Range.exponential 1 8) aExpr)
 
 -- * Sort Clause
 
-sortClause = nonEmpty (Range.exponential 1 8) sortBy
+sortClause = SortClause <$> nonEmpty (Range.exponential 1 8) sortBy
 
 sortBy =
   choice
@@ -534,39 +534,39 @@ cExpr =
     [ ColumnrefCExpr <$> columnref
     ]
     [ AexprConstCExpr <$> aexprConst,
-      ParamCExpr <$> integral (Range.linear 1 19) <*> maybe indirection,
-      InParensCExpr <$> nonSelectAExpr <*> maybe indirection,
+      ParamCExpr <$> integral (Range.linear 1 19) <*> maybe (Indirection <$> indirection),
+      InParensCExpr <$> nonSelectAExpr <*> maybe (Indirection <$> indirection),
       CaseCExpr <$> caseExpr,
       FuncCExpr <$> funcExpr,
-      SelectWithParensCExpr <$> selectWithParens <*> maybe indirection,
+      SelectWithParensCExpr <$> selectWithParens <*> maybe (Indirection <$> indirection),
       ExistsCExpr <$> selectWithParens,
       ArrayCExpr <$> choice [Left <$> selectWithParens, Right <$> arrayExpr],
       ExplicitRowCExpr <$> explicitRow,
       ImplicitRowCExpr <$> implicitRow,
-      GroupingCExpr <$> exprList
+      GroupingCExpr <$> (ExprList <$> exprList)
     ]
 
 caseExpr = CaseExpr <$> maybe aExpr <*> whenClauseList <*> maybe aExpr
 
-whenClauseList = nonEmpty (Range.exponential 1 7) whenClause
+whenClauseList = WhenClauseList <$> nonEmpty (Range.exponential 1 7) whenClause
 
 whenClause = WhenClause <$> small aExpr <*> small aExpr
 
 inExpr =
   choice
     [ SelectInExpr <$> NoParensSelectWithParens <$> selectNoParens,
-      ExprListInExpr <$> exprList
+      ExprListInExpr <$> (ExprList <$> exprList)
     ]
 
 arrayExpr =
   small
     $ choice
-      [ ExprListArrayExpr <$> exprList,
+      [ ExprListArrayExpr <$> (ExprList <$> exprList),
         ArrayExprListArrayExpr <$> arrayExprList,
         pure EmptyArrayExpr
       ]
 
-arrayExprList = nonEmpty (Range.exponential 1 4) arrayExpr
+arrayExprList = ArrayExprList <$> nonEmpty (Range.exponential 1 4) arrayExpr
 
 row =
   choice
@@ -574,9 +574,9 @@ row =
       ImplicitRowRow <$> implicitRow
     ]
 
-explicitRow = maybe exprList
+explicitRow = choice [pure EmptyExplicitRow, ExprListExplicitRow . ExprList <$> exprList]
 
-implicitRow = ImplicitRow <$> exprList <*> aExpr
+implicitRow = ImplicitRow <$> (ExprList <$> exprList) <*> aExpr
 
 -- ** FuncExpr
 
@@ -636,9 +636,9 @@ funcExprCommonSubexpr =
       TreatFuncExprCommonSubexpr <$> aExpr <*> typename,
       TrimFuncExprCommonSubexpr <$> maybe trimModifier <*> trimList,
       NullIfFuncExprCommonSubexpr <$> aExpr <*> aExpr,
-      CoalesceFuncExprCommonSubexpr <$> exprList,
-      GreatestFuncExprCommonSubexpr <$> exprList,
-      LeastFuncExprCommonSubexpr <$> exprList
+      CoalesceFuncExprCommonSubexpr <$> (ExprList <$> exprList),
+      GreatestFuncExprCommonSubexpr <$> (ExprList <$> exprList),
+      LeastFuncExprCommonSubexpr <$> (ExprList <$> exprList)
     ]
 
 extractList = ExtractList <$> extractArg <*> aExpr
@@ -664,7 +664,7 @@ positionList = PositionList <$> bExpr <*> bExpr
 substrList =
   choice
     [ ExprSubstrList <$> aExpr <*> substrListFromFor,
-      ExprListSubstrList <$> exprList
+      ExprListSubstrList <$> (ExprList <$> exprList)
     ]
 
 substrListFromFor =
@@ -683,9 +683,9 @@ trimModifier = enumBounded
 
 trimList =
   choice
-    [ ExprFromExprListTrimList <$> aExpr <*> exprList,
-      FromExprListTrimList <$> exprList,
-      ExprListTrimList <$> exprList
+    [ ExprFromExprListTrimList <$> aExpr <*> (ExprList <$> exprList),
+      FromExprListTrimList <$> (ExprList <$> exprList),
+      ExprListTrimList <$> (ExprList <$> exprList)
     ]
 
 -- * Operators
@@ -733,7 +733,7 @@ aExprReversableOp =
       pure FalseAExprReversableOp,
       pure UnknownAExprReversableOp,
       DistinctFromAExprReversableOp <$> aExpr,
-      OfAExprReversableOp <$> typeList,
+      OfAExprReversableOp <$> (TypeList <$> typeList),
       BetweenAExprReversableOp <$> bool <*> bExpr <*> aExpr,
       BetweenSymmetricAExprReversableOp <$> bExpr <*> aExpr,
       InAExprReversableOp <$> inExpr,
@@ -743,7 +743,7 @@ aExprReversableOp =
 bExprIsOp =
   choice
     [ DistinctFromBExprIsOp <$> bExpr,
-      OfBExprIsOp <$> typeList,
+      OfBExprIsOp <$> (TypeList <$> typeList),
       pure DocumentBExprIsOp
     ]
 
@@ -791,13 +791,13 @@ numeric =
       pure RealNumeric,
       FloatNumeric <$> maybe iconst,
       pure DoublePrecisionNumeric,
-      DecimalNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
-      DecNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
-      NumericNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
+      DecimalNumeric <$> maybe (ExprList <$> nonEmpty (Range.exponential 1 7) (small aExpr)),
+      DecNumeric <$> maybe (ExprList <$> nonEmpty (Range.exponential 1 7) (small aExpr)),
+      NumericNumeric <$> maybe (ExprList <$> nonEmpty (Range.exponential 1 7) (small aExpr)),
       pure BooleanNumeric
     ]
 
-bit = Bit . OptVarying <$> bool <*> maybe (nonEmpty (Range.exponential 1 7) (small aExpr))
+bit = Bit . OptVarying <$> bool <*> maybe (ExprList <$> nonEmpty (Range.exponential 1 7) (small aExpr))
 
 constBit = bit
 
@@ -880,7 +880,7 @@ genericType = GenericType <$> typeFunctionName <*> maybe (Attrs <$> attrs) <*> m
 
 attrs = nonEmpty (Range.exponential 1 10) attrName
 
-typeModifiers = exprList
+typeModifiers = (ExprList <$> exprList)
 
 typeList = nonEmpty (Range.exponential 1 7) typename
 
@@ -888,7 +888,7 @@ subType = enumBounded
 
 -- * Names
 
-columnref = Columnref <$> colId <*> maybe indirection
+columnref = Columnref <$> colId <*> maybe (Indirection <$> indirection)
 
 keywordNotInSet = \set -> notInSet set $ do
   a <- element startList
@@ -913,7 +913,7 @@ identWithSet set =
 qualifiedName =
   choice
     [ SimpleQualifiedName <$> name,
-      IndirectedQualifiedName <$> name <*> indirection
+      IndirectedQualifiedName <$> name <*> (Indirection <$> indirection)
     ]
 
 indirection = nonEmpty (Range.linear 1 3) indirectionEl
@@ -939,14 +939,14 @@ typeFunctionName = identWithSet KeywordSet.typeFunctionName
 funcName =
   choice
     [ TypeFuncName <$> typeFunctionName,
-      IndirectedFuncName <$> colId <*> indirection
+      IndirectedFuncName <$> colId <*> (Indirection <$> indirection)
     ]
 
 anyName = AnyName <$> colId <*> maybe (Attrs <$> attrs)
 
 -- * Indexes
 
-indexParams = nonEmpty (Range.exponential 1 5) indexElem
+indexParams = IndexParams <$> nonEmpty (Range.exponential 1 5) indexElem
 
 indexElem = IndexElem <$> indexElemDef <*> maybe collate <*> maybe class_ <*> maybe ascDesc <*> maybe nullsOrder
 

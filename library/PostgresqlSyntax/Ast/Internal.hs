@@ -15,12 +15,14 @@
 module PostgresqlSyntax.Ast.Internal where
 
 import Control.Applicative.Combinators hiding (some)
+import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.IsAst
+import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified Text.Megaparsec as Megaparsec
@@ -242,3 +244,31 @@ symbolicBinOpExpr a bParser constr = do
 
 iconstOrFconst :: (IsAst iconst, IsAst fconst) => Parser (Either iconst fconst)
 iconstOrFconst = Right <$> parser <|> Left <$> parser
+
+-- |
+-- Shared by 'PostgresqlSyntax.Ast.FuncApplicationParams' and
+-- 'PostgresqlSyntax.Ast.SimpleSelect' (@ALL@\/@DISTINCT@ before a func-arg
+-- list, and before a @UNION@\/@INTERSECT@\/@EXCEPT@ right-hand side,
+-- respectively).
+allOrDistinct :: Parser Bool
+allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
+
+renderAllOrDistinct :: Bool -> TextBuilder
+renderAllOrDistinct = \case
+  False -> "ALL"
+  True -> "DISTINCT"
+
+-- |
+-- A ColId-like identifier parser (unreserved keyword ∪ col-name keyword)
+-- restricted to exclude the given reserved words — needed wherever a
+-- trailing bare word must terminate a construct instead of being consumed
+-- as an identifier (e.g. 'PostgresqlSyntax.Ast.SortBy'\'s
+-- @USING@\/@ASC@\/@DESC@\/@NULLS@,
+-- 'PostgresqlSyntax.Ast.RelationExprOptAlias'\'s alias-terminating
+-- keywords). @identParser@ is the identifier type's own plain (unfiltered)
+-- parser, tried first, same as plain @ColId@ does.
+filteredColIdLike :: (Text -> a) -> Parser a -> [Text] -> Parser a
+filteredColIdLike wrap identParser excluded =
+  label "identifier"
+    $ identParser
+    <|> keywordNameFromSet wrap (foldr HashSet.delete (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword) excluded)
