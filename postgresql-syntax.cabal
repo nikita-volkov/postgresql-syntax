@@ -78,6 +78,7 @@ library
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
+    PostgresqlSyntax.IsAst
     PostgresqlSyntax.Predicate
     PostgresqlSyntax.Prelude
 
