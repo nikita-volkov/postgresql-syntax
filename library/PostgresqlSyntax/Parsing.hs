@@ -48,8 +48,6 @@ import qualified TextBuilder
 -- $setup
 -- >>> testParser parser = either putStr print . run parser
 
-type Parser = HeadedParsec Void Text
-
 -- * Executors
 
 run :: Parser a -> Text -> Either String a
