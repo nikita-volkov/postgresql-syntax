@@ -75,6 +75,7 @@ import System.Mem.StableName as Exports
 import System.Timeout as Exports
 import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
+import Test.QuickCheck as Exports (Arbitrary (..), Gen, choose, elements, listOf, oneof, sized, vectorOf)
 import Unsafe.Coerce as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, fail, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
 
