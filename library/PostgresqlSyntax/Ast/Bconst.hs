@@ -1,11 +1,12 @@
 module PostgresqlSyntax.Ast.Bconst where
 
 import qualified Data.Text as Text
-import HeadedMegaparsec
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import TextBuilder (text)
+import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
+import qualified TextBuilder
 
 -- |
 -- ==== References
@@ -16,15 +17,15 @@ newtype Bconst = Bconst Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Bconst where
-  toTextBuilder (Bconst a) = "B'" <> text a <> "'"
-  parser = label "bit literal" $ do
-    string' "b'"
-    endHead
-    a <- takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')
-    char '\''
+  toTextBuilder (Bconst a) = "B'" <> TextBuilder.text a <> "'"
+  parser = Parser.label "bit literal" $ do
+    Parser.string' "b'"
+    Parser.endHead
+    a <- Parser.takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')
+    Parser.char '\''
     return (Bconst a)
 
-instance Arbitrary Bconst where
+instance Qc.Arbitrary Bconst where
   arbitrary = do
-    len <- choose (1, 100)
-    Bconst . Text.pack <$> vectorOf len (elements "01")
+    len <- Qc.choose (1, 100)
+    Bconst . Text.pack <$> Qc.vectorOf len (Qc.elements "01")

@@ -20,7 +20,7 @@ where
 
 import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
-import PostgresqlSyntax.IsAst (Parser, parser)
+import PostgresqlSyntax.IsAst (parser)
 import PostgresqlSyntax.Prelude
 
 run :: Parser a -> Text -> Either String a

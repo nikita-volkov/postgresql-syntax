@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.SimpleSelect where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectClause (SelectClause)
-import PostgresqlSyntax.IsAst (IsAst, Parser)
-import PostgresqlSyntax.Prelude (Data, Eq, Ord, Show)
+import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Prelude (Data, Eq, Ord, Parser, Show)
 import Test.QuickCheck (Arbitrary)
 
 data SimpleSelect

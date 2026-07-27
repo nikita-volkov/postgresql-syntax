@@ -27,7 +27,6 @@ import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
-import TextBuilder (TextBuilder, toText)
 import qualified TextBuilder
 
 -- * Generic parsing combinators
@@ -149,7 +148,7 @@ suffixMaybe :: (a -> TextBuilder) -> Maybe a -> TextBuilder
 suffixMaybe a = foldMap (mappend " " . a)
 
 toByteString :: TextBuilder -> ByteString
-toByteString = Text.encodeUtf8 . toText
+toByteString = Text.encodeUtf8 . TextBuilder.toText
 
 -- * Keyword-matching infrastructure
 

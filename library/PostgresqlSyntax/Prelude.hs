@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Prelude
   ( module Exports,
-    showAsText,
     suffixRec,
     extendMany,
+    Parser,
   )
 where
 
@@ -64,6 +64,7 @@ import GHC.Conc as Exports hiding (orElse, threadWaitRead, threadWaitReadSTM, th
 import GHC.Exts as Exports (IsList (Item, fromList), groupWith, inline, lazy, sortWith)
 import GHC.Generics as Exports (Generic, Generic1)
 import GHC.IO.Exception as Exports
+import qualified HeadedMegaparsec
 import Numeric as Exports
 import System.Environment as Exports
 import System.Exit as Exports
@@ -76,11 +77,9 @@ import System.Timeout as Exports
 import Test.QuickCheck as Exports (Arbitrary (..), Gen, choose, elements, listOf, oneof, sized, vectorOf)
 import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
+import TextBuilder as Exports (TextBuilder)
 import Unsafe.Coerce as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, fail, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
-
-showAsText :: (Show a) => a -> Text
-showAsText = show >>> fromString
 
 -- |
 -- Compose a monad, which attempts to extend a value, based on the following input.
@@ -95,3 +94,5 @@ extendMany attempt = loop
       optional (attempt state) >>= \case
         Nothing -> pure state
         Just newState -> loop newState
+
+type Parser = HeadedMegaparsec.HeadedParsec Void Text

@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.AExpr where
 
-import PostgresqlSyntax.IsAst (IsAst, Parser)
-import PostgresqlSyntax.Prelude (Data, Eq, Ord, Show, Text)
+import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Prelude (Data, Eq, Ord, Parser, Show, Text)
 import Test.QuickCheck (Arbitrary)
 
 data AExpr
