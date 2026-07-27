@@ -36,10 +36,10 @@ import PostgresqlSyntax.Ast
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
+import PostgresqlSyntax.IsAst (parser)
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
-import qualified PostgresqlSyntax.Validation as Validation
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified TextBuilder
@@ -533,7 +533,7 @@ targetEl =
                 space1
                 asum
                   [ AliasedExprTargetEl expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
-                    ImplicitlyAliasedExprTargetEl expr <$> ident
+                    ImplicitlyAliasedExprTargetEl expr <$> parser
                   ],
               pure (ExprTargetEl expr)
             ],
@@ -857,7 +857,7 @@ funcAliasClause =
                       endHead
                       asum
                         [ AsColIdFuncAliasClause a <$> wrapToHead tableFuncElementList,
-                          AliasFuncAliasClause <$> AliasClause True a <$> Just <$> nameList
+                          AliasFuncAliasClause <$> AliasClause True a <$> Just <$> parser
                         ],
                   pure (AliasFuncAliasClause (AliasClause True a Nothing))
                 ]
@@ -871,7 +871,7 @@ funcAliasClause =
                 endHead
                 asum
                   [ ColIdFuncAliasClause a <$> wrapToHead tableFuncElementList,
-                    AliasFuncAliasClause <$> AliasClause False a <$> Just <$> nameList
+                    AliasFuncAliasClause <$> AliasClause False a <$> Just <$> parser
                   ],
             pure (AliasFuncAliasClause (AliasClause False a Nothing))
           ]
@@ -973,7 +973,7 @@ joinQual =
 
 aliasClause = do
   (as, alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colId) <|> (False,) <$> colId
-  columnAliases <- optional (space1 *> inParens (sep1 commaSeparator colId))
+  columnAliases <- optional (space1 *> inParens (NameList <$> sep1 commaSeparator colId))
   return (AliasClause as alias columnAliases)
 
 -- * Where
@@ -1017,7 +1017,7 @@ sortBy = do
         c <- optional (space1 *> nullsOrder)
         return (UsingSortBy a b c),
       do
-        b <- optional (space1 *> ascDesc)
+        b <- optional (space1 *> parser)
         c <- optional (space1 *> nullsOrder)
         return (AscDescSortBy a b c)
     ]
@@ -1283,7 +1283,7 @@ subqueryOp =
       do
         a <- trueIfPresent (keyword "not" *> space1)
         LikeSubqueryOp a <$ keyword "like" <|> IlikeSubqueryOp a <$ keyword "ilike",
-      AllSubqueryOp <$> allOp
+      AllSubqueryOp <$> parser
     ]
 
 subType =
@@ -1432,7 +1432,7 @@ funcExprCommonSubexpr =
       inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> exprList)
     ]
   where
-    labeledIconst label = keyword label *> endHead *> optional (space *> inParens iconst)
+    labeledIconst label = keyword label *> endHead *> optional (space *> inParens decimal)
 
 extractList = ExtractList <$> extractArg <*> (space1 *> keyword "from" *> space1 *> aExpr)
 
@@ -1445,7 +1445,7 @@ extractArg =
       MinuteExtractArg <$ keyword "minute",
       SecondExtractArg <$ keyword "second",
       SconstExtractArg <$> sconst,
-      IdentExtractArg <$> ident
+      IdentExtractArg <$> parser
     ]
 
 overlayList = do
@@ -1578,55 +1578,26 @@ funcArgExpr =
 
 symbolicExprBinOp =
   QualSymbolicExprBinOp <$> qualOp
-    <|> MathSymbolicExprBinOp <$> mathOp
+    <|> MathSymbolicExprBinOp <$> parser
 
 lexicalExprBinOp = asum $ fmap keyphrase $ ["and", "or", "is distinct from", "is not distinct from"]
 
 qualOp =
   asum
-    [ OpQualOp <$> op,
+    [ OpQualOp <$> parser,
       OperatorQualOp <$> inParensWithClause (keyword "operator") anyOperator
     ]
 
 qualAllOp =
   asum
     [ AnyQualAllOp <$> (keyword "operator" *> space *> inParens (endHead *> anyOperator)),
-      AllQualAllOp <$> allOp
+      AllQualAllOp <$> parser
     ]
-
-op = do
-  a <- takeWhile1P Nothing Predicate.opChar
-  case Validation.op a of
-    Nothing -> return a
-    Just err -> fail (Text.unpack err)
 
 anyOperator =
   asum
-    [ AllOpAnyOperator <$> allOp,
+    [ AllOpAnyOperator <$> parser,
       QualifiedAnyOperator <$> colId <*> (space *> char '.' *> space *> anyOperator)
-    ]
-
-allOp =
-  asum
-    [ OpAllOp <$> op,
-      MathAllOp <$> mathOp
-    ]
-
-mathOp =
-  asum
-    [ ArrowLeftArrowRightMathOp <$ string' "<>",
-      GreaterEqualsMathOp <$ string' ">=",
-      ExclamationEqualsMathOp <$ string' "!=",
-      LessEqualsMathOp <$ string' "<=",
-      PlusMathOp <$ char '+',
-      MinusMathOp <$ char '-',
-      AsteriskMathOp <$ char '*',
-      SlashMathOp <$ char '/',
-      PercentMathOp <$ char '%',
-      ArrowUpMathOp <$ char '^',
-      ArrowLeftMathOp <$ char '<',
-      ArrowRightMathOp <$ char '>',
-      EqualsMathOp <$ char '='
     ]
 
 -- * Constants
@@ -1677,7 +1648,7 @@ aexprConst =
                 b <- optional (space1 *> interval)
                 return (StringIntervalAexprConst a b),
               do
-                a <- inParens iconst
+                a <- inParens parser
                 space1
                 endHead
                 b <- sconst
@@ -1693,14 +1664,9 @@ aexprConst =
       BoolAexprConst True <$ keyword "true",
       BoolAexprConst False <$ keyword "false",
       NullAexprConst <$ keyword "null" <* parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
-      either IAexprConst FAexprConst <$> iconstOrFconst,
+      either IAexprConst FAexprConst <$> (Right <$> fconst <|> Left <$> parser),
       SAexprConst <$> sconst,
-      label "bit literal" $ do
-        string' "b'"
-        endHead
-        a <- takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')
-        char '\''
-        return (BAexprConst a),
+      BAexprConst <$> parser,
       label "hex literal" $ do
         string' "x'"
         endHead
@@ -1722,9 +1688,7 @@ aexprConst =
       FuncAexprConst <$> (wrapToHead funcName <* space1) <*> pure Nothing <*> sconst
     ]
 
-iconstOrFconst = Right <$> fconst <|> Left <$> iconst
-
-iconst = decimal
+iconstOrFconst = Right <$> fconst <|> Left <$> decimal
 
 fconst = float
 
@@ -1734,8 +1698,8 @@ constTypename =
   asum
     [ NumericConstTypename <$> numeric,
       ConstBitConstTypename <$> constBit,
-      ConstCharacterConstTypename <$> constCharacter,
-      ConstDatetimeConstTypename <$> constDatetime
+      ConstCharacterConstTypename <$> parser,
+      ConstDatetimeConstTypename <$> parser
     ]
 
 numeric =
@@ -1745,7 +1709,7 @@ numeric =
       SmallintNumeric <$ keyword "smallint",
       BigintNumeric <$ keyword "bigint",
       RealNumeric <$ keyword "real",
-      FloatNumeric <$> (keyword "float" *> endHead *> optional (space *> inParens iconst)),
+      FloatNumeric <$> (keyword "float" *> endHead *> optional (space *> inParens decimal)),
       DoublePrecisionNumeric <$ keyphrase "double precision",
       DecimalNumeric <$> (keyword "decimal" *> endHead *> optional (space *> exprListInParens)),
       DecNumeric <$> (keyword "dec" *> endHead *> optional (space *> exprListInParens)),
@@ -1755,54 +1719,11 @@ numeric =
 
 bit = do
   keyword "bit"
-  a <- option False (True <$ space1 <* keyword "varying")
+  a <- parser
   b <- optional (space1 *> exprListInParens)
   return (Bit a b)
 
 constBit = bit
-
-constCharacter = ConstCharacter <$> (character <* endHead) <*> optional (space *> inParens iconst)
-
-character =
-  asum
-    [ CharacterCharacter <$> (keyword "character" *> optVaryingAfterSpace),
-      CharCharacter <$> (keyword "char" *> optVaryingAfterSpace),
-      VarcharCharacter <$ keyword "varchar",
-      NationalCharacterCharacter <$> (keyphrase "national character" *> optVaryingAfterSpace),
-      NationalCharCharacter <$> (keyphrase "national char" *> optVaryingAfterSpace),
-      NcharCharacter <$> (keyword "nchar" *> optVaryingAfterSpace)
-    ]
-  where
-    optVaryingAfterSpace = True <$ space1 <* keyword "varying" <|> pure False
-
--- |
--- ==== References
--- @
--- ConstDatetime:
---   | TIMESTAMP '(' Iconst ')' opt_timezone
---   | TIMESTAMP opt_timezone
---   | TIME '(' Iconst ')' opt_timezone
---   | TIME opt_timezone
--- @
-constDatetime =
-  asum
-    [ do
-        keyword "timestamp"
-        a <- optional (space1 *> inParens iconst)
-        b <- optional (space1 *> timezone)
-        return (TimestampConstDatetime a b),
-      do
-        keyword "time"
-        a <- optional (space1 *> inParens iconst)
-        b <- optional (space1 *> timezone)
-        return (TimeConstDatetime a b)
-    ]
-
-timezone =
-  asum
-    [ False <$ keyphrase "with time zone",
-      True <$ keyphrase "without time zone"
-    ]
 
 interval =
   asum
@@ -1823,7 +1744,7 @@ interval =
 
 intervalSecond = do
   keyword "second"
-  a <- optional (space *> inParens iconst)
+  a <- optional (space *> inParens decimal)
   return a
 
 -- * Clauses
@@ -1979,17 +1900,6 @@ nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
 -- * References & Names
 
-quotedName = filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
-
--- |
--- ==== References
--- @
--- ident_start   [A-Za-z\200-\377_]
--- ident_cont    [A-Za-z\200-\377_0-9\$]
--- identifier    {ident_start}{ident_cont}*
--- @
-ident = quotedName <|> keywordNameByPredicate (not . Predicate.keyword)
-
 -- |
 -- ==== References
 -- @
@@ -2001,14 +1911,14 @@ ident = quotedName <|> keywordNameByPredicate (not . Predicate.keyword)
 {-# NOINLINE colId #-}
 colId =
   label "identifier"
-    $ ident
+    $ parser
     <|> keywordNameFromSet (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 {-# NOINLINE filteredColId #-}
 filteredColId =
   let originalSet = KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword
       filteredSet = foldr HashSet.delete originalSet
-   in \reservedKeywords -> label "identifier" $ ident <|> keywordNameFromSet (filteredSet reservedKeywords)
+   in \reservedKeywords -> label "identifier" $ parser <|> keywordNameFromSet (filteredSet reservedKeywords)
 
 -- |
 -- ==== References
@@ -2023,7 +1933,7 @@ filteredColId =
 colLabel =
   label "column label"
     $ keywordNameFromSet KeywordSet.keyword
-    <|> ident
+    <|> parser
 
 -- |
 -- >>> testParser qualifiedName "a.b"
@@ -2065,8 +1975,6 @@ customizedAnyName colId = do
 
 name = colId
 
-nameList = sep1 commaSeparator name
-
 cursorName = name
 
 -- |
@@ -2090,7 +1998,7 @@ funcName =
 -- @
 typeFunctionName =
   keywordNameFromSet KeywordSet.typeFunctionName
-    <|> ident
+    <|> parser
 
 -- |
 -- ==== References
@@ -2223,19 +2131,17 @@ typename =
           space1
           keyword "array"
           endHead
-          d <- optional (space *> inBrackets iconst)
+          d <- optional (space *> inBrackets parser)
           e <- trueIfPresent (space *> char '?')
           return (Typename a b c (Just (ExplicitTypenameArrayDimensions d, e))),
         do
           space
-          d <- arrayBounds
+          d <- parser
           endHead
           e <- trueIfPresent (space *> char '?')
           return (Typename a b c (Just (BoundsTypenameArrayDimensions d, e))),
         return (Typename a b c Nothing)
       ]
-
-arrayBounds = sep1 space (inBrackets (optional iconst))
 
 simpleTypename =
   asum
@@ -2243,13 +2149,13 @@ simpleTypename =
           keyword "interval"
           endHead
           asum
-            [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens iconst),
+            [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens parser),
               ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
             ],
-        ConstDatetimeSimpleTypename <$> constDatetime,
+        ConstDatetimeSimpleTypename <$> parser,
         NumericSimpleTypename <$> numeric,
         BitSimpleTypename <$> bit,
-        CharacterSimpleTypename <$> character,
+        CharacterSimpleTypename <$> parser,
         GenericTypeSimpleTypename <$> genericType
       ]
 
@@ -2273,7 +2179,7 @@ indexElem =
     <$> (indexElemDef <* endHead)
     <*> optional (space1 *> collate)
     <*> optional (space1 *> class_)
-    <*> optional (space1 *> ascDesc)
+    <*> optional (space1 *> parser)
     <*> optional (space1 *> nullsOrder)
 
 indexElemDef =
@@ -2284,7 +2190,5 @@ indexElemDef =
 collate = keyword "collate" *> space1 *> endHead *> anyName
 
 class_ = filteredAnyName ["asc", "desc", "nulls"]
-
-ascDesc = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
 
 nullsOrder = keyword "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")

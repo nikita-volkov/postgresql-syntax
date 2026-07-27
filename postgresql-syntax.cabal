@@ -74,7 +74,21 @@ library
     PostgresqlSyntax.Validation
 
   other-modules:
+    PostgresqlSyntax.Ast.AllOp
+    PostgresqlSyntax.Ast.ArrayBounds
+    PostgresqlSyntax.Ast.AscDesc
+    PostgresqlSyntax.Ast.Bconst
+    PostgresqlSyntax.Ast.Character
+    PostgresqlSyntax.Ast.ConstCharacter
+    PostgresqlSyntax.Ast.ConstDatetime
+    PostgresqlSyntax.Ast.Iconst
+    PostgresqlSyntax.Ast.Ident
     PostgresqlSyntax.Ast.Internal
+    PostgresqlSyntax.Ast.MathOp
+    PostgresqlSyntax.Ast.NameList
+    PostgresqlSyntax.Ast.Op
+    PostgresqlSyntax.Ast.OptVarying
+    PostgresqlSyntax.Ast.Timezone
     PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty

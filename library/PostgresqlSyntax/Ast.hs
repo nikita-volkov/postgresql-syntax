@@ -3,8 +3,55 @@
 -- original Postgres parser file, except for the cases where we can optimize on that.
 --
 -- For reasoning see the docs of the parsing module of this project.
-module PostgresqlSyntax.Ast where
+-- Extracted, see Ast/<Type>.hs (temporary imports + re-exports below, until a
+-- later task turns this into the proper re-export root):
+-- extracted, see Ast/Ident.hs
+-- extracted, see Ast/NameList.hs
+-- extracted, see Ast/Op.hs
+-- extracted, see Ast/MathOp.hs
+-- extracted, see Ast/AllOp.hs
+-- extracted, see Ast/Iconst.hs
+-- extracted, see Ast/ArrayBounds.hs
+-- extracted, see Ast/AscDesc.hs
+-- extracted, see Ast/Bconst.hs
+-- extracted, see Ast/OptVarying.hs
+-- extracted, see Ast/Character.hs
+-- extracted, see Ast/ConstCharacter.hs
+-- extracted, see Ast/Timezone.hs
+-- extracted, see Ast/ConstDatetime.hs
+module PostgresqlSyntax.Ast
+  ( module PostgresqlSyntax.Ast,
+    module PostgresqlSyntax.Ast.Ident,
+    module PostgresqlSyntax.Ast.NameList,
+    module PostgresqlSyntax.Ast.Op,
+    module PostgresqlSyntax.Ast.MathOp,
+    module PostgresqlSyntax.Ast.AllOp,
+    module PostgresqlSyntax.Ast.Iconst,
+    module PostgresqlSyntax.Ast.ArrayBounds,
+    module PostgresqlSyntax.Ast.AscDesc,
+    module PostgresqlSyntax.Ast.Bconst,
+    module PostgresqlSyntax.Ast.OptVarying,
+    module PostgresqlSyntax.Ast.Character,
+    module PostgresqlSyntax.Ast.ConstCharacter,
+    module PostgresqlSyntax.Ast.Timezone,
+    module PostgresqlSyntax.Ast.ConstDatetime,
+  )
+where
 
+import PostgresqlSyntax.Ast.AllOp
+import PostgresqlSyntax.Ast.ArrayBounds
+import PostgresqlSyntax.Ast.AscDesc
+import PostgresqlSyntax.Ast.Bconst
+import PostgresqlSyntax.Ast.Character
+import PostgresqlSyntax.Ast.ConstCharacter
+import PostgresqlSyntax.Ast.ConstDatetime
+import PostgresqlSyntax.Ast.Iconst
+import PostgresqlSyntax.Ast.Ident
+import PostgresqlSyntax.Ast.MathOp
+import PostgresqlSyntax.Ast.NameList
+import PostgresqlSyntax.Ast.Op
+import PostgresqlSyntax.Ast.OptVarying
+import PostgresqlSyntax.Ast.Timezone
 import PostgresqlSyntax.Prelude
 
 -- * Statement
@@ -1590,11 +1637,7 @@ data FuncArgExpr
 
 type Sconst = Text
 
-type Iconst = Int64
-
 type Fconst = Double
-
-type Bconst = Text
 
 type Xconst = Text
 
@@ -1709,76 +1752,6 @@ type ConstBit = Bit
 -- |
 -- ==== References
 -- @
--- opt_varying:
---   | VARYING
---   | EMPTY
--- @
-type OptVarying = Bool
-
--- |
--- ==== References
--- @
--- Character:
---   | CharacterWithLength
---   | CharacterWithoutLength
--- ConstCharacter:
---   | CharacterWithLength
---   | CharacterWithoutLength
--- CharacterWithLength:
---   | character '(' Iconst ')'
--- CharacterWithoutLength:
---   | character
--- @
-data ConstCharacter = ConstCharacter Character (Maybe Int64)
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- character:
---   | CHARACTER opt_varying
---   | CHAR_P opt_varying
---   | VARCHAR
---   | NATIONAL CHARACTER opt_varying
---   | NATIONAL CHAR_P opt_varying
---   | NCHAR opt_varying
--- @
-data Character
-  = CharacterCharacter OptVarying
-  | CharCharacter OptVarying
-  | VarcharCharacter
-  | NationalCharacterCharacter OptVarying
-  | NationalCharCharacter OptVarying
-  | NcharCharacter OptVarying
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- ConstDatetime:
---   | TIMESTAMP '(' Iconst ')' opt_timezone
---   | TIMESTAMP opt_timezone
---   | TIME '(' Iconst ')' opt_timezone
---   | TIME opt_timezone
--- @
-data ConstDatetime
-  = TimestampConstDatetime (Maybe Int64) (Maybe Timezone)
-  | TimeConstDatetime (Maybe Int64) (Maybe Timezone)
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- opt_timezone:
---   | WITH_LA TIME ZONE
---   | WITHOUT TIME ZONE
---   | EMPTY
--- @
-type Timezone = Bool
-
--- |
--- ==== References
--- @
 -- opt_interval:
 --   | YEAR_P
 --   | MONTH_P
@@ -1825,14 +1798,6 @@ type IntervalSecond = Maybe Int64
 -- |
 -- ==== References
 -- @
--- IDENT
--- @
-data Ident = QuotedIdent Text | UnquotedIdent Text
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- ColId:
 --   | IDENT
 --   | unreserved_keyword
@@ -1859,15 +1824,6 @@ type ColLabel = Ident
 --   | ColId
 -- @
 type Name = ColId
-
--- |
--- ==== References
--- @
--- name_list:
---   | name
---   | name_list ',' name
--- @
-type NameList = NonEmpty Name
 
 -- |
 -- ==== References
@@ -2006,16 +1962,6 @@ data TypenameArrayDimensions
 -- |
 -- ==== References
 -- @
--- opt_array_bounds:
---   | opt_array_bounds '[' ']'
---   | opt_array_bounds '[' Iconst ']'
---   | EMPTY
--- @
-type ArrayBounds = NonEmpty (Maybe Iconst)
-
--- |
--- ==== References
--- @
 -- SimpleTypename:
 --   | GenericType
 --   | Numeric
@@ -2110,34 +2056,6 @@ data QualAllOp
 -- |
 -- ==== References
 -- @
--- The operator name is a sequence of up to NAMEDATALEN-1 (63 by default)
--- characters from the following list:
---
--- + - * / < > = ~ ! @ # % ^ & | ` ?
---
--- There are a few restrictions on your choice of name:
--- -- and /* cannot appear anywhere in an operator name,
--- since they will be taken as the start of a comment.
---
--- A multicharacter operator name cannot end in + or -,
--- unless the name also contains at least one of these characters:
---
--- ~ ! @ # % ^ & | ` ?
---
--- For example, @- is an allowed operator name, but *- is not.
--- This restriction allows PostgreSQL to parse SQL-compliant
--- commands without requiring spaces between tokens.
--- The use of => as an operator name is deprecated.
--- It may be disallowed altogether in a future release.
---
--- The operator != is mapped to <> on input,
--- so these two names are always equivalent.
--- @
-type Op = Text
-
--- |
--- ==== References
--- @
 -- any_operator:
 --   | all_Op
 --   | ColId '.' any_operator
@@ -2147,50 +2065,6 @@ data AnyOperator
   | QualifiedAnyOperator ColId AnyOperator
   deriving (Show, Generic, Eq, Ord, Data)
 
--- |
--- ==== References
--- @
--- all_Op:
---   | Op
---   | MathOp
--- @
-data AllOp
-  = OpAllOp Op
-  | MathAllOp MathOp
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- MathOp:
---   | '+'
---   | '-'
---   | '*'
---   | '/'
---   | '%'
---   | '^'
---   | '<'
---   | '>'
---   | '='
---   | LESS_EQUALS
---   | GREATER_EQUALS
---   | NOT_EQUALS
--- @
-data MathOp
-  = PlusMathOp
-  | MinusMathOp
-  | AsteriskMathOp
-  | SlashMathOp
-  | PercentMathOp
-  | ArrowUpMathOp
-  | ArrowLeftMathOp
-  | ArrowRightMathOp
-  | EqualsMathOp
-  | LessEqualsMathOp
-  | GreaterEqualsMathOp
-  | ArrowLeftArrowRightMathOp
-  | ExclamationEqualsMathOp
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 data SymbolicExprBinOp
   = MathSymbolicExprBinOp MathOp
@@ -2316,17 +2190,6 @@ type Collate = AnyName
 --   | EMPTY
 -- @
 type Class = AnyName
-
--- |
--- ==== References
--- @
--- opt_asc_desc:
---   | ASC
---   | DESC
---   | EMPTY
--- @
-data AscDesc = AscAscDesc | DescAscDesc
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 -- |
 -- ==== References

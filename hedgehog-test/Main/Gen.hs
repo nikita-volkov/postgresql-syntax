@@ -11,7 +11,7 @@ import qualified Hedgehog.Range as Range
 import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Validation as Validation
-import Prelude hiding (bit, bool, filter, fromList, maybe, sortBy)
+import Prelude hiding (Op, bit, bool, filter, fromList, maybe, sortBy)
 
 -- * Generic
 
@@ -266,7 +266,7 @@ tableFuncElement = TableFuncElement <$> colId <*> typename <*> maybe collateClau
 
 collateClause = anyName
 
-aliasClause = AliasClause <$> bool <*> name <*> maybe (nonEmpty (Range.exponential 1 8) name)
+aliasClause = AliasClause <$> bool <*> name <*> maybe (NameList <$> nonEmpty (Range.exponential 1 8) name)
 
 funcAliasClause =
   choice
@@ -690,7 +690,7 @@ trimList =
 
 -- * Operators
 
-qualOp = choice [OpQualOp <$> op, OperatorQualOp <$> anyOperator]
+qualOp = choice [OpQualOp . Op <$> op, OperatorQualOp <$> anyOperator]
 
 qualAllOp =
   choice
@@ -712,7 +712,7 @@ anyOperator =
     [ QualifiedAnyOperator <$> colId <*> anyOperator
     ]
 
-allOp = choice [OpAllOp <$> op, MathAllOp <$> mathOp]
+allOp = choice [OpAllOp . Op <$> op, MathAllOp <$> mathOp]
 
 mathOp = enumBounded
 
@@ -759,15 +759,15 @@ subqueryOp =
 
 aexprConst =
   choice
-    [ IAexprConst <$> iconst,
+    [ IAexprConst . Iconst <$> iconst,
       FAexprConst <$> fconst,
       SAexprConst <$> sconst,
-      BAexprConst <$> text (Range.exponential 1 100) (listElement "01"),
+      BAexprConst . Bconst <$> text (Range.exponential 1 100) (listElement "01"),
       XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
       FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> sconst,
       ConstTypenameAexprConst <$> constTypename <*> sconst,
       StringIntervalAexprConst <$> sconst <*> maybe interval,
-      IntIntervalAexprConst <$> integral (Range.exponential 0 2309482309483029) <*> sconst,
+      IntIntervalAexprConst . Iconst <$> integral (Range.exponential 0 2309482309483029) <*> sconst,
       BoolAexprConst <$> bool,
       pure NullAexprConst
     ]
@@ -797,7 +797,7 @@ numeric =
       pure BooleanNumeric
     ]
 
-bit = Bit <$> bool <*> maybe (nonEmpty (Range.exponential 1 7) (small aExpr))
+bit = Bit . OptVarying <$> bool <*> maybe (nonEmpty (Range.exponential 1 7) (small aExpr))
 
 constBit = bit
 
@@ -805,18 +805,18 @@ constCharacter = ConstCharacter <$> character <*> maybe iconst
 
 character =
   choice
-    [ CharacterCharacter <$> bool,
-      CharCharacter <$> bool,
+    [ CharacterCharacter . OptVarying <$> bool,
+      CharCharacter . OptVarying <$> bool,
       pure VarcharCharacter,
-      NationalCharacterCharacter <$> bool,
-      NationalCharCharacter <$> bool,
-      NcharCharacter <$> bool
+      NationalCharacterCharacter . OptVarying <$> bool,
+      NationalCharCharacter . OptVarying <$> bool,
+      NcharCharacter . OptVarying <$> bool
     ]
 
 constDatetime =
   choice
-    [ TimestampConstDatetime <$> maybe iconst <*> maybe bool,
-      TimeConstDatetime <$> maybe iconst <*> maybe bool
+    [ TimestampConstDatetime <$> maybe iconst <*> maybe (Timezone <$> bool),
+      TimeConstDatetime <$> maybe iconst <*> maybe (Timezone <$> bool)
     ]
 
 interval =
@@ -861,10 +861,10 @@ typename = Typename <$> bool <*> simpleTypename <*> pure False <*> maybe ((,) <$
 typenameArrayDimensions =
   choice
     [ BoundsTypenameArrayDimensions <$> arrayBounds,
-      ExplicitTypenameArrayDimensions <$> maybe iconst
+      ExplicitTypenameArrayDimensions <$> maybe (Iconst <$> iconst)
     ]
 
-arrayBounds = nonEmpty (Range.exponential 1 4) (maybe iconst)
+arrayBounds = ArrayBounds <$> nonEmpty (Range.exponential 1 4) (maybe (Iconst <$> iconst))
 
 simpleTypename =
   choice
@@ -873,7 +873,7 @@ simpleTypename =
       BitSimpleTypename <$> bit,
       CharacterSimpleTypename <$> character,
       ConstDatetimeSimpleTypename <$> constDatetime,
-      ConstIntervalSimpleTypename <$> choice [Left <$> maybe interval, Right <$> iconst]
+      ConstIntervalSimpleTypename <$> choice [Left <$> maybe interval, Right . Iconst <$> iconst]
     ]
 
 genericType = GenericType <$> typeFunctionName <*> maybe attrs <*> maybe typeModifiers

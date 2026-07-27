@@ -11,6 +11,7 @@ import qualified Data.Text.Encoding as Text
 import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.Extras.TextBuilder
+import PostgresqlSyntax.IsAst (toTextBuilder)
 import PostgresqlSyntax.Prelude hiding (aExpr, bit, fromList, many, option, sortBy, try)
 import TextBuilder
 
@@ -164,8 +165,8 @@ withClause (WithClause a b) =
 
 commonTableExpr (CommonTableExpr a b c d) =
   optLexemes
-    [ Just (ident a),
-      fmap (inParens . commaNonEmpty ident) b,
+    [ Just (toTextBuilder a),
+      fmap (inParens . commaNonEmpty toTextBuilder) b,
       Just "AS",
       fmap materialization c,
       Just (inParens (preparableStmt d))
@@ -262,8 +263,8 @@ targetList = commaNonEmpty targetEl
 onExpressionsClause a = "ON (" <> commaNonEmpty aExpr a <> ")"
 
 targetEl = \case
-  AliasedExprTargetEl a b -> aExpr a <> " AS " <> ident b
-  ImplicitlyAliasedExprTargetEl a b -> aExpr a <> " " <> ident b
+  AliasedExprTargetEl a b -> aExpr a <> " AS " <> toTextBuilder b
+  ImplicitlyAliasedExprTargetEl a b -> aExpr a <> " " <> toTextBuilder b
   ExprTargetEl a -> aExpr a
   AsteriskTargetEl -> "*"
 
@@ -343,8 +344,8 @@ collateClause a = "COLLATE " <> anyName a
 aliasClause (AliasClause a b c) =
   optLexemes
     [ if a then Just "AS" else Nothing,
-      Just (ident b),
-      fmap (inParens . commaNonEmpty ident) c
+      Just (toTextBuilder b),
+      fmap (inParens . toTextBuilder) c
     ]
 
 funcAliasClause = \case
@@ -367,7 +368,7 @@ joinType = \case
   InnerJoinType -> "INNER"
 
 joinQual = \case
-  UsingJoinQual a -> "USING (" <> commaNonEmpty ident a <> ")"
+  UsingJoinQual a -> "USING (" <> commaNonEmpty toTextBuilder a <> ")"
   OnJoinQual a -> "ON " <> aExpr a
 
 -- * Where
@@ -397,12 +398,12 @@ havingClause a = "HAVING " <> aExpr a
 
 windowClause a = "WINDOW " <> commaNonEmpty windowDefinition a
 
-windowDefinition (WindowDefinition a b) = ident a <> " AS " <> windowSpecification b
+windowDefinition (WindowDefinition a b) = toTextBuilder a <> " AS " <> windowSpecification b
 
 windowSpecification (WindowSpecification a b c d) =
   inParens
     $ optLexemes
-      [ fmap ident a,
+      [ fmap toTextBuilder a,
         fmap partitionClause b,
         fmap sortClause c,
         fmap frameClause d
@@ -445,7 +446,7 @@ sortClause a = "ORDER BY " <> commaNonEmpty sortBy a
 
 sortBy = \case
   UsingSortBy a b c -> aExpr a <> " USING " <> qualAllOp b <> suffixMaybe nullsOrder c
-  AscDescSortBy a b c -> aExpr a <> suffixMaybe ascDesc b <> suffixMaybe nullsOrder c
+  AscDescSortBy a b c -> aExpr a <> suffixMaybe toTextBuilder b <> suffixMaybe nullsOrder c
 
 -- * Values
 
@@ -521,7 +522,7 @@ verbalExprBinOp a =
     SimilarToVerbalExprBinOp -> "SIMILAR TO"
 
 subqueryOp = \case
-  AllSubqueryOp a -> allOp a
+  AllSubqueryOp a -> toTextBuilder a
   AnySubqueryOp a -> "OPERATOR " <> inParens (anyOperator a)
   LikeSubqueryOp a -> bool "" "NOT " a <> "LIKE"
   IlikeSubqueryOp a -> bool "" "NOT " a <> "ILIKE"
@@ -533,41 +534,20 @@ bExprIsOp a =
     DocumentBExprIsOp -> "DOCUMENT"
 
 symbolicExprBinOp = \case
-  MathSymbolicExprBinOp a -> mathOp a
+  MathSymbolicExprBinOp a -> toTextBuilder a
   QualSymbolicExprBinOp a -> qualOp a
 
 qualOp = \case
-  OpQualOp a -> op a
+  OpQualOp a -> toTextBuilder a
   OperatorQualOp a -> "OPERATOR (" <> anyOperator a <> ")"
 
 qualAllOp = \case
-  AllQualAllOp a -> allOp a
+  AllQualAllOp a -> toTextBuilder a
   AnyQualAllOp a -> "OPERATOR (" <> anyOperator a <> ")"
 
-op = text
-
 anyOperator = \case
-  AllOpAnyOperator a -> allOp a
+  AllOpAnyOperator a -> toTextBuilder a
   QualifiedAnyOperator a b -> colId a <> "." <> anyOperator b
-
-allOp = \case
-  OpAllOp a -> op a
-  MathAllOp a -> mathOp a
-
-mathOp = \case
-  PlusMathOp -> char7 '+'
-  MinusMathOp -> char7 '-'
-  AsteriskMathOp -> char7 '*'
-  SlashMathOp -> char7 '/'
-  PercentMathOp -> char7 '%'
-  ArrowUpMathOp -> char7 '^'
-  ArrowLeftMathOp -> char7 '<'
-  ArrowRightMathOp -> char7 '>'
-  EqualsMathOp -> char7 '='
-  LessEqualsMathOp -> "<="
-  GreaterEqualsMathOp -> ">="
-  ArrowLeftArrowRightMathOp -> "<>"
-  ExclamationEqualsMathOp -> "!="
 
 inExpr = \case
   SelectInExpr a -> selectWithParens a
@@ -627,8 +607,8 @@ allOrDistinct = \case
 
 funcArgExpr = \case
   ExprFuncArgExpr a -> aExpr a
-  ColonEqualsFuncArgExpr a b -> ident a <> " := " <> aExpr b
-  EqualsGreaterFuncArgExpr a b -> ident a <> " => " <> aExpr b
+  ColonEqualsFuncArgExpr a b -> toTextBuilder a <> " := " <> aExpr b
+  EqualsGreaterFuncArgExpr a b -> toTextBuilder a <> " => " <> aExpr b
 
 -- ** Func Expr
 
@@ -657,10 +637,10 @@ overClause = \case
 funcExprCommonSubexpr = \case
   CollationForFuncExprCommonSubexpr a -> "COLLATION FOR (" <> aExpr a <> ")"
   CurrentDateFuncExprCommonSubexpr -> "CURRENT_DATE"
-  CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> suffixMaybe (inParens . iconst) a
-  CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> suffixMaybe (inParens . iconst) a
-  LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> suffixMaybe (inParens . iconst) a
-  LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> suffixMaybe (inParens . iconst) a
+  CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> suffixMaybe (inParens . int64Dec) a
+  CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> suffixMaybe (inParens . int64Dec) a
+  LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> suffixMaybe (inParens . int64Dec) a
+  LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> suffixMaybe (inParens . int64Dec) a
   CurrentRoleFuncExprCommonSubexpr -> "CURRENT_ROLE"
   CurrentUserFuncExprCommonSubexpr -> "CURRENT_USER"
   SessionUserFuncExprCommonSubexpr -> "SESSION_USER"
@@ -682,7 +662,7 @@ funcExprCommonSubexpr = \case
 extractList (ExtractList a b) = extractArg a <> " FROM " <> aExpr b
 
 extractArg = \case
-  IdentExtractArg a -> ident a
+  IdentExtractArg a -> toTextBuilder a
   YearExtractArg -> "YEAR"
   MonthExtractArg -> "MONTH"
   DayExtractArg -> "DAY"
@@ -724,19 +704,17 @@ trimList = \case
 -- * AexprConsts
 
 aexprConst = \case
-  IAexprConst a -> iconst a
+  IAexprConst a -> toTextBuilder a
   FAexprConst a -> fconst a
   SAexprConst a -> sconst a
-  BAexprConst a -> "B'" <> text a <> "'"
+  BAexprConst a -> toTextBuilder a
   XAexprConst a -> "X'" <> text a <> "'"
   FuncAexprConst a b c -> funcName a <> foldMap (inParens . funcAexprConstArgList) b <> " " <> sconst c
   ConstTypenameAexprConst a b -> constTypename a <> " " <> sconst b
   StringIntervalAexprConst a b -> "INTERVAL " <> sconst a <> suffixMaybe interval b
-  IntIntervalAexprConst a b -> "INTERVAL " <> inParens (int64Dec a) <> " " <> sconst b
+  IntIntervalAexprConst a b -> "INTERVAL " <> inParens (toTextBuilder a) <> " " <> sconst b
   BoolAexprConst a -> if a then "TRUE" else "FALSE"
   NullAexprConst -> "NULL"
-
-iconst = int64Dec
 
 fconst = doubleDec
 
@@ -747,8 +725,8 @@ funcAexprConstArgList (FuncConstArgs a b) = commaNonEmpty funcArgExpr a <> suffi
 constTypename = \case
   NumericConstTypename a -> numeric a
   ConstBitConstTypename a -> constBit a
-  ConstCharacterConstTypename a -> constCharacter a
-  ConstDatetimeConstTypename a -> constDatetime a
+  ConstCharacterConstTypename a -> toTextBuilder a
+  ConstDatetimeConstTypename a -> toTextBuilder a
 
 numeric = \case
   IntNumeric -> "INT"
@@ -766,39 +744,11 @@ numeric = \case
 bit (Bit a b) =
   optLexemes
     [ Just "BIT",
-      bool Nothing (Just "VARYING") a,
+      bool Nothing (Just "VARYING") (coerce a :: Bool),
       fmap (inParens . commaNonEmpty aExpr) b
     ]
 
 constBit = bit
-
-constCharacter (ConstCharacter a b) = character a <> suffixMaybe (inParens . int64Dec) b
-
-character = \case
-  CharacterCharacter a -> "CHARACTER" <> bool "" " VARYING" a
-  CharCharacter a -> "CHAR" <> bool "" " VARYING" a
-  VarcharCharacter -> "VARCHAR"
-  NationalCharacterCharacter a -> "NATIONAL CHARACTER" <> bool "" " VARYING" a
-  NationalCharCharacter a -> "NATIONAL CHAR" <> bool "" " VARYING" a
-  NcharCharacter a -> "NCHAR" <> bool "" " VARYING" a
-
-constDatetime = \case
-  TimestampConstDatetime a b ->
-    optLexemes
-      [ Just "TIMESTAMP",
-        fmap (inParens . int64Dec) a,
-        fmap timezone b
-      ]
-  TimeConstDatetime a b ->
-    optLexemes
-      [ Just "TIME",
-        fmap (inParens . int64Dec) a,
-        fmap timezone b
-      ]
-
-timezone = \case
-  False -> "WITH TIME ZONE"
-  True -> "WITHOUT TIME ZONE"
 
 interval = \case
   YearInterval -> "YEAR"
@@ -823,33 +773,29 @@ intervalSecond = \case
 
 columnref (Columnref a b) = colId a <> foldMap indirection b
 
-ident = \case
-  QuotedIdent a -> char7 '"' <> text (Text.replace "\"" "\"\"" a) <> char7 '"'
-  UnquotedIdent a -> text a
-
 qualifiedName = \case
-  SimpleQualifiedName a -> ident a
-  IndirectedQualifiedName a b -> ident a <> indirection b
+  SimpleQualifiedName a -> toTextBuilder a
+  IndirectedQualifiedName a b -> toTextBuilder a <> indirection b
 
 indirection = foldMap indirectionEl
 
 indirectionEl = \case
-  AttrNameIndirectionEl a -> "." <> ident a
+  AttrNameIndirectionEl a -> "." <> toTextBuilder a
   AllIndirectionEl -> ".*"
   ExprIndirectionEl a -> "[" <> aExpr a <> "]"
   SliceIndirectionEl a b -> "[" <> foldMap aExpr a <> ":" <> foldMap aExpr b <> "]"
 
-colId = ident
+colId = toTextBuilder
 
 name = colId
 
 cursorName = name
 
-colLabel = ident
+colLabel = toTextBuilder
 
 attrName = colLabel
 
-typeFunctionName = ident
+typeFunctionName = toTextBuilder
 
 funcName = \case
   TypeFuncName a -> typeFunctionName a
@@ -866,18 +812,16 @@ typenameArrayDimensionsWithQuestionMark (a, _) =
   typenameArrayDimensions a
 
 typenameArrayDimensions = \case
-  BoundsTypenameArrayDimensions a -> arrayBounds a
-  ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (inBrackets . iconst) a
-
-arrayBounds = spaceNonEmpty (inBrackets . foldMap iconst)
+  BoundsTypenameArrayDimensions a -> toTextBuilder a
+  ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (inBrackets . toTextBuilder) a
 
 simpleTypename = \case
   GenericTypeSimpleTypename a -> genericType a
   NumericSimpleTypename a -> numeric a
   BitSimpleTypename a -> bit a
-  CharacterSimpleTypename a -> character a
-  ConstDatetimeSimpleTypename a -> constDatetime a
-  ConstIntervalSimpleTypename a -> "INTERVAL" <> either (suffixMaybe interval) (mappend " " . inParens . iconst) a
+  CharacterSimpleTypename a -> toTextBuilder a
+  ConstDatetimeSimpleTypename a -> toTextBuilder a
+  ConstIntervalSimpleTypename a -> "INTERVAL" <> either (suffixMaybe interval) (mappend " " . inParens . toTextBuilder) a
 
 genericType (GenericType a b c) = typeFunctionName a <> foldMap attrs b <> suffixMaybe typeModifiers c
 
@@ -900,7 +844,7 @@ indexElem (IndexElem a b c d e) =
   indexElemDef a
     <> suffixMaybe collate b
     <> suffixMaybe class_ c
-    <> suffixMaybe ascDesc d
+    <> suffixMaybe toTextBuilder d
     <> suffixMaybe nullsOrder e
 
 indexElemDef = \case
@@ -911,10 +855,6 @@ indexElemDef = \case
 collate = mappend "COLLATE " . anyName
 
 class_ = anyName
-
-ascDesc = \case
-  AscAscDesc -> "ASC"
-  DescAscDesc -> "DESC"
 
 nullsOrder = \case
   FirstNullsOrder -> "NULLS FIRST"
