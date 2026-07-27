@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.SubqueryOp where
 
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 
 -- |
 -- ==== References

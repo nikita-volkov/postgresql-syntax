@@ -5,7 +5,7 @@ import PostgresqlSyntax.Ast.Timezone
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 
 -- |
 -- ==== References

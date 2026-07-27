@@ -2,13 +2,13 @@ module PostgresqlSyntax.Ast.Attrs where
 
 import Control.Applicative.Combinators.NonEmpty (some)
 import qualified Data.List.NonEmpty as NonEmpty
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 
 -- |
 -- ==== References

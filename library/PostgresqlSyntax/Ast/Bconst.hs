@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.Bconst where
 
 import qualified Data.Text as Text
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import TextBuilder (text)
 
 -- |

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.Sconst where
 import qualified Data.Text as Text
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import Test.QuickCheck (suchThat)
 import TextBuilder (text)
 

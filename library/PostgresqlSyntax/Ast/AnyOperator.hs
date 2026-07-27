@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.AnyOperator where
 
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import Test.QuickCheck (scale)
 
 -- |

@@ -20,9 +20,7 @@ import qualified Data.Text.Encoding as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
-import PostgresqlSyntax.Extras.TextBuilder
 import PostgresqlSyntax.IsAst
-import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
 import qualified Text.Megaparsec as Megaparsec
@@ -31,6 +29,7 @@ import TextBuilder (TextBuilder, toText)
 import qualified TextBuilder
 
 -- * Generic parsing combinators
+
 --
 -- Ported verbatim from "PostgresqlSyntax.Parsing".
 
@@ -114,6 +113,7 @@ dollarQuotedSconst = do
   return tail
 
 -- * Generic rendering combinators
+
 --
 -- Ported verbatim from "PostgresqlSyntax.Rendering". "PostgresqlSyntax.Rendering"
 -- also has an @inParens@\/@inBrackets@ pair with these exact names but the
@@ -150,6 +150,7 @@ toByteString :: TextBuilder -> ByteString
 toByteString = Text.encodeUtf8 . toText
 
 -- * Keyword-matching infrastructure
+
 --
 -- Ported from "PostgresqlSyntax.Parsing". @keywordNameFromSet@\/@keywordNameByPredicate@
 -- originally built an @Ident@ directly via its @UnquotedIdent@ constructor;
@@ -209,6 +210,7 @@ keyphrase a =
     & (<* endHead)
 
 -- * Cross-type-family helpers
+
 --
 -- Ported from "PostgresqlSyntax.Parsing". Each of these originally called a
 -- single concrete node's parser directly (@typename@, @qualOp@,

@@ -190,6 +190,5 @@ benchmark nesting-bench
 
   build-depends:
     clock >=0.8 && <1,
-    deepseq >=1.4 && <2,
     postgresql-syntax,
     rerebase >=1.6.1 && <2,

@@ -4,7 +4,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 
 -- |
 -- ==== References

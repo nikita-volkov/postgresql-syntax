@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.Ident where
 
 import qualified Data.Text as Text
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.TextBuilder (char7)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, try)
 import qualified PostgresqlSyntax.Predicate as Predicate
+import PostgresqlSyntax.Prelude hiding (filter, try)
 import Test.QuickCheck (frequency, suchThat)
 import TextBuilder (text)
 

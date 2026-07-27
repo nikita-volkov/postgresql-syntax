@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.ConstCharacter where
 
-import HeadedMegaparsec hiding (string)
+import HeadedMegaparsec
 import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 
 -- |
 -- ==== References

@@ -11,11 +11,7 @@
 -- as a timeout instead of hanging the run.
 module Main where
 
-import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.MVar
-import Control.DeepSeq (force)
-import Control.Exception (evaluate)
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified PostgresqlSyntax.Parsing as Parsing
 import System.Clock

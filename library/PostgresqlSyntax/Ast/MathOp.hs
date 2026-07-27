@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.MathOp where
 
-import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
 import PostgresqlSyntax.Extras.TextBuilder (char7)
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (many, option, some, try)
+import PostgresqlSyntax.Prelude hiding (many, some, try)
 
 -- |
 -- ==== References

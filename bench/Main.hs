@@ -90,6 +90,8 @@ main = do
   let reservedWords = HashSet.toList KeywordSet.reservedKeyword -- ~90 words: the size of a typical mid-size dispatch
       allWords = HashSet.toList KeywordSet.keyword -- ~440 words: the full reserved-word set, worst case
       lastOf xs = last xs
+      firstOf (x : _) = x
+      firstOf [] = error "empty keyword list"
       noMatchToken = "zzzznotakeyword" :: Text.Text
 
   corpus <- replicateM 500 (Gen.sample (Gen.resize 15 SynGen.preparableStmt))
@@ -105,7 +107,7 @@ main = do
             ]
         | (label, kws) <- [("~90 words", reservedWords), ("~440 words", allWords)],
           (scenario, token) <-
-            [ ("first match", head kws),
+            [ ("first match", firstOf kws),
               ("last match", lastOf kws),
               ("no match", noMatchToken)
             ]
