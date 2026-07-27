@@ -6,7 +6,6 @@ module PostgresqlSyntax.Rendering
   )
 where
 
-import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
@@ -83,11 +82,7 @@ insertRest = \case
       ]
   DefaultValuesInsertRest -> "DEFAULT VALUES"
 
-insertRestOverriding a = "OVERRIDING " <> overrideKind a <> " VALUE"
-
-overrideKind = \case
-  UserOverrideKind -> "USER"
-  SystemOverrideKind -> "SYSTEM"
+insertRestOverriding a = "OVERRIDING " <> toTextBuilder a <> " VALUE"
 
 insertColumnList = commaNonEmpty insertColumnItem
 
@@ -215,16 +210,10 @@ forLockingClause = \case
 
 forLockingItem (ForLockingItem a b c) =
   optLexemes
-    [ Just (forLockingStrength a),
+    [ Just (toTextBuilder a),
       fmap lockedRelsList b,
       fmap nowaitOrSkip c
     ]
-
-forLockingStrength = \case
-  UpdateForLockingStrength -> "FOR UPDATE"
-  NoKeyUpdateForLockingStrength -> "FOR NO KEY UPDATE"
-  ShareForLockingStrength -> "FOR SHARE"
-  KeyForLockingStrength -> "FOR KEY SHARE"
 
 lockedRelsList a = "OF " <> commaNonEmpty qualifiedName a
 
@@ -326,8 +315,8 @@ tablesampleClause (TablesampleClause a b c) =
 repeatableClause a = "REPEATABLE (" <> aExpr a <> ")"
 
 funcTable = \case
-  FuncExprFuncTable a b -> funcExprWindownless a <> bool "" " WITH ORDINALITY" b
-  RowsFromFuncTable a b -> "ROWS FROM (" <> rowsfromList a <> ")" <> bool "" " WITH ORDINALITY" b
+  FuncExprFuncTable a b -> funcExprWindownless a <> bool "" " WITH ORDINALITY" (coerce b :: Bool)
+  RowsFromFuncTable a b -> "ROWS FROM (" <> rowsfromList a <> ")" <> bool "" " WITH ORDINALITY" (coerce b :: Bool)
 
 rowsfromItem (RowsfromItem a b) = funcExprWindownless a <> suffixMaybe colDefList b
 
@@ -358,14 +347,8 @@ joinedTable = \case
   InParensJoinedTable a -> inParens (joinedTable a)
   MethJoinedTable a b c -> case a of
     CrossJoinMeth -> tableRef b <> " CROSS JOIN " <> tableRef c
-    QualJoinMeth d e -> tableRef b <> suffixMaybe joinType d <> " JOIN " <> tableRef c <> " " <> joinQual e
-    NaturalJoinMeth d -> tableRef b <> " NATURAL" <> suffixMaybe joinType d <> " JOIN " <> tableRef c
-
-joinType = \case
-  FullJoinType a -> "FULL" <> if a then " OUTER" else ""
-  LeftJoinType a -> "LEFT" <> if a then " OUTER" else ""
-  RightJoinType a -> "RIGHT" <> if a then " OUTER" else ""
-  InnerJoinType -> "INNER"
+    QualJoinMeth d e -> tableRef b <> suffixMaybe toTextBuilder d <> " JOIN " <> tableRef c <> " " <> joinQual e
+    NaturalJoinMeth d -> tableRef b <> " NATURAL" <> suffixMaybe toTextBuilder d <> " JOIN " <> tableRef c
 
 joinQual = \case
   UsingJoinQual a -> "USING (" <> commaNonEmpty toTextBuilder a <> ")"
@@ -413,15 +396,10 @@ partitionClause a = "PARTITION BY " <> commaNonEmpty aExpr a
 
 frameClause (FrameClause a b c) =
   optLexemes
-    [ Just (frameClauseMode a),
+    [ Just (toTextBuilder a),
       Just (frameExtent b),
       fmap windowExclusionCause c
     ]
-
-frameClauseMode = \case
-  RangeFrameClauseMode -> "RANGE"
-  RowsFrameClauseMode -> "ROWS"
-  GroupsFrameClauseMode -> "GROUPS"
 
 frameExtent = \case
   SingularFrameExtent a -> frameBound a
@@ -445,8 +423,8 @@ windowExclusionCause = \case
 sortClause a = "ORDER BY " <> commaNonEmpty sortBy a
 
 sortBy = \case
-  UsingSortBy a b c -> aExpr a <> " USING " <> qualAllOp b <> suffixMaybe nullsOrder c
-  AscDescSortBy a b c -> aExpr a <> suffixMaybe toTextBuilder b <> suffixMaybe nullsOrder c
+  UsingSortBy a b c -> aExpr a <> " USING " <> qualAllOp b <> suffixMaybe toTextBuilder c
+  AscDescSortBy a b c -> aExpr a <> suffixMaybe toTextBuilder b <> suffixMaybe toTextBuilder c
 
 -- * Values
 
@@ -659,17 +637,7 @@ funcExprCommonSubexpr = \case
   GreatestFuncExprCommonSubexpr a -> "GREATEST (" <> exprList a <> ")"
   LeastFuncExprCommonSubexpr a -> "LEAST (" <> exprList a <> ")"
 
-extractList (ExtractList a b) = extractArg a <> " FROM " <> aExpr b
-
-extractArg = \case
-  IdentExtractArg a -> toTextBuilder a
-  YearExtractArg -> "YEAR"
-  MonthExtractArg -> "MONTH"
-  DayExtractArg -> "DAY"
-  HourExtractArg -> "HOUR"
-  MinuteExtractArg -> "MINUTE"
-  SecondExtractArg -> "SECOND"
-  SconstExtractArg a -> sconst a
+extractList (ExtractList a b) = toTextBuilder a <> " FROM " <> aExpr b
 
 overlayList (OverlayList a b c d) = aExpr a <> " " <> overlayPlacing b <> " " <> substrFrom c <> suffixMaybe substrFor d
 
@@ -705,20 +673,16 @@ trimList = \case
 
 aexprConst = \case
   IAexprConst a -> toTextBuilder a
-  FAexprConst a -> fconst a
-  SAexprConst a -> sconst a
+  FAexprConst a -> toTextBuilder a
+  SAexprConst a -> toTextBuilder a
   BAexprConst a -> toTextBuilder a
   XAexprConst a -> "X'" <> text a <> "'"
-  FuncAexprConst a b c -> funcName a <> foldMap (inParens . funcAexprConstArgList) b <> " " <> sconst c
-  ConstTypenameAexprConst a b -> constTypename a <> " " <> sconst b
-  StringIntervalAexprConst a b -> "INTERVAL " <> sconst a <> suffixMaybe interval b
-  IntIntervalAexprConst a b -> "INTERVAL " <> inParens (toTextBuilder a) <> " " <> sconst b
+  FuncAexprConst a b c -> funcName a <> foldMap (inParens . funcAexprConstArgList) b <> " " <> toTextBuilder c
+  ConstTypenameAexprConst a b -> constTypename a <> " " <> toTextBuilder b
+  StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder a <> suffixMaybe toTextBuilder b
+  IntIntervalAexprConst a b -> "INTERVAL " <> inParens (toTextBuilder a) <> " " <> toTextBuilder b
   BoolAexprConst a -> if a then "TRUE" else "FALSE"
   NullAexprConst -> "NULL"
-
-fconst = doubleDec
-
-sconst a = "'" <> text (Text.replace "'" "''" a) <> "'"
 
 funcAexprConstArgList (FuncConstArgs a b) = commaNonEmpty funcArgExpr a <> suffixMaybe sortClause b
 
@@ -749,25 +713,6 @@ bit (Bit a b) =
     ]
 
 constBit = bit
-
-interval = \case
-  YearInterval -> "YEAR"
-  MonthInterval -> "MONTH"
-  DayInterval -> "DAY"
-  HourInterval -> "HOUR"
-  MinuteInterval -> "MINUTE"
-  SecondInterval a -> intervalSecond a
-  YearToMonthInterval -> "YEAR TO MONTH"
-  DayToHourInterval -> "DAY TO HOUR"
-  DayToMinuteInterval -> "DAY TO MINUTE"
-  DayToSecondInterval a -> "DAY TO " <> intervalSecond a
-  HourToMinuteInterval -> "HOUR TO MINUTE"
-  HourToSecondInterval a -> "HOUR TO " <> intervalSecond a
-  MinuteToSecondInterval a -> "MINUTE TO " <> intervalSecond a
-
-intervalSecond = \case
-  Nothing -> "SECOND"
-  Just a -> "SECOND " <> inParens (int64Dec a)
 
 -- * Names and refs
 
@@ -801,7 +746,7 @@ funcName = \case
   TypeFuncName a -> typeFunctionName a
   IndirectedFuncName a b -> colId a <> indirection b
 
-anyName (AnyName a b) = colId a <> foldMap attrs b
+anyName (AnyName a b) = colId a <> foldMap toTextBuilder b
 
 -- * Types
 
@@ -821,11 +766,9 @@ simpleTypename = \case
   BitSimpleTypename a -> bit a
   CharacterSimpleTypename a -> toTextBuilder a
   ConstDatetimeSimpleTypename a -> toTextBuilder a
-  ConstIntervalSimpleTypename a -> "INTERVAL" <> either (suffixMaybe interval) (mappend " " . inParens . toTextBuilder) a
+  ConstIntervalSimpleTypename a -> "INTERVAL" <> either (suffixMaybe toTextBuilder) (mappend " " . inParens . toTextBuilder) a
 
-genericType (GenericType a b c) = typeFunctionName a <> foldMap attrs b <> suffixMaybe typeModifiers c
-
-attrs = foldMap (mappend "." . attrName)
+genericType (GenericType a b c) = typeFunctionName a <> foldMap toTextBuilder b <> suffixMaybe typeModifiers c
 
 typeModifiers = inParens . exprList
 
@@ -845,7 +788,7 @@ indexElem (IndexElem a b c d e) =
     <> suffixMaybe collate b
     <> suffixMaybe class_ c
     <> suffixMaybe toTextBuilder d
-    <> suffixMaybe nullsOrder e
+    <> suffixMaybe toTextBuilder e
 
 indexElemDef = \case
   IdIndexElemDef a -> colId a
@@ -855,7 +798,3 @@ indexElemDef = \case
 collate = mappend "COLLATE " . anyName
 
 class_ = anyName
-
-nullsOrder = \case
-  FirstNullsOrder -> "NULLS FIRST"
-  LastNullsOrder -> "NULLS LAST"

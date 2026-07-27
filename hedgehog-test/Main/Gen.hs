@@ -248,8 +248,8 @@ repeatableClause = aExpr
 
 funcTable =
   choice
-    [ FuncExprFuncTable <$> funcExprWindowless <*> optOrdinality,
-      RowsFromFuncTable <$> rowsfromList <*> optOrdinality
+    [ FuncExprFuncTable <$> funcExprWindowless <*> (OptOrdinality <$> optOrdinality),
+      RowsFromFuncTable <$> rowsfromList <*> (OptOrdinality <$> optOrdinality)
     ]
 
 rowsfromItem = RowsfromItem <$> funcExprWindowless <*> maybe colDefList
@@ -652,7 +652,7 @@ extractArg =
       pure HourExtractArg,
       pure MinuteExtractArg,
       pure SecondExtractArg,
-      SconstExtractArg <$> sconst
+      SconstExtractArg . Sconst <$> sconst
     ]
 
 overlayList = OverlayList <$> aExpr <*> overlayPlacing <*> substrFrom <*> maybe substrFor
@@ -760,14 +760,14 @@ subqueryOp =
 aexprConst =
   choice
     [ IAexprConst . Iconst <$> iconst,
-      FAexprConst <$> fconst,
-      SAexprConst <$> sconst,
+      FAexprConst . Fconst <$> fconst,
+      SAexprConst . Sconst <$> sconst,
       BAexprConst . Bconst <$> text (Range.exponential 1 100) (listElement "01"),
       XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
-      FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> sconst,
-      ConstTypenameAexprConst <$> constTypename <*> sconst,
-      StringIntervalAexprConst <$> sconst <*> maybe interval,
-      IntIntervalAexprConst . Iconst <$> integral (Range.exponential 0 2309482309483029) <*> sconst,
+      FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> (Sconst <$> sconst),
+      ConstTypenameAexprConst <$> constTypename <*> (Sconst <$> sconst),
+      StringIntervalAexprConst <$> (Sconst <$> sconst) <*> maybe interval,
+      IntIntervalAexprConst . Iconst <$> integral (Range.exponential 0 2309482309483029) <*> (Sconst <$> sconst),
       BoolAexprConst <$> bool,
       pure NullAexprConst
     ]
@@ -826,14 +826,14 @@ interval =
       pure DayInterval,
       pure HourInterval,
       pure MinuteInterval,
-      SecondInterval <$> intervalSecond,
+      SecondInterval . IntervalSecond <$> intervalSecond,
       pure YearToMonthInterval,
       pure DayToHourInterval,
       pure DayToMinuteInterval,
-      DayToSecondInterval <$> intervalSecond,
+      DayToSecondInterval . IntervalSecond <$> intervalSecond,
       pure HourToMinuteInterval,
-      HourToSecondInterval <$> intervalSecond,
-      MinuteToSecondInterval <$> intervalSecond
+      HourToSecondInterval . IntervalSecond <$> intervalSecond,
+      MinuteToSecondInterval . IntervalSecond <$> intervalSecond
     ]
 
 intervalSecond = maybe iconst
@@ -876,7 +876,7 @@ simpleTypename =
       ConstIntervalSimpleTypename <$> choice [Left <$> maybe interval, Right . Iconst <$> iconst]
     ]
 
-genericType = GenericType <$> typeFunctionName <*> maybe attrs <*> maybe typeModifiers
+genericType = GenericType <$> typeFunctionName <*> maybe (Attrs <$> attrs) <*> maybe typeModifiers
 
 attrs = nonEmpty (Range.exponential 1 10) attrName
 
@@ -942,7 +942,7 @@ funcName =
       IndirectedFuncName <$> colId <*> indirection
     ]
 
-anyName = AnyName <$> colId <*> maybe attrs
+anyName = AnyName <$> colId <*> maybe (Attrs <$> attrs)
 
 -- * Indexes
 

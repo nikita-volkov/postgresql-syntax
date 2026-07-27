@@ -19,6 +19,18 @@
 -- extracted, see Ast/ConstCharacter.hs
 -- extracted, see Ast/Timezone.hs
 -- extracted, see Ast/ConstDatetime.hs
+-- extracted, see Ast/Sconst.hs
+-- extracted, see Ast/ExtractArg.hs
+-- extracted, see Ast/Fconst.hs
+-- extracted, see Ast/ForLockingStrength.hs
+-- extracted, see Ast/FrameClauseMode.hs
+-- extracted, see Ast/IntervalSecond.hs
+-- extracted, see Ast/Interval.hs
+-- extracted, see Ast/JoinType.hs
+-- extracted, see Ast/NullsOrder.hs
+-- extracted, see Ast/OptOrdinality.hs
+-- extracted, see Ast/OverrideKind.hs
+-- extracted, see Ast/Attrs.hs
 module PostgresqlSyntax.Ast
   ( module PostgresqlSyntax.Ast,
     module PostgresqlSyntax.Ast.Ident,
@@ -35,22 +47,46 @@ module PostgresqlSyntax.Ast
     module PostgresqlSyntax.Ast.ConstCharacter,
     module PostgresqlSyntax.Ast.Timezone,
     module PostgresqlSyntax.Ast.ConstDatetime,
+    module PostgresqlSyntax.Ast.Sconst,
+    module PostgresqlSyntax.Ast.ExtractArg,
+    module PostgresqlSyntax.Ast.Fconst,
+    module PostgresqlSyntax.Ast.ForLockingStrength,
+    module PostgresqlSyntax.Ast.FrameClauseMode,
+    module PostgresqlSyntax.Ast.IntervalSecond,
+    module PostgresqlSyntax.Ast.Interval,
+    module PostgresqlSyntax.Ast.JoinType,
+    module PostgresqlSyntax.Ast.NullsOrder,
+    module PostgresqlSyntax.Ast.OptOrdinality,
+    module PostgresqlSyntax.Ast.OverrideKind,
+    module PostgresqlSyntax.Ast.Attrs,
   )
 where
 
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.ArrayBounds
 import PostgresqlSyntax.Ast.AscDesc
+import PostgresqlSyntax.Ast.Attrs
 import PostgresqlSyntax.Ast.Bconst
 import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.ConstCharacter
 import PostgresqlSyntax.Ast.ConstDatetime
+import PostgresqlSyntax.Ast.ExtractArg
+import PostgresqlSyntax.Ast.Fconst
+import PostgresqlSyntax.Ast.ForLockingStrength
+import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.Iconst
 import PostgresqlSyntax.Ast.Ident
+import PostgresqlSyntax.Ast.Interval
+import PostgresqlSyntax.Ast.IntervalSecond
+import PostgresqlSyntax.Ast.JoinType
 import PostgresqlSyntax.Ast.MathOp
 import PostgresqlSyntax.Ast.NameList
+import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.Op
+import PostgresqlSyntax.Ast.OptOrdinality
 import PostgresqlSyntax.Ast.OptVarying
+import PostgresqlSyntax.Ast.OverrideKind
+import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.Ast.Timezone
 import PostgresqlSyntax.Prelude
 
@@ -120,13 +156,6 @@ data InsertRest
 -- |
 -- ==== References
 -- @
--- override_kind:
---   | USER
---   | SYSTEM_P
--- @
-data OverrideKind = UserOverrideKind | SystemOverrideKind
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
-
 -- |
 -- ==== References
 -- @
@@ -542,18 +571,6 @@ data FrameClause = FrameClause FrameClauseMode FrameExtent (Maybe WindowExclusio
 -- |
 -- ==== References
 -- @
--- opt_frame_clause:
---   |  RANGE frame_extent opt_window_exclusion_clause
---   |  ROWS frame_extent opt_window_exclusion_clause
---   |  GROUPS frame_extent opt_window_exclusion_clause
---   |  EMPTY
--- @
-data FrameClauseMode = RangeFrameClauseMode | RowsFrameClauseMode | GroupsFrameClauseMode
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- frame_extent:
 --   |  frame_bound
 --   |  BETWEEN frame_bound AND frame_bound
@@ -740,22 +757,6 @@ data ForLockingClause
 data ForLockingItem = ForLockingItem ForLockingStrength (Maybe (NonEmpty QualifiedName)) (Maybe Bool)
   deriving (Show, Generic, Eq, Ord, Data)
 
--- |
--- ==== References
--- @
--- for_locking_strength:
---   | FOR UPDATE
---   | FOR NO KEY UPDATE
---   | FOR SHARE
---   | FOR KEY SHARE
--- @
-data ForLockingStrength
-  = UpdateForLockingStrength
-  | NoKeyUpdateForLockingStrength
-  | ShareForLockingStrength
-  | KeyForLockingStrength
-  deriving (Show, Generic, Eq, Ord, Data)
-
 -- * Table references and joining
 
 -- |
@@ -902,15 +903,6 @@ type ColDefList = TableFuncElementList
 -- |
 -- ==== References
 -- @
--- opt_ordinality:
---   | WITH_LA ORDINALITY
---   | EMPTY
--- @
-type OptOrdinality = Bool
-
--- |
--- ==== References
--- @
 -- TableFuncElementList:
 --   | TableFuncElement
 --   | TableFuncElementList ',' TableFuncElement
@@ -999,18 +991,6 @@ data JoinMeth
 -- |
 -- ==== References
 -- @
--- | FULL join_outer
--- | LEFT join_outer
--- | RIGHT join_outer
--- | INNER_P
--- @
-data JoinType
-  = FullJoinType Bool
-  | LeftJoinType Bool
-  | RightJoinType Bool
-  | InnerJoinType
-  deriving (Show, Generic, Eq, Ord, Data)
-
 -- |
 -- ==== References
 -- @
@@ -1429,30 +1409,6 @@ data ExtractList = ExtractList ExtractArg AExpr
 -- |
 -- ==== References
 -- @
--- extract_arg:
---   | IDENT
---   | YEAR_P
---   | MONTH_P
---   | DAY_P
---   | HOUR_P
---   | MINUTE_P
---   | SECOND_P
---   | Sconst
--- @
-data ExtractArg
-  = IdentExtractArg Ident
-  | YearExtractArg
-  | MonthExtractArg
-  | DayExtractArg
-  | HourExtractArg
-  | MinuteExtractArg
-  | SecondExtractArg
-  | SconstExtractArg Sconst
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
 -- overlay_list:
 --   | a_expr overlay_placing substr_from substr_for
 --   | a_expr overlay_placing substr_from
@@ -1635,10 +1591,6 @@ data FuncArgExpr
 
 -- * Constants
 
-type Sconst = Text
-
-type Fconst = Double
-
 type Xconst = Text
 
 -- |
@@ -1748,50 +1700,6 @@ data Bit = Bit OptVarying (Maybe ExprList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 type ConstBit = Bit
-
--- |
--- ==== References
--- @
--- opt_interval:
---   | YEAR_P
---   | MONTH_P
---   | DAY_P
---   | HOUR_P
---   | MINUTE_P
---   | interval_second
---   | YEAR_P TO MONTH_P
---   | DAY_P TO HOUR_P
---   | DAY_P TO MINUTE_P
---   | DAY_P TO interval_second
---   | HOUR_P TO MINUTE_P
---   | HOUR_P TO interval_second
---   | MINUTE_P TO interval_second
---   | EMPTY
--- @
-data Interval
-  = YearInterval
-  | MonthInterval
-  | DayInterval
-  | HourInterval
-  | MinuteInterval
-  | SecondInterval IntervalSecond
-  | YearToMonthInterval
-  | DayToHourInterval
-  | DayToMinuteInterval
-  | DayToSecondInterval IntervalSecond
-  | HourToMinuteInterval
-  | HourToSecondInterval IntervalSecond
-  | MinuteToSecondInterval IntervalSecond
-  deriving (Show, Generic, Eq, Ord, Data)
-
--- |
--- ==== References
--- @
--- interval_second:
---   | SECOND_P
---   | SECOND_P '(' Iconst ')'
--- @
-type IntervalSecond = Maybe Int64
 
 -- * Names & References
 
@@ -1995,15 +1903,6 @@ data GenericType = GenericType TypeFunctionName (Maybe Attrs) (Maybe TypeModifie
 -- |
 -- ==== References
 -- @
--- attrs:
---   | '.' attr_name
---   | attrs '.' attr_name
--- @
-type Attrs = NonEmpty AttrName
-
--- |
--- ==== References
--- @
 -- attr_name:
 --   | ColLabel
 -- @
@@ -2190,14 +2089,3 @@ type Collate = AnyName
 --   | EMPTY
 -- @
 type Class = AnyName
-
--- |
--- ==== References
--- @
--- opt_nulls_order:
---   | NULLS_LA FIRST_P
---   | NULLS_LA LAST_P
---   | EMPTY
--- @
-data NullsOrder = FirstNullsOrder | LastNullsOrder
-  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)

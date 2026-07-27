@@ -190,19 +190,13 @@ insertRest =
           keyword "overriding"
           space1
           endHead
-          b <- overrideKind
+          b <- parser
           space1
           keyword "value"
           space1
           return b
         c <- selectStmt
         return (SelectInsertRest a b c)
-    ]
-
-overrideKind =
-  asum
-    [ UserOverrideKind <$ keyword "user",
-      SystemOverrideKind <$ keyword "system"
     ]
 
 insertColumnList = sep1 commaSeparator insertColumnItem
@@ -644,17 +638,10 @@ partitionByClause = keyphrase "partition by" *> space1 *> endHead *> sep1 commaS
 --   |  EMPTY
 -- @
 frameClause = do
-  a <- frameClauseMode <* space1 <* endHead
+  a <- parser <* space1 <* endHead
   b <- frameExtent
   c <- optional (space1 *> windowExclusionClause)
   return (FrameClause a b c)
-
-frameClauseMode =
-  asum
-    [ RangeFrameClauseMode <$ keyword "range",
-      RowsFrameClauseMode <$ keyword "rows",
-      GroupsFrameClauseMode <$ keyword "groups"
-    ]
 
 frameExtent =
   BetweenFrameExtent <$> (keyword "between" *> space1 *> endHead *> frameBound <* space1 <* keyword "and" <* space1) <*> frameBound
@@ -806,11 +793,11 @@ funcTable =
         keyword "from"
         space
         a <- inParens (endHead *> rowsfromList)
-        b <- trueIfPresent (space *> optOrdinality)
+        b <- OptOrdinality <$> trueIfPresent (space *> keyword "with" *> space1 *> keyword "ordinality")
         return (RowsFromFuncTable a b),
       do
         a <- funcExprWindowless
-        b <- trueIfPresent (space1 *> optOrdinality)
+        b <- OptOrdinality <$> trueIfPresent (space1 *> keyword "with" *> space1 *> keyword "ordinality")
         return (FuncExprFuncTable a b)
     ]
 
@@ -823,8 +810,6 @@ rowsfromItem = do
 rowsfromList = sep1 commaSeparator rowsfromItem
 
 colDefList = keyword "as" *> space *> inParens (endHead *> tableFuncElementList)
-
-optOrdinality = keyword "with" *> space1 *> keyword "ordinality"
 
 tableFuncElementList = sep1 commaSeparator tableFuncElement
 
@@ -940,30 +925,8 @@ trailingJoinedTable tr1 =
     ]
   where
     joinTypedJoin =
-      Just <$> (joinType <* endHead <* space1 <* keyword "join")
+      Just <$> (parser <* endHead <* space1 <* keyword "join")
         <|> Nothing <$ keyword "join"
-
-joinType =
-  asum
-    [ do
-        keyword "full"
-        endHead
-        outer <- outerAfterSpace
-        return (FullJoinType outer),
-      do
-        keyword "left"
-        endHead
-        outer <- outerAfterSpace
-        return (LeftJoinType outer),
-      do
-        keyword "right"
-        endHead
-        outer <- outerAfterSpace
-        return (RightJoinType outer),
-      keyword "inner" $> InnerJoinType
-    ]
-  where
-    outerAfterSpace = (space1 *> keyword "outer") $> True <|> pure False
 
 joinQual =
   asum
@@ -1014,11 +977,11 @@ sortBy = do
         space1
         endHead
         b <- qualAllOp
-        c <- optional (space1 *> nullsOrder)
+        c <- optional (space1 *> parser)
         return (UsingSortBy a b c),
       do
         b <- optional (space1 *> parser)
-        c <- optional (space1 *> nullsOrder)
+        c <- optional (space1 *> parser)
         return (AscDescSortBy a b c)
     ]
 
@@ -1434,19 +1397,7 @@ funcExprCommonSubexpr =
   where
     labeledIconst label = keyword label *> endHead *> optional (space *> inParens decimal)
 
-extractList = ExtractList <$> extractArg <*> (space1 *> keyword "from" *> space1 *> aExpr)
-
-extractArg =
-  asum
-    [ YearExtractArg <$ keyword "year",
-      MonthExtractArg <$ keyword "month",
-      DayExtractArg <$ keyword "day",
-      HourExtractArg <$ keyword "hour",
-      MinuteExtractArg <$ keyword "minute",
-      SecondExtractArg <$ keyword "second",
-      SconstExtractArg <$> sconst,
-      IdentExtractArg <$> parser
-    ]
+extractList = ExtractList <$> parser <*> (space1 *> keyword "from" *> space1 *> aExpr)
 
 overlayList = do
   a <- aExpr
@@ -1643,15 +1594,15 @@ aexprConst =
         a <-
           asum
             [ do
-                a <- sconst
+                a <- parser
                 endHead
-                b <- optional (space1 *> interval)
+                b <- optional (space1 *> parser)
                 return (StringIntervalAexprConst a b),
               do
                 a <- inParens parser
                 space1
                 endHead
-                b <- sconst
+                b <- parser
                 return (IntIntervalAexprConst a b)
             ]
         return a,
@@ -1659,13 +1610,13 @@ aexprConst =
         a <- constTypename
         space1
         endHead
-        b <- sconst
+        b <- parser
         return (ConstTypenameAexprConst a b),
       BoolAexprConst True <$ keyword "true",
       BoolAexprConst False <$ keyword "false",
       NullAexprConst <$ keyword "null" <* parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
-      either IAexprConst FAexprConst <$> (Right <$> fconst <|> Left <$> parser),
-      SAexprConst <$> sconst,
+      either IAexprConst FAexprConst <$> (Right <$> parser <|> Left <$> parser),
+      SAexprConst <$> parser,
       BAexprConst <$> parser,
       label "hex literal" $ do
         string' "x'"
@@ -1683,16 +1634,18 @@ aexprConst =
         space
         char ')'
         space1
-        d <- sconst
+        d <- parser
         return (FuncAexprConst a (Just (FuncConstArgs b c)) d),
-      FuncAexprConst <$> (wrapToHead funcName <* space1) <*> pure Nothing <*> sconst
+      FuncAexprConst <$> (wrapToHead funcName <* space1) <*> pure Nothing <*> parser
     ]
 
-iconstOrFconst = Right <$> fconst <|> Left <$> decimal
+iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> decimal
 
-fconst = float
-
-sconst = quotedString '\'' <|> dollarQuotedSconst
+-- | Named re-export of 'Sconst'\'s parser, kept for external consumers
+-- (e.g. tasty-test) that referenced it by this name before 'Sconst' was
+-- extracted into its own module with a generic 'PostgresqlSyntax.IsAst.parser'.
+sconst :: Parser Sconst
+sconst = parser
 
 constTypename =
   asum
@@ -1724,28 +1677,6 @@ bit = do
   return (Bit a b)
 
 constBit = bit
-
-interval =
-  asum
-    [ YearToMonthInterval <$ keyphrase "year to month",
-      DayToHourInterval <$ keyphrase "day to hour",
-      DayToMinuteInterval <$ keyphrase "day to minute",
-      DayToSecondInterval <$> (keyphrase "day to" *> space1 *> endHead *> intervalSecond),
-      HourToMinuteInterval <$ keyphrase "hour to minute",
-      HourToSecondInterval <$> (keyphrase "hour to" *> space1 *> endHead *> intervalSecond),
-      MinuteToSecondInterval <$> (keyphrase "minute to" *> space1 *> endHead *> intervalSecond),
-      YearInterval <$ keyword "year",
-      MonthInterval <$ keyword "month",
-      DayInterval <$ keyword "day",
-      HourInterval <$ keyword "hour",
-      MinuteInterval <$ keyword "minute",
-      SecondInterval <$> intervalSecond
-    ]
-
-intervalSecond = do
-  keyword "second"
-  a <- optional (space *> inParens decimal)
-  return a
 
 -- * Clauses
 
@@ -1876,25 +1807,10 @@ forLockingClause = readOnly <|> items
 --   | EMPTY
 -- @
 forLockingItem = do
-  strength <- forLockingStrength
+  strength <- parser
   rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator qualifiedName
   nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
   return (ForLockingItem strength rels nowaitOrSkip)
-
--- |
--- ==== References
--- @
--- for_locking_strength:
---   | FOR UPDATE
---   | FOR NO KEY UPDATE
---   | FOR SHARE
---   | FOR KEY SHARE
--- @
-forLockingStrength =
-  UpdateForLockingStrength <$ keyphrase "for update"
-    <|> NoKeyUpdateForLockingStrength <$ keyphrase "for no key update"
-    <|> ShareForLockingStrength <$ keyphrase "for share"
-    <|> KeyForLockingStrength <$ keyphrase "for key share"
 
 nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
@@ -1970,7 +1886,7 @@ filteredAnyName keywords = customizedAnyName (filteredColId keywords)
 customizedAnyName colId = do
   a <- wrapToHead colId
   endHead
-  b <- optional (space *> attrs)
+  b <- optional (space *> parser)
   return (AnyName a b)
 
 name = colId
@@ -2150,7 +2066,7 @@ simpleTypename =
           endHead
           asum
             [ ConstIntervalSimpleTypename <$> Right <$> (space *> inParens parser),
-              ConstIntervalSimpleTypename <$> Left <$> optional (space *> interval)
+              ConstIntervalSimpleTypename <$> Left <$> optional (space *> parser)
             ],
         ConstDatetimeSimpleTypename <$> parser,
         NumericSimpleTypename <$> numeric,
@@ -2162,11 +2078,9 @@ simpleTypename =
 genericType = do
   a <- typeFunctionName
   endHead
-  b <- optional (space *> attrs)
+  b <- optional (space *> parser)
   c <- optional (space1 *> typeModifiers)
   return (GenericType a b c)
-
-attrs = some (char '.' *> endHead *> space *> attrName)
 
 typeModifiers = inParens exprList
 
@@ -2180,7 +2094,7 @@ indexElem =
     <*> optional (space1 *> collate)
     <*> optional (space1 *> class_)
     <*> optional (space1 *> parser)
-    <*> optional (space1 *> nullsOrder)
+    <*> optional (space1 *> parser)
 
 indexElemDef =
   ExprIndexElemDef <$> inParens aExpr
@@ -2190,5 +2104,3 @@ indexElemDef =
 collate = keyword "collate" *> space1 *> endHead *> anyName
 
 class_ = filteredAnyName ["asc", "desc", "nulls"]
-
-nullsOrder = keyword "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")

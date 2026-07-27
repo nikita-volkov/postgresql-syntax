@@ -1,0 +1,28 @@
+module PostgresqlSyntax.Ast.OverrideKind where
+
+import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+
+-- |
+-- ==== References
+-- @
+-- override_kind:
+--   | USER
+--   | SYSTEM_P
+-- @
+data OverrideKind = UserOverrideKind | SystemOverrideKind
+  deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
+
+instance IsAst OverrideKind where
+  toTextBuilder = \case
+    UserOverrideKind -> "USER"
+    SystemOverrideKind -> "SYSTEM"
+  parser =
+    asum
+      [ UserOverrideKind <$ keyword "user",
+        SystemOverrideKind <$ keyword "system"
+      ]
+
+instance Arbitrary OverrideKind where
+  arbitrary = elements [minBound .. maxBound]

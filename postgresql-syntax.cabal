@@ -77,17 +77,29 @@ library
     PostgresqlSyntax.Ast.AllOp
     PostgresqlSyntax.Ast.ArrayBounds
     PostgresqlSyntax.Ast.AscDesc
+    PostgresqlSyntax.Ast.Attrs
     PostgresqlSyntax.Ast.Bconst
     PostgresqlSyntax.Ast.Character
     PostgresqlSyntax.Ast.ConstCharacter
     PostgresqlSyntax.Ast.ConstDatetime
+    PostgresqlSyntax.Ast.ExtractArg
+    PostgresqlSyntax.Ast.Fconst
+    PostgresqlSyntax.Ast.ForLockingStrength
+    PostgresqlSyntax.Ast.FrameClauseMode
     PostgresqlSyntax.Ast.Iconst
     PostgresqlSyntax.Ast.Ident
     PostgresqlSyntax.Ast.Internal
+    PostgresqlSyntax.Ast.Interval
+    PostgresqlSyntax.Ast.IntervalSecond
+    PostgresqlSyntax.Ast.JoinType
     PostgresqlSyntax.Ast.MathOp
     PostgresqlSyntax.Ast.NameList
+    PostgresqlSyntax.Ast.NullsOrder
     PostgresqlSyntax.Ast.Op
+    PostgresqlSyntax.Ast.OptOrdinality
     PostgresqlSyntax.Ast.OptVarying
+    PostgresqlSyntax.Ast.OverrideKind
+    PostgresqlSyntax.Ast.Sconst
     PostgresqlSyntax.Ast.Timezone
     PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
