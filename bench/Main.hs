@@ -4,7 +4,7 @@
 -- Benchmark for the "keyword allocation cost in wide alternations" concern
 -- raised in <https://github.com/nikita-volkov/postgresql-syntax/issues/21>.
 --
--- Compares the shipped, cheap 'PostgresqlSyntax.Parsing.keyword'
+-- Compares the shipped, cheap 'PostgresqlSyntax.Ast.Internal.keyword'
 -- (a bare 'empty' on mismatch, no allocation beyond the consumed text)
 -- against a richer alternative that reports a proper \"expected one of ...\"
 -- error via 'Text.Megaparsec.failure' (as PR #20 proposed), the way it would
@@ -12,10 +12,10 @@
 --
 -- Both implementations here pin the reported error offset via
 -- 'Megaparsec.setOffset', matching the fix applied to the shipped
--- 'PostgresqlSyntax.Parsing.keyword' to stay correct under megaparsec
+-- 'PostgresqlSyntax.Ast.Internal.keyword' to stay correct under megaparsec
 -- >=9.8's stricter '(<|>)' error-merging. That fix is what makes the rich
 -- variant produce complete "expecting ..." lists at all under current
--- megaparsec; see 'PostgresqlSyntax.Parsing.keyword''s haddock.
+-- megaparsec; see 'PostgresqlSyntax.Ast.Internal.keyword''s haddock.
 module Main where
 
 import Criterion.Main
@@ -24,15 +24,13 @@ import qualified Data.HashSet as HashSet
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import HeadedMegaparsec (HeadedParsec, parse, toParsec)
-import qualified Hedgehog.Gen as Gen
-import qualified Main.Gen as SynGen
+import qualified PostgresqlSyntax
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-import qualified PostgresqlSyntax.Parsing as Parsing
-import qualified PostgresqlSyntax.Rendering as Rendering
+import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 import Prelude
 
--- * Shared token scanner (mirrors 'PostgresqlSyntax.Parsing.anyKeyword')
+-- * Shared token scanner (mirrors 'PostgresqlSyntax.Ast.Internal.anyKeyword')
 
 firstIdentifierChar :: Char -> Bool
 firstIdentifierChar x = Char.isAlpha x || x == '_' || x >= '\200' && x <= '\377'
@@ -94,8 +92,8 @@ main = do
       firstOf [] = error "empty keyword list"
       noMatchToken = "zzzznotakeyword" :: Text.Text
 
-  corpus <- replicateM 500 (Gen.sample (Gen.resize 15 SynGen.preparableStmt))
-  let corpusTexts = map (Rendering.toText . Rendering.preparableStmt) corpus
+  corpus <- replicateM 500 (Qc.generate (Qc.resize 15 (Qc.arbitrary @PostgresqlSyntax.PreparableStmt)))
+  let corpusTexts = map PostgresqlSyntax.toText corpus
 
   defaultMain
     [ bgroup
@@ -114,5 +112,5 @@ main = do
         ],
       bgroup
         "full grammar on generated corpus (reference, shipped keyword only)"
-        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . Parsing.run Parsing.preparableStmt)) corpusTexts]
+        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . PostgresqlSyntax.run @PostgresqlSyntax.PreparableStmt)) corpusTexts]
     ]

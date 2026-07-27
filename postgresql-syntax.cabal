@@ -75,8 +75,8 @@ library
 
   other-modules:
     PostgresqlSyntax.Ast.AExpr
-    PostgresqlSyntax.Ast.AExprReversableOp
     PostgresqlSyntax.Ast.AexprConst
+    PostgresqlSyntax.Ast.AExprReversableOp
     PostgresqlSyntax.Ast.AliasClause
     PostgresqlSyntax.Ast.AllOp
     PostgresqlSyntax.Ast.AnyName
@@ -86,13 +86,13 @@ library
     PostgresqlSyntax.Ast.ArrayExprList
     PostgresqlSyntax.Ast.AscDesc
     PostgresqlSyntax.Ast.Attrs
+    PostgresqlSyntax.Ast.Bconst
     PostgresqlSyntax.Ast.BExpr
     PostgresqlSyntax.Ast.BExprIsOp
-    PostgresqlSyntax.Ast.Bconst
     PostgresqlSyntax.Ast.Bit
-    PostgresqlSyntax.Ast.CExpr
     PostgresqlSyntax.Ast.CallStmt
     PostgresqlSyntax.Ast.CaseExpr
+    PostgresqlSyntax.Ast.CExpr
     PostgresqlSyntax.Ast.Character
     PostgresqlSyntax.Ast.Columnref
     PostgresqlSyntax.Ast.CommonTableExpr
@@ -128,12 +128,12 @@ library
     PostgresqlSyntax.Ast.Iconst
     PostgresqlSyntax.Ast.Ident
     PostgresqlSyntax.Ast.ImplicitRow
-    PostgresqlSyntax.Ast.InExpr
     PostgresqlSyntax.Ast.IndexElem
     PostgresqlSyntax.Ast.IndexElemDef
     PostgresqlSyntax.Ast.IndexParams
     PostgresqlSyntax.Ast.Indirection
     PostgresqlSyntax.Ast.IndirectionEl
+    PostgresqlSyntax.Ast.InExpr
     PostgresqlSyntax.Ast.InsertColumnItem
     PostgresqlSyntax.Ast.InsertColumnList
     PostgresqlSyntax.Ast.InsertRest
@@ -142,10 +142,10 @@ library
     PostgresqlSyntax.Ast.Internal
     PostgresqlSyntax.Ast.Interval
     PostgresqlSyntax.Ast.IntervalSecond
+    PostgresqlSyntax.Ast.JoinedTable
     PostgresqlSyntax.Ast.JoinMeth
     PostgresqlSyntax.Ast.JoinQual
     PostgresqlSyntax.Ast.JoinType
-    PostgresqlSyntax.Ast.JoinedTable
     PostgresqlSyntax.Ast.LimitClause
     PostgresqlSyntax.Ast.MathOp
     PostgresqlSyntax.Ast.NameList
@@ -164,8 +164,8 @@ library
     PostgresqlSyntax.Ast.PositionList
     PostgresqlSyntax.Ast.PreparableStmt
     PostgresqlSyntax.Ast.QualAllOp
-    PostgresqlSyntax.Ast.QualOp
     PostgresqlSyntax.Ast.QualifiedName
+    PostgresqlSyntax.Ast.QualOp
     PostgresqlSyntax.Ast.RelationExpr
     PostgresqlSyntax.Ast.RelationExprOptAlias
     PostgresqlSyntax.Ast.Row
@@ -188,18 +188,18 @@ library
     PostgresqlSyntax.Ast.SimpleTypename
     PostgresqlSyntax.Ast.SortBy
     PostgresqlSyntax.Ast.SortClause
-    PostgresqlSyntax.Ast.SubType
     PostgresqlSyntax.Ast.SubqueryOp
     PostgresqlSyntax.Ast.SubstrList
     PostgresqlSyntax.Ast.SubstrListFromFor
+    PostgresqlSyntax.Ast.SubType
     PostgresqlSyntax.Ast.SymbolicExprBinOp
     PostgresqlSyntax.Ast.TableFuncElement
     PostgresqlSyntax.Ast.TableFuncElementList
     PostgresqlSyntax.Ast.TableRef
     PostgresqlSyntax.Ast.TablesampleClause
     PostgresqlSyntax.Ast.TargetEl
-    PostgresqlSyntax.Ast.TargetList
     PostgresqlSyntax.Ast.Targeting
+    PostgresqlSyntax.Ast.TargetList
     PostgresqlSyntax.Ast.Timezone
     PostgresqlSyntax.Ast.TrimList
     PostgresqlSyntax.Ast.TrimModifier
@@ -236,28 +236,16 @@ library
     text-builder >=1 && <1.1,
     unordered-containers >=0.2.16 && <0.3,
 
-test-suite tasty-test
+test-suite hspec-test
   import: base-settings
   type: exitcode-stdio-1.0
-  hs-source-dirs: tasty-test
+  hs-source-dirs: hspec-test
   main-is: Main.hs
   ghc-options: -threaded
   build-depends:
+    hspec >=2.10 && <3,
     postgresql-syntax,
-    rerebase <2,
-    tasty >=1.2.3 && <2,
-    tasty-hunit >=0.10 && <0.11,
-
-test-suite hedgehog-test
-  import: base-settings
-  type: exitcode-stdio-1.0
-  hs-source-dirs: hedgehog-test
-  main-is: Main.hs
-  ghc-options: -threaded
-  other-modules: Main.Gen
-  build-depends:
-    hedgehog >=1.0.1 && <2,
-    postgresql-syntax,
+    QuickCheck >=2.14 && <3,
     rerebase >=1.6.1 && <2,
 
 benchmark keyword-bench
@@ -265,18 +253,16 @@ benchmark keyword-bench
   type: exitcode-stdio-1.0
   hs-source-dirs:
     bench
-    hedgehog-test
 
   main-is: Main.hs
   ghc-options: -O2
-  other-modules: Main.Gen
   build-depends:
     containers >=0.4 && <1,
     criterion >=1.6 && <1.7,
     headed-megaparsec >=0.2.0.1 && <0.3,
-    hedgehog >=1.0.1 && <2,
     megaparsec >=9.2 && <10,
     postgresql-syntax,
+    QuickCheck >=2.14 && <3,
     rerebase >=1.6.1 && <2,
 
 benchmark nesting-bench
@@ -292,4 +278,3 @@ benchmark nesting-bench
     clock >=0.8 && <1,
     postgresql-syntax,
     rerebase >=1.6.1 && <2,
-

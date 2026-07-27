@@ -13,7 +13,8 @@ module Main where
 
 import Control.Concurrent.MVar
 import qualified Data.Text as Text
-import qualified PostgresqlSyntax.Parsing as Parsing
+import PostgresqlSyntax (run)
+import PostgresqlSyntax.Ast (AExpr)
 import System.Clock
 import Prelude
 
@@ -54,7 +55,7 @@ withTimeout micros action = do
 time :: Text -> IO Double
 time input = do
   start <- getTime Monotonic
-  _ <- evaluate (force (either (const "err") (const "ok") (Parsing.run Parsing.aExpr input) :: String))
+  _ <- evaluate (force (either (const "err") (const "ok") (run @AExpr input) :: String))
   end <- getTime Monotonic
   pure (fromIntegral (toNanoSecs (diffTimeSpec end start)) / 1e9)
 

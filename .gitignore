@@ -23,7 +23,7 @@
 !/library/
 !/nesting-bench/
 !/references/
-!/tasty-test/
+!/hspec-test/
 !/docs/
 
 # Ignore noise:
