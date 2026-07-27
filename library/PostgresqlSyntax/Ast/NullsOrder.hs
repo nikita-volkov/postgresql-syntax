@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.NullsOrder where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -21,7 +22,7 @@ instance IsAst NullsOrder where
   toTextBuilder = \case
     FirstNullsOrder -> "NULLS FIRST"
     LastNullsOrder -> "NULLS LAST"
-  parser = keyword "nulls" *> space1 *> endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")
+  parser = keyword "nulls" *> Parser.space1 *> Parser.endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")
 
-instance Arbitrary NullsOrder where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary NullsOrder where
+  arbitrary = Qc.elements [minBound .. maxBound]

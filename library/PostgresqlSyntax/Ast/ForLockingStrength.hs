@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.ForLockingStrength where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -32,9 +33,9 @@ instance IsAst ForLockingStrength where
       <|> ShareForLockingStrength <$ keyphrase "for share"
       <|> KeyForLockingStrength <$ keyphrase "for key share"
 
-instance Arbitrary ForLockingStrength where
+instance Qc.Arbitrary ForLockingStrength where
   arbitrary =
-    elements
+    Qc.elements
       [ UpdateForLockingStrength,
         NoKeyUpdateForLockingStrength,
         ShareForLockingStrength,

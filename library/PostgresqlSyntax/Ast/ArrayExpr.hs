@@ -5,7 +5,7 @@ import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -35,14 +35,14 @@ instance IsAst ArrayExpr where
           pure EmptyArrayExpr
         ]
 
-instance Arbitrary ArrayExpr where
+instance Qc.Arbitrary ArrayExpr where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
         then pure EmptyArrayExpr
         else
-          oneof
-            [ ExprListArrayExpr <$> scale (`div` 2) arbitrary,
-              ArrayExprListArrayExpr <$> scale (`div` 2) arbitrary,
+          Qc.oneof
+            [ ExprListArrayExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ArrayExprListArrayExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
               pure EmptyArrayExpr
             ]

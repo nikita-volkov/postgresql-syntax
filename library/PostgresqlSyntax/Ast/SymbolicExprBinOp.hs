@@ -4,6 +4,7 @@ import PostgresqlSyntax.Ast.MathOp
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 data SymbolicExprBinOp
   = MathSymbolicExprBinOp MathOp
@@ -18,9 +19,9 @@ instance IsAst SymbolicExprBinOp where
     QualSymbolicExprBinOp <$> parser
       <|> MathSymbolicExprBinOp <$> parser
 
-instance Arbitrary SymbolicExprBinOp where
+instance Qc.Arbitrary SymbolicExprBinOp where
   arbitrary =
-    oneof
-      [ MathSymbolicExprBinOp <$> arbitrary,
-        QualSymbolicExprBinOp <$> arbitrary
+    Qc.oneof
+      [ MathSymbolicExprBinOp <$> Qc.arbitrary,
+        QualSymbolicExprBinOp <$> Qc.arbitrary
       ]

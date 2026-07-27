@@ -4,7 +4,7 @@ import Control.Applicative.Combinators.NonEmpty (some)
 import PostgresqlSyntax.Ast.IndirectionEl
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (some)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -20,9 +20,9 @@ instance IsAst Indirection where
   toTextBuilder (Indirection a) = foldMap toTextBuilder a
   parser = Indirection <$> some parser
 
-instance Arbitrary Indirection where
+instance Qc.Arbitrary Indirection where
   arbitrary = do
-    len <- choose (0, 2)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 2)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (Indirection (x :| xs))

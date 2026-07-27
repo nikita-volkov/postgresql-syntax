@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.SubstrList where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.SubstrListFromFor
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -31,13 +31,13 @@ instance IsAst SubstrList where
     ExprListSubstrList a -> toTextBuilder a
   parser =
     asum
-      [ ExprSubstrList <$> wrapToHead parser <*> (space1 *> parser),
+      [ ExprSubstrList <$> Parser.wrapToHead parser <*> (Parser.space1 *> parser),
         ExprListSubstrList <$> parser
       ]
 
-instance Arbitrary SubstrList where
+instance Qc.Arbitrary SubstrList where
   arbitrary =
-    oneof
-      [ ExprSubstrList <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        ExprListSubstrList <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ ExprSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        ExprListSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

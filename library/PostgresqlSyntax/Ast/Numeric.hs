@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.Numeric where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -51,7 +52,7 @@ instance IsAst Numeric where
     SmallintNumeric -> "SMALLINT"
     BigintNumeric -> "BIGINT"
     RealNumeric -> "REAL"
-    FloatNumeric a -> "FLOAT" <> suffixMaybe (renderInParens . int64Dec) a
+    FloatNumeric a -> "FLOAT" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
     DoublePrecisionNumeric -> "DOUBLE PRECISION"
     DecimalNumeric a -> "DECIMAL" <> suffixMaybe (renderInParens . toTextBuilder) a
     DecNumeric a -> "DEC" <> suffixMaybe (renderInParens . toTextBuilder) a
@@ -64,26 +65,26 @@ instance IsAst Numeric where
         SmallintNumeric <$ keyword "smallint",
         BigintNumeric <$ keyword "bigint",
         RealNumeric <$ keyword "real",
-        FloatNumeric <$> (keyword "float" *> endHead *> optional (space *> inParens decimal)),
+        FloatNumeric <$> (keyword "float" *> Parser.endHead *> optional (Parser.space *> inParens Parser.decimal)),
         DoublePrecisionNumeric <$ keyphrase "double precision",
-        DecimalNumeric <$> (keyword "decimal" *> endHead *> optional (space *> inParens parser)),
-        DecNumeric <$> (keyword "dec" *> endHead *> optional (space *> inParens parser)),
-        NumericNumeric <$> (keyword "numeric" *> endHead *> optional (space *> inParens parser)),
+        DecimalNumeric <$> (keyword "decimal" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
+        DecNumeric <$> (keyword "dec" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
+        NumericNumeric <$> (keyword "numeric" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
         BooleanNumeric <$ keyword "boolean"
       ]
 
-instance Arbitrary Numeric where
+instance Qc.Arbitrary Numeric where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure IntNumeric,
         pure IntegerNumeric,
         pure SmallintNumeric,
         pure BigintNumeric,
         pure RealNumeric,
-        FloatNumeric <$> arbitrary,
+        FloatNumeric <$> Qc.arbitrary,
         pure DoublePrecisionNumeric,
-        DecimalNumeric <$> arbitrary,
-        DecNumeric <$> arbitrary,
-        NumericNumeric <$> arbitrary,
+        DecimalNumeric <$> Qc.arbitrary,
+        DecNumeric <$> Qc.arbitrary,
+        NumericNumeric <$> Qc.arbitrary,
         pure BooleanNumeric
       ]

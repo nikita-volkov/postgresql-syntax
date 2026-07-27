@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.InsertColumnList where
 
 import PostgresqlSyntax.Ast.InsertColumnItem
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype InsertColumnList = InsertColumnList (NonEmpty InsertColumnItem)
 
 instance IsAst InsertColumnList where
   toTextBuilder (InsertColumnList a) = commaNonEmpty toTextBuilder a
-  parser = InsertColumnList <$> sep1 commaSeparator parser
+  parser = InsertColumnList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary InsertColumnList where
+instance Qc.Arbitrary InsertColumnList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (InsertColumnList (x :| xs))

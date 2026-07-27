@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.IndirectionEl where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- 'PostgresqlSyntax.Ast.AttrName' is a bare alias to 'PostgresqlSyntax.Ast.ColLabel',
@@ -45,49 +45,49 @@ instance IsAst IndirectionEl where
   parser =
     asum
       [ do
-          char '.'
-          endHead
-          space
-          AllIndirectionEl <$ char '*' <|> AttrNameIndirectionEl <$> colLabelLikeName,
+          Parser.char '.'
+          Parser.endHead
+          Parser.space
+          AllIndirectionEl <$ Parser.char '*' <|> AttrNameIndirectionEl <$> colLabelLikeName,
         do
-          char '['
-          endHead
-          space
+          Parser.char '['
+          Parser.endHead
+          Parser.space
           a <-
             asum
               [ do
-                  char ':'
-                  endHead
-                  space
+                  Parser.char ':'
+                  Parser.endHead
+                  Parser.space
                   b <- optional parser
                   return (SliceIndirectionEl Nothing b),
                 do
                   a <- parser
                   asum
                     [ do
-                        space
-                        char ':'
-                        space
+                        Parser.space
+                        Parser.char ':'
+                        Parser.space
                         b <- optional parser
                         return (SliceIndirectionEl (Just a) b),
                       return (ExprIndirectionEl a)
                     ]
               ]
-          space
-          char ']'
+          Parser.space
+          Parser.char ']'
           return a
       ]
     where
       colLabelLikeName =
-        label "column label"
+        Parser.label "column label"
           $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
           <|> parser
 
-instance Arbitrary IndirectionEl where
+instance Qc.Arbitrary IndirectionEl where
   arbitrary =
-    oneof
-      [ AttrNameIndirectionEl <$> arbitrary,
+    Qc.oneof
+      [ AttrNameIndirectionEl <$> Qc.arbitrary,
         pure AllIndirectionEl,
-        ExprIndirectionEl <$> scale (`div` 2) arbitrary,
-        SliceIndirectionEl <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+        ExprIndirectionEl <$> Qc.scale (`div` 2) Qc.arbitrary,
+        SliceIndirectionEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
       ]

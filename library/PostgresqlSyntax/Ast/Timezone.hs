@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.Timezone where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -24,5 +25,5 @@ instance IsAst Timezone where
           True <$ keyphrase "without time zone"
         ]
 
-instance Arbitrary Timezone where
+instance Qc.Arbitrary Timezone where
   arbitrary = Timezone <$> arbitrary

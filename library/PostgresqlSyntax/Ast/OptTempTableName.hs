@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.OptTempTableName where
 
 import Control.Applicative.Combinators (option)
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualifiedName
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -50,35 +51,35 @@ instance IsAst OptTempTableName where
       [ do
           a <-
             asum
-              [ TemporaryOptTempTableName <$ keyword "temporary" <* space1,
-                TempOptTempTableName <$ keyword "temp" <* space1,
-                LocalTemporaryOptTempTableName <$ keyphrase "local temporary" <* space1,
-                LocalTempOptTempTableName <$ keyphrase "local temp" <* space1,
-                GlobalTemporaryOptTempTableName <$ keyphrase "global temporary" <* space1,
-                GlobalTempOptTempTableName <$ keyphrase "global temp" <* space1,
-                UnloggedOptTempTableName <$ keyword "unlogged" <* space1
+              [ TemporaryOptTempTableName <$ keyword "temporary" <* Parser.space1,
+                TempOptTempTableName <$ keyword "temp" <* Parser.space1,
+                LocalTemporaryOptTempTableName <$ keyphrase "local temporary" <* Parser.space1,
+                LocalTempOptTempTableName <$ keyphrase "local temp" <* Parser.space1,
+                GlobalTemporaryOptTempTableName <$ keyphrase "global temporary" <* Parser.space1,
+                GlobalTempOptTempTableName <$ keyphrase "global temp" <* Parser.space1,
+                UnloggedOptTempTableName <$ keyword "unlogged" <* Parser.space1
               ]
-          b <- option False (True <$ keyword "table" <* space1)
+          b <- option False (True <$ keyword "table" <* Parser.space1)
           c <- parser
           return (a b c),
         do
           keyword "table"
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           TableOptTempTableName <$> parser,
         QualifedOptTempTableName <$> parser
       ]
 
-instance Arbitrary OptTempTableName where
+instance Qc.Arbitrary OptTempTableName where
   arbitrary =
-    oneof
-      [ TemporaryOptTempTableName <$> arbitrary <*> arbitrary,
-        TempOptTempTableName <$> arbitrary <*> arbitrary,
-        LocalTemporaryOptTempTableName <$> arbitrary <*> arbitrary,
-        LocalTempOptTempTableName <$> arbitrary <*> arbitrary,
-        GlobalTemporaryOptTempTableName <$> arbitrary <*> arbitrary,
-        GlobalTempOptTempTableName <$> arbitrary <*> arbitrary,
-        UnloggedOptTempTableName <$> arbitrary <*> arbitrary,
-        TableOptTempTableName <$> arbitrary,
-        QualifedOptTempTableName <$> arbitrary
+    Qc.oneof
+      [ TemporaryOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        TempOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        LocalTemporaryOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        LocalTempOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        GlobalTemporaryOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        GlobalTempOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        UnloggedOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,
+        TableOptTempTableName <$> Qc.arbitrary,
+        QualifedOptTempTableName <$> Qc.arbitrary
       ]

@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.TablesampleClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,18 +28,18 @@ instance IsAst TablesampleClause where
       repeatableClause a' = "REPEATABLE (" <> toTextBuilder a' <> ")"
   parser = do
     keyword "tablesample"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     a <- parser
-    space
+    Parser.space
     b <- inParens parser
-    c <- optional (space *> repeatableClause)
+    c <- optional (Parser.space *> repeatableClause)
     return (TablesampleClause a b c)
     where
       repeatableClause = do
         keyword "repeatable"
-        space
-        inParens (endHead *> parser)
+        Parser.space
+        inParens (Parser.endHead *> parser)
 
-instance Arbitrary TablesampleClause where
-  arbitrary = TablesampleClause <$> arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary TablesampleClause where
+  arbitrary = TablesampleClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

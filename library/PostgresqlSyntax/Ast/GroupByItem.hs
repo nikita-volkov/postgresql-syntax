@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.GroupByItem where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -44,27 +44,27 @@ instance IsAst GroupByItem where
     GroupingSetsGroupByItem a -> "GROUPING SETS (" <> commaNonEmpty toTextBuilder a <> ")"
   parser =
     asum
-      [ EmptyGroupingSetGroupByItem <$ (char '(' *> space *> char ')'),
-        RollupGroupByItem . ExprList <$> (keyword "rollup" *> endHead *> space *> inParens (sep1 commaSeparator parser)),
-        CubeGroupByItem . ExprList <$> (keyword "cube" *> endHead *> space *> inParens (sep1 commaSeparator parser)),
-        GroupingSetsGroupByItem <$> (keyphrase "grouping sets" *> endHead *> space *> inParens (sep1 commaSeparator parser)),
+      [ EmptyGroupingSetGroupByItem <$ (Parser.char '(' *> Parser.space *> Parser.char ')'),
+        RollupGroupByItem . ExprList <$> (keyword "rollup" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
+        CubeGroupByItem . ExprList <$> (keyword "cube" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
+        GroupingSetsGroupByItem <$> (keyphrase "grouping sets" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
         ExprGroupByItem <$> parser
       ]
 
-instance Arbitrary GroupByItem where
+instance Qc.Arbitrary GroupByItem where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then oneof [ExprGroupByItem <$> scale (`div` 2) arbitrary, pure EmptyGroupingSetGroupByItem]
+        then Qc.oneof [ExprGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary, pure EmptyGroupingSetGroupByItem]
         else
-          oneof
-            [ ExprGroupByItem <$> scale (`div` 2) arbitrary,
+          Qc.oneof
+            [ ExprGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
               pure EmptyGroupingSetGroupByItem,
-              RollupGroupByItem <$> scale (`div` 2) arbitrary,
-              CubeGroupByItem <$> scale (`div` 2) arbitrary,
+              RollupGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
+              CubeGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
               GroupingSetsGroupByItem <$> do
-                len <- choose (0, 2)
-                x <- scale (`div` 4) arbitrary
-                xs <- vectorOf len (scale (`div` 4) arbitrary)
+                len <- Qc.choose (0, 2)
+                x <- Qc.scale (`div` 4) Qc.arbitrary
+                xs <- Qc.vectorOf len (Qc.scale (`div` 4) Qc.arbitrary)
                 pure (x :| xs)
             ]

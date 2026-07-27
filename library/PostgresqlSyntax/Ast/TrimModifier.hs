@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.TrimModifier where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -24,5 +25,5 @@ instance IsAst TrimModifier where
       <|> LeadingTrimModifier <$ keyword "leading"
       <|> TrailingTrimModifier <$ keyword "trailing"
 
-instance Arbitrary TrimModifier where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary TrimModifier where
+  arbitrary = Qc.elements [minBound .. maxBound]

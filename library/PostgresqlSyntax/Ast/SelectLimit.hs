@@ -3,9 +3,10 @@ module PostgresqlSyntax.Ast.SelectLimit where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.LimitClause
 import PostgresqlSyntax.Ast.OffsetClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -33,17 +34,17 @@ instance IsAst SelectLimit where
     asum
       [ do
           a <- parser
-          LimitOffsetSelectLimit a <$> (space1 *> parser) <|> pure (LimitSelectLimit a),
+          LimitOffsetSelectLimit a <$> (Parser.space1 *> parser) <|> pure (LimitSelectLimit a),
         do
           a <- parser
-          OffsetLimitSelectLimit a <$> (space1 *> parser) <|> pure (OffsetSelectLimit a)
+          OffsetLimitSelectLimit a <$> (Parser.space1 *> parser) <|> pure (OffsetSelectLimit a)
       ]
 
-instance Arbitrary SelectLimit where
+instance Qc.Arbitrary SelectLimit where
   arbitrary =
-    oneof
-      [ LimitOffsetSelectLimit <$> arbitrary <*> arbitrary,
-        OffsetLimitSelectLimit <$> arbitrary <*> arbitrary,
-        LimitSelectLimit <$> arbitrary,
-        OffsetSelectLimit <$> arbitrary
+    Qc.oneof
+      [ LimitOffsetSelectLimit <$> Qc.arbitrary <*> Qc.arbitrary,
+        OffsetLimitSelectLimit <$> Qc.arbitrary <*> Qc.arbitrary,
+        LimitSelectLimit <$> Qc.arbitrary,
+        OffsetSelectLimit <$> Qc.arbitrary
       ]

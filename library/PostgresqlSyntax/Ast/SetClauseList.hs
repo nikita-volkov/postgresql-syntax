@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.SetClauseList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype SetClauseList = SetClauseList (NonEmpty SetClause)
 
 instance IsAst SetClauseList where
   toTextBuilder (SetClauseList a) = commaNonEmpty toTextBuilder a
-  parser = SetClauseList <$> sep1 commaSeparator parser
+  parser = SetClauseList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary SetClauseList where
+instance Qc.Arbitrary SetClauseList where
   arbitrary = do
-    len <- choose (0, 9)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 9)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (SetClauseList (x :| xs))

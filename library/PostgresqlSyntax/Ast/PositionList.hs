@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.PositionList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,7 +19,7 @@ data PositionList = PositionList BExpr BExpr
 
 instance IsAst PositionList where
   toTextBuilder (PositionList a b) = toTextBuilder a <> " IN " <> toTextBuilder b
-  parser = PositionList <$> parser <*> (space1 *> keyword "in" *> space1 *> parser)
+  parser = PositionList <$> parser <*> (Parser.space1 *> keyword "in" *> Parser.space1 *> parser)
 
-instance Arbitrary PositionList where
-  arbitrary = PositionList <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary PositionList where
+  arbitrary = PositionList <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

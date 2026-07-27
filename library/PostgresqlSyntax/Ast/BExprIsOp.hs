@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.BExprIsOp where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TypeList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- Renders\/parses only the \"positive\" form (@DISTINCT FROM ...@\/@OF
@@ -38,15 +38,15 @@ instance IsAst BExprIsOp where
     DocumentBExprIsOp -> "DOCUMENT"
   parser =
     asum
-      [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> parser),
-        OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens parser),
+      [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> Parser.space1 *> Parser.endHead *> parser),
+        OfBExprIsOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
         DocumentBExprIsOp <$ keyword "document"
       ]
 
-instance Arbitrary BExprIsOp where
+instance Qc.Arbitrary BExprIsOp where
   arbitrary =
-    oneof
-      [ DistinctFromBExprIsOp <$> scale (`div` 2) arbitrary,
-        OfBExprIsOp <$> scale (`div` 2) arbitrary,
+    Qc.oneof
+      [ DistinctFromBExprIsOp <$> Qc.scale (`div` 2) Qc.arbitrary,
+        OfBExprIsOp <$> Qc.scale (`div` 2) Qc.arbitrary,
         pure DocumentBExprIsOp
       ]

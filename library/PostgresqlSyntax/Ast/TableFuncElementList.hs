@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.TableFuncElementList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElement
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype TableFuncElementList = TableFuncElementList (NonEmpty TableFuncElement)
 
 instance IsAst TableFuncElementList where
   toTextBuilder (TableFuncElementList a) = commaNonEmpty toTextBuilder a
-  parser = TableFuncElementList <$> sep1 commaSeparator parser
+  parser = TableFuncElementList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary TableFuncElementList where
+instance Qc.Arbitrary TableFuncElementList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (TableFuncElementList (x :| xs))

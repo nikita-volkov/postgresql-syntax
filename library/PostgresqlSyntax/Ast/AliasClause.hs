@@ -1,13 +1,14 @@
 module PostgresqlSyntax.Ast.AliasClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NameList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,14 +37,14 @@ instance IsAst AliasClause where
         fmap (renderInParens . toTextBuilder) c
       ]
   parser = do
-    (as, alias) <- (True,) <$> (keyword "as" *> space1 *> endHead *> colIdLikeName) <|> (False,) <$> colIdLikeName
-    columnAliases <- optional (space1 *> inParens parser)
+    (as, alias) <- (True,) <$> (keyword "as" *> Parser.space1 *> Parser.endHead *> colIdLikeName) <|> (False,) <$> colIdLikeName
+    columnAliases <- optional (Parser.space1 *> inParens parser)
     return (AliasClause as alias columnAliases)
     where
       colIdLikeName =
-        label "identifier"
+        Parser.label "identifier"
           $ parser
           <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
-instance Arbitrary AliasClause where
+instance Qc.Arbitrary AliasClause where
   arbitrary = AliasClause <$> arbitrary <*> arbitrary <*> arbitrary

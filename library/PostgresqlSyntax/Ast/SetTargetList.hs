@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.SetTargetList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype SetTargetList = SetTargetList (NonEmpty SetTarget)
 
 instance IsAst SetTargetList where
   toTextBuilder (SetTargetList a) = commaNonEmpty toTextBuilder a
-  parser = SetTargetList <$> sep1 commaSeparator parser
+  parser = SetTargetList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary SetTargetList where
+instance Qc.Arbitrary SetTargetList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (SetTargetList (x :| xs))

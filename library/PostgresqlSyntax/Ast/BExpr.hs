@@ -1,16 +1,16 @@
 module PostgresqlSyntax.Ast.BExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.BExprIsOp
 import PostgresqlSyntax.Ast.CExpr (CExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -86,32 +86,32 @@ instance IsAst BExpr where
           [ typecastExpr a TypecastBExpr,
             symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
             do
-              space1
+              Parser.space1
               keyword "is"
-              space1
-              endHead
-              b <- trueIfPresent (keyword "not" *> space1)
+              Parser.space1
+              Parser.endHead
+              b <- trueIfPresent (keyword "not" *> Parser.space1)
               c <-
                 asum
-                  [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> space1 *> endHead *> bExpr),
-                    OfBExprIsOp <$> (keyword "of" *> space1 *> endHead *> inParens parser),
+                  [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> Parser.space1 *> Parser.endHead *> bExpr),
+                    OfBExprIsOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
                     DocumentBExprIsOp <$ keyword "document"
                   ]
               return (IsOpBExpr a b c)
           ]
 
-instance Arbitrary BExpr where
+instance Qc.Arbitrary BExpr where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then CExprBExpr <$> scale (`div` 2) arbitrary
+        then CExprBExpr <$> Qc.scale (`div` 2) Qc.arbitrary
         else
-          oneof
-            [ CExprBExpr <$> scale (`div` 2) arbitrary,
-              TypecastBExpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-              PlusBExpr <$> scale (`div` 2) arbitrary,
-              MinusBExpr <$> scale (`div` 2) arbitrary,
-              SymbolicBinOpBExpr <$> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary,
-              QualOpBExpr <$> arbitrary <*> scale (`div` 2) arbitrary,
-              IsOpBExpr <$> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ CExprBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              TypecastBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+              PlusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              MinusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              SymbolicBinOpBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              QualOpBExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              IsOpBExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

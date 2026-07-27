@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.SubstrListFromFor where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -35,7 +35,7 @@ instance IsAst SubstrListFromFor where
           a <- substrFrom
           asum
             [ do
-                b <- space1 *> substrFor
+                b <- Parser.space1 *> substrFor
                 return (FromForSubstrListFromFor a b),
               return (FromSubstrListFromFor a)
             ],
@@ -43,20 +43,20 @@ instance IsAst SubstrListFromFor where
           a <- substrFor
           asum
             [ do
-                b <- space1 *> substrFrom
+                b <- Parser.space1 *> substrFrom
                 return (ForFromSubstrListFromFor a b),
               return (ForSubstrListFromFor a)
             ]
       ]
     where
-      substrFrom = keyword "from" *> space1 *> endHead *> parser
-      substrFor = keyword "for" *> space1 *> endHead *> parser
+      substrFrom = keyword "from" *> Parser.space1 *> Parser.endHead *> parser
+      substrFor = keyword "for" *> Parser.space1 *> Parser.endHead *> parser
 
-instance Arbitrary SubstrListFromFor where
+instance Qc.Arbitrary SubstrListFromFor where
   arbitrary =
-    oneof
-      [ FromForSubstrListFromFor <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        ForFromSubstrListFromFor <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        FromSubstrListFromFor <$> scale (`div` 2) arbitrary,
-        ForSubstrListFromFor <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ FromForSubstrListFromFor <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        ForFromSubstrListFromFor <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        FromSubstrListFromFor <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ForSubstrListFromFor <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

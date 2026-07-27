@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.TargetEl where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,20 +36,20 @@ instance IsAst TargetEl where
   -- >>> testParser targetEl "a.b as c"
   -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
   parser =
-    label "target"
+    Parser.label "target"
       $ asum
         [ do
             expr <- parser
             asum
               [ do
-                  space1
+                  Parser.space1
                   asum
-                    [ AliasedExprTargetEl expr <$> (keyword "as" *> space1 *> endHead *> colLabel),
+                    [ AliasedExprTargetEl expr <$> (keyword "as" *> Parser.space1 *> Parser.endHead *> colLabel),
                       ImplicitlyAliasedExprTargetEl expr <$> parser
                     ],
                 pure (ExprTargetEl expr)
               ],
-          AsteriskTargetEl <$ char '*'
+          AsteriskTargetEl <$ Parser.char '*'
         ]
     where
       -- |
@@ -58,15 +58,15 @@ instance IsAst TargetEl where
       -- permissive parser lives above this module in the dependency
       -- order), mirroring the 'PostgresqlSyntax.Ast.AnyName' precedent.
       colLabel =
-        label "column label"
+        Parser.label "column label"
           $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
           <|> parser
 
-instance Arbitrary TargetEl where
+instance Qc.Arbitrary TargetEl where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure AsteriskTargetEl,
-        AliasedExprTargetEl <$> scale (`div` 2) arbitrary <*> arbitrary,
-        ImplicitlyAliasedExprTargetEl <$> scale (`div` 2) arbitrary <*> arbitrary,
-        ExprTargetEl <$> scale (`div` 2) arbitrary
+        AliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        ImplicitlyAliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        ExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.ExprList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype ExprList = ExprList (NonEmpty AExpr)
 
 instance IsAst ExprList where
   toTextBuilder (ExprList a) = commaNonEmpty toTextBuilder a
-  parser = ExprList <$> sep1 commaSeparator parser
+  parser = ExprList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary ExprList where
+instance Qc.Arbitrary ExprList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (ExprList (x :| xs))

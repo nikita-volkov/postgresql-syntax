@@ -3,10 +3,10 @@ module PostgresqlSyntax.Ast.JoinMeth where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinQual
 import PostgresqlSyntax.Ast.JoinType
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -41,23 +41,23 @@ instance IsAst JoinMeth where
     asum
       [ CrossJoinMeth <$ keyphrase "cross join",
         do
-          a <- optional (parser <* space1)
+          a <- optional (parser <* Parser.space1)
           keyword "join"
-          space1
+          Parser.space1
           b <- parser
           return (QualJoinMeth a b),
         do
           keyword "natural"
-          space1
-          a <- optional (parser <* space1)
+          Parser.space1
+          a <- optional (parser <* Parser.space1)
           keyword "join"
           return (NaturalJoinMeth a)
       ]
 
-instance Arbitrary JoinMeth where
+instance Qc.Arbitrary JoinMeth where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure CrossJoinMeth,
-        QualJoinMeth <$> arbitrary <*> scale (`div` 2) arbitrary,
-        NaturalJoinMeth <$> arbitrary
+        QualJoinMeth <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        NaturalJoinMeth <$> Qc.arbitrary
       ]

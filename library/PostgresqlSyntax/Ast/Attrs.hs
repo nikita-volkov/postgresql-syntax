@@ -2,13 +2,14 @@ module PostgresqlSyntax.Ast.Attrs where
 
 import Control.Applicative.Combinators.NonEmpty (some)
 import qualified Data.List.NonEmpty as NonEmpty
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -33,14 +34,14 @@ newtype Attrs = Attrs (NonEmpty Ident)
 
 instance IsAst Attrs where
   toTextBuilder (Attrs a) = foldMap (mappend "." . toTextBuilder) a
-  parser = Attrs <$> some (char '.' *> endHead *> space *> colLabelLikeName)
+  parser = Attrs <$> some (Parser.char '.' *> Parser.endHead *> Parser.space *> colLabelLikeName)
     where
       colLabelLikeName =
-        label "column label"
+        Parser.label "column label"
           $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
           <|> parser
 
-instance Arbitrary Attrs where
+instance Qc.Arbitrary Attrs where
   arbitrary = do
-    len <- choose (1, 10)
-    Attrs . NonEmpty.fromList <$> vectorOf len arbitrary
+    len <- Qc.choose (1, 10)
+    Attrs . NonEmpty.fromList <$> Qc.vectorOf len Qc.arbitrary

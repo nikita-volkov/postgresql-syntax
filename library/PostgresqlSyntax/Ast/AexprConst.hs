@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.AexprConst where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Bconst
 import PostgresqlSyntax.Ast.ConstTypename
 import PostgresqlSyntax.Ast.Fconst
@@ -11,10 +11,10 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.Ast.Xconst
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 
@@ -67,58 +67,58 @@ instance IsAst AexprConst where
     asum
       [ do
           keyword "interval"
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           a <-
             asum
               [ do
                   a <- parser
-                  endHead
-                  b <- optional (space1 *> parser)
+                  Parser.endHead
+                  b <- optional (Parser.space1 *> parser)
                   return (StringIntervalAexprConst a b),
                 do
                   a <- inParens parser
-                  space1
-                  endHead
+                  Parser.space1
+                  Parser.endHead
                   b <- parser
                   return (IntIntervalAexprConst a b)
               ]
           return a,
         do
           a <- parser
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           b <- parser
           return (ConstTypenameAexprConst a b),
         BoolAexprConst True <$ keyword "true",
         BoolAexprConst False <$ keyword "false",
-        NullAexprConst <$ keyword "null" <* parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
+        NullAexprConst <$ keyword "null" <* Parser.parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
         either IAexprConst FAexprConst <$> (Right <$> parser <|> Left <$> parser),
         SAexprConst <$> parser,
         BAexprConst <$> parser,
         XAexprConst <$> parser,
-        wrapToHead $ do
+        Parser.wrapToHead $ do
           a <- parser
-          space
+          Parser.space
           b <- inParens parser
-          space1
+          Parser.space1
           d <- parser
           return (FuncAexprConst a (Just b) d),
-        FuncAexprConst <$> (wrapToHead parser <* space1) <*> pure Nothing <*> parser
+        FuncAexprConst <$> (Parser.wrapToHead parser <* Parser.space1) <*> pure Nothing <*> parser
       ]
 
-instance Arbitrary AexprConst where
+instance Qc.Arbitrary AexprConst where
   arbitrary =
-    oneof
-      [ IAexprConst <$> arbitrary,
-        FAexprConst <$> arbitrary,
-        SAexprConst <$> arbitrary,
-        BAexprConst <$> arbitrary,
-        XAexprConst <$> arbitrary,
-        FuncAexprConst <$> arbitrary <*> scale (`div` 2) arbitrary <*> arbitrary,
-        ConstTypenameAexprConst <$> arbitrary <*> arbitrary,
-        StringIntervalAexprConst <$> arbitrary <*> arbitrary,
-        IntIntervalAexprConst <$> arbitrary <*> arbitrary,
-        BoolAexprConst <$> arbitrary,
+    Qc.oneof
+      [ IAexprConst <$> Qc.arbitrary,
+        FAexprConst <$> Qc.arbitrary,
+        SAexprConst <$> Qc.arbitrary,
+        BAexprConst <$> Qc.arbitrary,
+        XAexprConst <$> Qc.arbitrary,
+        FuncAexprConst <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        ConstTypenameAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,
+        StringIntervalAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,
+        IntIntervalAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,
+        BoolAexprConst <$> Qc.arbitrary,
         pure NullAexprConst
       ]

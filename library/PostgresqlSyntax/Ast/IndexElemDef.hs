@@ -6,7 +6,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,10 +34,10 @@ instance IsAst IndexElemDef where
       <|> IdIndexElemDef
       <$> colId
 
-instance Arbitrary IndexElemDef where
+instance Qc.Arbitrary IndexElemDef where
   arbitrary =
-    oneof
-      [ IdIndexElemDef <$> arbitrary,
-        FuncIndexElemDef <$> scale (`div` 2) arbitrary,
-        ExprIndexElemDef <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ IdIndexElemDef <$> Qc.arbitrary,
+        FuncIndexElemDef <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ExprIndexElemDef <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

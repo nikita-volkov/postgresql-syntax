@@ -3,9 +3,10 @@ module PostgresqlSyntax.Ast.Bit where
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptVarying
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,8 +35,8 @@ instance IsAst Bit where
   parser = do
     keyword "bit"
     a <- parser
-    b <- optional (space1 *> inParens parser)
+    b <- optional (Parser.space1 *> inParens parser)
     return (Bit a b)
 
-instance Arbitrary Bit where
+instance Qc.Arbitrary Bit where
   arbitrary = Bit <$> arbitrary <*> arbitrary

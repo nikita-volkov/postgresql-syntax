@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.WhenClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -21,14 +21,14 @@ instance IsAst WhenClause where
   toTextBuilder (WhenClause a b) = "WHEN " <> toTextBuilder a <> " THEN " <> toTextBuilder b
   parser = do
     keyword "when"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     a <- parser
-    space1
+    Parser.space1
     keyword "then"
-    space1
+    Parser.space1
     b <- parser
     return (WhenClause a b)
 
-instance Arbitrary WhenClause where
-  arbitrary = WhenClause <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary WhenClause where
+  arbitrary = WhenClause <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

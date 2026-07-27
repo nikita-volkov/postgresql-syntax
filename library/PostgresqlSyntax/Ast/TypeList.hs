@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.TypeList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Typename
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype TypeList = TypeList (NonEmpty Typename)
 
 instance IsAst TypeList where
   toTextBuilder (TypeList a) = commaNonEmpty toTextBuilder a
-  parser = TypeList <$> sep1 commaSeparator parser
+  parser = TypeList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary TypeList where
+instance Qc.Arbitrary TypeList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (TypeList (x :| xs))

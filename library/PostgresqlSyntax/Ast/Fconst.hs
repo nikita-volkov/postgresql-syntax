@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.Fconst where
 
-import PostgresqlSyntax.Extras.HeadedMegaparsec (float)
-import PostgresqlSyntax.Extras.TextBuilder (doubleDec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (suchThat)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -15,10 +15,10 @@ newtype Fconst = Fconst Double
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Fconst where
-  toTextBuilder (Fconst a) = doubleDec a
-  parser = Fconst <$> float
+  toTextBuilder (Fconst a) = TextBuilder.doubleDec a
+  parser = Fconst <$> Parser.float
 
-instance Arbitrary Fconst where
+instance Qc.Arbitrary Fconst where
   arbitrary =
     Fconst
-      <$> (arbitrary `suchThat` (\a -> fromIntegral (round a :: Int) /= a))
+      <$> (Qc.arbitrary `Qc.suchThat` (\a -> fromIntegral (round a :: Int) /= a))

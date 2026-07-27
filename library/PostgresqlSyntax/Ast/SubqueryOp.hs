@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.SubqueryOp where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,18 +35,18 @@ instance IsAst SubqueryOp where
     IlikeSubqueryOp a -> bool "" "NOT " a <> "ILIKE"
   parser =
     asum
-      [ AnySubqueryOp <$> (keyword "operator" *> space *> endHead *> inParens parser),
+      [ AnySubqueryOp <$> (keyword "operator" *> Parser.space *> Parser.endHead *> inParens parser),
         do
-          a <- trueIfPresent (keyword "not" *> space1)
+          a <- trueIfPresent (keyword "not" *> Parser.space1)
           LikeSubqueryOp a <$ keyword "like" <|> IlikeSubqueryOp a <$ keyword "ilike",
         AllSubqueryOp <$> parser
       ]
 
-instance Arbitrary SubqueryOp where
+instance Qc.Arbitrary SubqueryOp where
   arbitrary =
-    oneof
-      [ AllSubqueryOp <$> arbitrary,
-        AnySubqueryOp <$> arbitrary,
-        LikeSubqueryOp <$> arbitrary,
-        IlikeSubqueryOp <$> arbitrary
+    Qc.oneof
+      [ AllSubqueryOp <$> Qc.arbitrary,
+        AnySubqueryOp <$> Qc.arbitrary,
+        LikeSubqueryOp <$> Qc.arbitrary,
+        IlikeSubqueryOp <$> Qc.arbitrary
       ]

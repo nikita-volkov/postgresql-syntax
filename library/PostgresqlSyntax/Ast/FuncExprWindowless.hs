@@ -4,7 +4,7 @@ import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,9 +28,9 @@ instance IsAst FuncExprWindowless where
         ApplicationFuncExprWindowless <$> parser
       ]
 
-instance Arbitrary FuncExprWindowless where
+instance Qc.Arbitrary FuncExprWindowless where
   arbitrary =
-    oneof
-      [ ApplicationFuncExprWindowless <$> scale (`div` 2) arbitrary,
-        CommonSubexprFuncExprWindowless <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ ApplicationFuncExprWindowless <$> Qc.scale (`div` 2) Qc.arbitrary,
+        CommonSubexprFuncExprWindowless <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -4,10 +4,10 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
 import PostgresqlSyntax.Ast.SetTargetList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,23 +29,23 @@ instance IsAst SetClause where
     asum
       [ do
           a <- inParens parser
-          space
-          char '='
-          space
+          Parser.space
+          Parser.char '='
+          Parser.space
           b <- parser
           return (TargetListSetClause a b),
         do
           a <- parser
-          space
-          char '='
-          space
+          Parser.space
+          Parser.char '='
+          Parser.space
           b <- parser
           return (TargetSetClause a b)
       ]
 
-instance Arbitrary SetClause where
+instance Qc.Arbitrary SetClause where
   arbitrary =
-    oneof
-      [ TargetSetClause <$> arbitrary <*> scale (`div` 2) arbitrary,
-        TargetListSetClause <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ TargetSetClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        TargetListSetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -6,7 +6,7 @@ module PostgresqlSyntax.Ast.SelectNoParens
   )
 where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ForLockingClause
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectClause
@@ -15,10 +15,10 @@ import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- Covers the following cases:
@@ -51,8 +51,8 @@ instance IsAst SelectNoParens where
     where
       simpleSelectNoParens = sharedSelectNoParens Nothing
       withSelectNoParens = do
-        with <- wrapToHead parser
-        space1
+        with <- Parser.wrapToHead parser
+        Parser.space1
         sharedSelectNoParens (Just with)
 
 sharedSelectNoParens :: Maybe WithClause -> Parser SelectNoParens
@@ -67,24 +67,24 @@ unparenthesizedSelectNoParens =
     <|> (SimpleSelect.baseSimpleSelect >>= selectNoParensAfterClause Nothing . SimpleSelectSelectClause)
   where
     withSelectNoParens = do
-      with <- wrapToHead parser
-      space1
+      with <- Parser.wrapToHead parser
+      Parser.space1
       sharedSelectNoParens (Just with)
 
 selectNoParensAfterClause :: Maybe WithClause -> SelectClause -> Parser SelectNoParens
 selectNoParensAfterClause with clauseBase = do
   select <- SimpleSelect.extendSelectClause clauseBase
-  sort <- optional (space1 *> parser)
+  sort <- optional (Parser.space1 *> parser)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
   where
     limitFirst = do
-      limit <- space1 *> parser
-      forLocking <- optional (space1 *> parser)
+      limit <- Parser.space1 *> parser
+      forLocking <- optional (Parser.space1 *> parser)
       pure (Just limit, forLocking)
     forLockingFirst = do
-      forLocking <- space1 *> parser
-      limit <- optional (space1 *> parser)
+      forLocking <- Parser.space1 *> parser
+      limit <- optional (Parser.space1 *> parser)
       pure (limit, Just forLocking)
 
 -- |
@@ -102,11 +102,11 @@ afterSelectWithParensClause a = do
     SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing -> Left c
     _ -> Right b
 
-instance Arbitrary SelectNoParens where
+instance Qc.Arbitrary SelectNoParens where
   arbitrary =
     SelectNoParens
-      <$> scale (`div` 4) arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
+      <$> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary

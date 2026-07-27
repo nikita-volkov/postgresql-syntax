@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.WindowExclusionClause where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -33,9 +34,9 @@ instance IsAst WindowExclusionClause where
       <|> TiesWindowExclusionClause <$ keyphrase "exclude ties"
       <|> NoOthersWindowExclusionClause <$ keyphrase "exclude no others"
 
-instance Arbitrary WindowExclusionClause where
+instance Qc.Arbitrary WindowExclusionClause where
   arbitrary =
-    elements
+    Qc.elements
       [ CurrentRowWindowExclusionClause,
         GroupWindowExclusionClause,
         TiesWindowExclusionClause,

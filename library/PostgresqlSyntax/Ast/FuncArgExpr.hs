@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.FuncArgExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,18 +34,18 @@ instance IsAst FuncArgExpr where
   parser =
     asum
       [ do
-          a <- wrapToHead typeFunctionName
-          space
+          a <- Parser.wrapToHead typeFunctionName
+          Parser.space
           asum
             [ do
-                string ":="
-                endHead
-                b <- space *> parser
+                Parser.string ":="
+                Parser.endHead
+                b <- Parser.space *> parser
                 return (ColonEqualsFuncArgExpr a b),
               do
-                string "=>"
-                endHead
-                b <- space *> parser
+                Parser.string "=>"
+                Parser.endHead
+                b <- Parser.space *> parser
                 return (EqualsGreaterFuncArgExpr a b)
             ],
         ExprFuncArgExpr <$> parser
@@ -61,10 +61,10 @@ instance IsAst FuncArgExpr where
         keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
           <|> parser
 
-instance Arbitrary FuncArgExpr where
+instance Qc.Arbitrary FuncArgExpr where
   arbitrary =
-    oneof
-      [ ExprFuncArgExpr <$> scale (`div` 2) arbitrary,
-        ColonEqualsFuncArgExpr <$> arbitrary <*> scale (`div` 2) arbitrary,
-        EqualsGreaterFuncArgExpr <$> arbitrary <*> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ ExprFuncArgExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ColonEqualsFuncArgExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        EqualsGreaterFuncArgExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.TypenameArrayDimensions where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ArrayBounds
 import PostgresqlSyntax.Ast.Iconst
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,16 +29,16 @@ instance IsAst TypenameArrayDimensions where
   parser =
     asum
       [ do
-          space1
+          Parser.space1
           keyword "array"
-          endHead
-          ExplicitTypenameArrayDimensions <$> optional (space *> inBrackets parser),
-        BoundsTypenameArrayDimensions <$> (space *> parser)
+          Parser.endHead
+          ExplicitTypenameArrayDimensions <$> optional (Parser.space *> inBrackets parser),
+        BoundsTypenameArrayDimensions <$> (Parser.space *> parser)
       ]
 
-instance Arbitrary TypenameArrayDimensions where
+instance Qc.Arbitrary TypenameArrayDimensions where
   arbitrary =
-    oneof
-      [ BoundsTypenameArrayDimensions <$> arbitrary,
-        ExplicitTypenameArrayDimensions <$> arbitrary
+    Qc.oneof
+      [ BoundsTypenameArrayDimensions <$> Qc.arbitrary,
+        ExplicitTypenameArrayDimensions <$> Qc.arbitrary
       ]

@@ -4,7 +4,7 @@ import PostgresqlSyntax.Ast.ExplicitRow
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -25,9 +25,9 @@ instance IsAst Row where
     ImplicitRowRow a -> toTextBuilder a
   parser = ExplicitRowRow <$> parser <|> ImplicitRowRow <$> parser
 
-instance Arbitrary Row where
+instance Qc.Arbitrary Row where
   arbitrary =
-    oneof
-      [ ExplicitRowRow <$> scale (`div` 2) arbitrary,
-        ImplicitRowRow <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ ExplicitRowRow <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ImplicitRowRow <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

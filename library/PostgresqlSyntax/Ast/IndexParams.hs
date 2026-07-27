@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.IndexParams where
 
 import PostgresqlSyntax.Ast.IndexElem
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype IndexParams = IndexParams (NonEmpty IndexElem)
 
 instance IsAst IndexParams where
   toTextBuilder (IndexParams a) = commaNonEmpty toTextBuilder a
-  parser = IndexParams <$> sep1 commaSeparator parser
+  parser = IndexParams <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary IndexParams where
+instance Qc.Arbitrary IndexParams where
   arbitrary = do
-    len <- choose (0, 4)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 4)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (IndexParams (x :| xs))

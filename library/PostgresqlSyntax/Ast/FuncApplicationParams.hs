@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.FuncApplicationParams where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -52,17 +52,17 @@ instance IsAst FuncApplicationParams where
       ]
     where
       normalFuncApplicationParams = do
-        optAllOrDistinct <- optional (allOrDistinct <* space1)
-        argList <- sep1 commaSeparator parser
-        endHead
-        optSortClause <- optional (space1 *> parser)
+        optAllOrDistinct <- optional (allOrDistinct <* Parser.space1)
+        argList <- Parser.sep1 commaSeparator parser
+        Parser.endHead
+        optSortClause <- optional (Parser.space1 *> parser)
         return (NormalFuncApplicationParams optAllOrDistinct argList optSortClause)
       singleVariadicFuncApplicationParams = do
         keyword "variadic"
-        space1
-        endHead
+        Parser.space1
+        Parser.endHead
         arg <- parser
-        optSortClause <- optional (space1 *> parser)
+        optSortClause <- optional (Parser.space1 *> parser)
         return (VariadicFuncApplicationParams Nothing arg optSortClause)
       -- |
       -- @func_arg_list ',' VARIADIC func_arg_expr@: one or more
@@ -71,31 +71,31 @@ instance IsAst FuncApplicationParams where
       -- by) the terminating branch — equivalent to the pre-extraction
       -- @sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr@.
       listVariadicFuncApplicationParams = do
-        argList <- wrapToHead argListEndingInVariadic
-        endHead
+        argList <- Parser.wrapToHead argListEndingInVariadic
+        Parser.endHead
         arg <- parser
-        optSortClause <- optional (space1 *> parser)
+        optSortClause <- optional (Parser.space1 *> parser)
         return (VariadicFuncApplicationParams (Just argList) arg optSortClause)
       argListEndingInVariadic = do
         a <- parser
         commaSeparator
         asum
-          [ pure (a :| []) <* (keyword "variadic" *> space1),
+          [ pure (a :| []) <* (keyword "variadic" *> Parser.space1),
             (\(b :| bs) -> a :| b : bs) <$> argListEndingInVariadic
           ]
-      starFuncApplicationParams = space *> char '*' *> endHead *> space $> StarFuncApplicationParams
+      starFuncApplicationParams = Parser.space *> Parser.char '*' *> Parser.endHead *> Parser.space $> StarFuncApplicationParams
 
-instance Arbitrary FuncApplicationParams where
+instance Qc.Arbitrary FuncApplicationParams where
   arbitrary =
-    oneof
-      [ NormalFuncApplicationParams <$> arbitrary <*> nonEmptyOf 8 <*> scale (`div` 2) arbitrary,
-        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
+    Qc.oneof
+      [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary,
+        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
         pure StarFuncApplicationParams
       ]
     where
       nonEmptyOf hi = do
-        len <- choose (0, hi - 1)
-        x <- scale (`div` 2) arbitrary
-        xs <- vectorOf len (scale (`div` 2) arbitrary)
+        len <- Qc.choose (0, hi - 1)
+        x <- Qc.scale (`div` 2) Qc.arbitrary
+        xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
         pure (x :| xs)
-      maybeNonEmptyOf hi = oneof [pure Nothing, Just <$> nonEmptyOf hi]
+      maybeNonEmptyOf hi = Qc.oneof [pure Nothing, Just <$> nonEmptyOf hi]

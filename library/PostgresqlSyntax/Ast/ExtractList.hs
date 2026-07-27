@@ -3,10 +3,10 @@ module PostgresqlSyntax.Ast.ExtractList where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExtractArg
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -20,7 +20,7 @@ data ExtractList = ExtractList ExtractArg AExpr
 
 instance IsAst ExtractList where
   toTextBuilder (ExtractList a b) = toTextBuilder a <> " FROM " <> toTextBuilder b
-  parser = ExtractList <$> parser <*> (space1 *> keyword "from" *> space1 *> parser)
+  parser = ExtractList <$> parser <*> (Parser.space1 *> keyword "from" *> Parser.space1 *> parser)
 
-instance Arbitrary ExtractList where
-  arbitrary = ExtractList <$> arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary ExtractList where
+  arbitrary = ExtractList <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

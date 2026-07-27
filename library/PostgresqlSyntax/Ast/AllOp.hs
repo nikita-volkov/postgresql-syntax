@@ -4,6 +4,7 @@ import PostgresqlSyntax.Ast.MathOp
 import PostgresqlSyntax.Ast.Op
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -27,9 +28,9 @@ instance IsAst AllOp where
         MathAllOp <$> parser
       ]
 
-instance Arbitrary AllOp where
+instance Qc.Arbitrary AllOp where
   arbitrary =
-    oneof
-      [ OpAllOp <$> arbitrary,
-        MathAllOp <$> arbitrary
+    Qc.oneof
+      [ OpAllOp <$> Qc.arbitrary,
+        MathAllOp <$> Qc.arbitrary
       ]

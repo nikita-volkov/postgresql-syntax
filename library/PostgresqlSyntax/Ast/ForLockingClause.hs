@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.ForLockingClause where
 
 import PostgresqlSyntax.Ast.ForLockingItem
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,15 +29,15 @@ instance IsAst ForLockingClause where
   parser = readOnly <|> items
     where
       readOnly = ReadOnlyForLockingClause <$ keyphrase "for read only"
-      items = ItemsForLockingClause <$> sep1 space1 parser
+      items = ItemsForLockingClause <$> Parser.sep1 Parser.space1 parser
 
-instance Arbitrary ForLockingClause where
+instance Qc.Arbitrary ForLockingClause where
   arbitrary =
-    oneof
+    Qc.oneof
       [ ItemsForLockingClause <$> do
-          len <- choose (0, 7)
-          x <- scale (`div` 2) arbitrary
-          xs <- vectorOf len (scale (`div` 2) arbitrary)
+          len <- Qc.choose (0, 7)
+          x <- Qc.scale (`div` 2) Qc.arbitrary
+          xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
           pure (x :| xs),
         pure ReadOnlyForLockingClause
       ]

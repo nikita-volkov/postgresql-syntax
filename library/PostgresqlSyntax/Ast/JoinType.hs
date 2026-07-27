@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.JoinType where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -31,29 +32,29 @@ instance IsAst JoinType where
     asum
       [ do
           keyword "full"
-          endHead
+          Parser.endHead
           outer <- outerAfterSpace
           return (FullJoinType outer),
         do
           keyword "left"
-          endHead
+          Parser.endHead
           outer <- outerAfterSpace
           return (LeftJoinType outer),
         do
           keyword "right"
-          endHead
+          Parser.endHead
           outer <- outerAfterSpace
           return (RightJoinType outer),
         keyword "inner" $> InnerJoinType
       ]
     where
-      outerAfterSpace = (space1 *> keyword "outer") $> True <|> pure False
+      outerAfterSpace = (Parser.space1 *> keyword "outer") $> True <|> pure False
 
-instance Arbitrary JoinType where
+instance Qc.Arbitrary JoinType where
   arbitrary =
-    oneof
-      [ FullJoinType <$> arbitrary,
-        LeftJoinType <$> arbitrary,
-        RightJoinType <$> arbitrary,
+    Qc.oneof
+      [ FullJoinType <$> Qc.arbitrary,
+        LeftJoinType <$> Qc.arbitrary,
+        RightJoinType <$> Qc.arbitrary,
         pure InnerJoinType
       ]

@@ -4,7 +4,7 @@ module PostgresqlSyntax.Ast.AExpr
   )
 where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AExprReversableOp
 import qualified PostgresqlSyntax.Ast.CExpr as CExpr
 import PostgresqlSyntax.Ast.CExpr (CExpr)
@@ -19,10 +19,10 @@ import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
 import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -173,84 +173,84 @@ customizedParser cExpr = suffixRec base suffix
     base =
       asum
         [ DefaultAExpr <$ keyword "default",
-          UniqueAExpr <$> (keyword "unique" *> space1 *> parser),
+          UniqueAExpr <$> (keyword "unique" *> Parser.space1 *> parser),
           qualOpExpr aExpr PrefixQualOpAExpr,
           PlusAExpr <$> plusedExpr aExpr,
           MinusAExpr <$> minusedExpr aExpr,
-          NotAExpr <$> (keyword "not" *> space1 *> aExpr),
+          NotAExpr <$> (keyword "not" *> Parser.space1 *> aExpr),
           CExprAExpr <$> cExpr
         ]
     suffix a =
       asum
         [ overlapsSuffix a,
           do
-            space1
-            b <- wrapToHead parser
-            space1
-            c <- wrapToHead parser
-            space
-            d <- Left <$> wrapToHead parser <|> Right <$> inParens aExpr
+            Parser.space1
+            b <- Parser.wrapToHead parser
+            Parser.space1
+            c <- Parser.wrapToHead parser
+            Parser.space
+            d <- Left <$> Parser.wrapToHead parser <|> Right <$> inParens aExpr
             return (SubqueryAExpr a b c d),
           typecastExpr a TypecastAExpr,
-          CollateAExpr a <$> (space1 *> keyword "collate" *> space1 *> endHead *> parser),
-          AtTimeZoneAExpr a <$> (space1 *> keyphrase "at time zone" *> space1 *> endHead *> aExpr),
+          CollateAExpr a <$> (Parser.space1 *> keyword "collate" *> Parser.space1 *> Parser.endHead *> parser),
+          AtTimeZoneAExpr a <$> (Parser.space1 *> keyphrase "at time zone" *> Parser.space1 *> Parser.endHead *> aExpr),
           symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (space *> parser),
-          AndAExpr a <$> (space1 *> keyword "and" *> space1 *> endHead *> aExpr),
-          OrAExpr a <$> (space1 *> keyword "or" *> space1 *> endHead *> aExpr),
+          SuffixQualOpAExpr a <$> (Parser.space *> parser),
+          AndAExpr a <$> (Parser.space1 *> keyword "and" *> Parser.space1 *> Parser.endHead *> aExpr),
+          OrAExpr a <$> (Parser.space1 *> keyword "or" *> Parser.space1 *> Parser.endHead *> aExpr),
           do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
+            Parser.space1
+            b <- trueIfPresent (keyword "not" *> Parser.space1)
             c <- parser
-            space1
-            endHead
+            Parser.space1
+            Parser.endHead
             d <- aExpr
-            e <- optional (space1 *> keyword "escape" *> space1 *> endHead *> aExpr)
+            e <- optional (Parser.space1 *> keyword "escape" *> Parser.space1 *> Parser.endHead *> aExpr)
             return (VerbalExprBinOpAExpr a b c d e),
           do
-            space1
+            Parser.space1
             keyword "is"
-            space1
-            endHead
-            b <- trueIfPresent (keyword "not" *> space1)
+            Parser.space1
+            Parser.endHead
+            b <- trueIfPresent (keyword "not" *> Parser.space1)
             c <-
               asum
                 [ NullAExprReversableOp <$ keyword "null",
                   TrueAExprReversableOp <$ keyword "true",
                   FalseAExprReversableOp <$ keyword "false",
                   UnknownAExprReversableOp <$ keyword "unknown",
-                  DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> aExpr),
-                  OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens parser),
+                  DistinctFromAExprReversableOp <$> (keyword "distinct" *> Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> aExpr),
+                  OfAExprReversableOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
                   DocumentAExprReversableOp <$ keyword "document"
                 ]
             return (ReversableOpAExpr a b c),
           do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
+            Parser.space1
+            b <- trueIfPresent (keyword "not" *> Parser.space1)
             keyword "between"
-            space1
-            endHead
+            Parser.space1
+            Parser.endHead
             c <-
               asum
-                [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
-                  BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
+                [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> Parser.space1),
+                  BetweenAExprReversableOp True <$ (keyword "asymmetric" *> Parser.space1),
                   pure (BetweenAExprReversableOp False)
                 ]
             d <- parser
-            space1
+            Parser.space1
             keyword "and"
-            space1
+            Parser.space1
             e <- aExpr
             return (ReversableOpAExpr a b (c d e)),
           do
-            space1
-            b <- trueIfPresent (keyword "not" *> space1)
+            Parser.space1
+            b <- trueIfPresent (keyword "not" *> Parser.space1)
             keyword "in"
-            space
+            Parser.space
             c <- InAExprReversableOp <$> parser
             return (ReversableOpAExpr a b c),
-          IsnullAExpr a <$ (space1 *> keyword "isnull"),
-          NotnullAExpr a <$ (space1 *> keyword "notnull")
+          IsnullAExpr a <$ (Parser.space1 *> keyword "isnull"),
+          NotnullAExpr a <$ (Parser.space1 *> keyword "notnull")
         ]
 
 -- |
@@ -262,10 +262,10 @@ customizedParser cExpr = suffixRec base suffix
 overlapsSuffix :: AExpr -> Parser AExpr
 overlapsSuffix a = do
   b <- maybe empty pure (aExprRow a)
-  space1
+  Parser.space1
   keyword "overlaps"
-  endHead
-  space1
+  Parser.endHead
+  Parser.space1
   c <- parser
   return (OverlapsAExpr b c)
   where
@@ -281,31 +281,31 @@ overlapsSuffix a = do
 filteredParser :: [Text] -> Parser AExpr
 filteredParser excluded = customizedParser (CExpr.customizedParser (filteredColIdLike UnquotedIdent parser excluded))
 
-instance Arbitrary AExpr where
+instance Qc.Arbitrary AExpr where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then oneof [CExprAExpr <$> scale (`div` 2) arbitrary, pure DefaultAExpr]
+        then Qc.oneof [CExprAExpr <$> Qc.scale (`div` 2) Qc.arbitrary, pure DefaultAExpr]
         else
-          oneof
-            [ CExprAExpr <$> scale (`div` 2) arbitrary,
+          Qc.oneof
+            [ CExprAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
               pure DefaultAExpr,
-              TypecastAExpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-              CollateAExpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-              AtTimeZoneAExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              PlusAExpr <$> scale (`div` 2) arbitrary,
-              MinusAExpr <$> scale (`div` 2) arbitrary,
-              SymbolicBinOpAExpr <$> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary,
-              PrefixQualOpAExpr <$> arbitrary <*> scale (`div` 2) arbitrary,
-              SuffixQualOpAExpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-              AndAExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              OrAExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              NotAExpr <$> scale (`div` 2) arbitrary,
-              VerbalExprBinOpAExpr <$> scale (`div` 4) arbitrary <*> arbitrary <*> arbitrary <*> scale (`div` 4) arbitrary <*> scale (`div` 4) arbitrary,
-              ReversableOpAExpr <$> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary,
-              IsnullAExpr <$> scale (`div` 2) arbitrary,
-              NotnullAExpr <$> scale (`div` 2) arbitrary,
-              OverlapsAExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              SubqueryAExpr <$> scale (`div` 4) arbitrary <*> arbitrary <*> arbitrary <*> scale (`div` 4) arbitrary,
-              UniqueAExpr <$> scale (`div` 2) arbitrary
+              TypecastAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+              CollateAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+              AtTimeZoneAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              PlusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              MinusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              SymbolicBinOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SuffixQualOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+              AndAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              OrAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              NotAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              VerbalExprBinOpAExpr <$> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
+              ReversableOpAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              IsnullAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              NotnullAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              OverlapsAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SubqueryAExpr <$> Qc.scale (`div` 4) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
+              UniqueAExpr <$> Qc.scale (`div` 2) Qc.arbitrary
             ]

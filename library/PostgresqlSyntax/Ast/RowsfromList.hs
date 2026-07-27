@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.RowsfromList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RowsfromItem
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype RowsfromList = RowsfromList (NonEmpty RowsfromItem)
 
 instance IsAst RowsfromList where
   toTextBuilder (RowsfromList a) = commaNonEmpty toTextBuilder a
-  parser = RowsfromList <$> sep1 commaSeparator parser
+  parser = RowsfromList <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary RowsfromList where
+instance Qc.Arbitrary RowsfromList where
   arbitrary = do
-    len <- choose (0, 7)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 7)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (RowsfromList (x :| xs))

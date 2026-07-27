@@ -3,10 +3,10 @@ module PostgresqlSyntax.Ast.FuncApplication where
 import PostgresqlSyntax.Ast.FuncApplicationParams
 import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -32,8 +32,8 @@ instance IsAst FuncApplication where
   -- literally named \"operator\", mirroring how real PostgreSQL's grammar
   -- resolves the conflict between these two productions in favor of qual_op.
   parser =
-    notFollowedBy (keyword "operator" *> space *> char '(')
+    Parser.notFollowedBy (keyword "operator" *> Parser.space *> Parser.char '(')
       *> inParensWithLabel FuncApplication parser (optional parser)
 
-instance Arbitrary FuncApplication where
-  arbitrary = FuncApplication <$> arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary FuncApplication where
+  arbitrary = FuncApplication <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

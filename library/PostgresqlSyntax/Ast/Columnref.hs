@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.Columnref where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident (Ident, colId)
 import PostgresqlSyntax.Ast.Indirection
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -21,10 +21,10 @@ data Columnref = Columnref Ident (Maybe Indirection)
 instance IsAst Columnref where
   toTextBuilder (Columnref a b) = toTextBuilder a <> foldMap toTextBuilder b
   parser = do
-    a <- wrapToHead colId
-    endHead
-    b <- optional (space *> parser)
+    a <- Parser.wrapToHead colId
+    Parser.endHead
+    b <- optional (Parser.space *> parser)
     return (Columnref a b)
 
-instance Arbitrary Columnref where
-  arbitrary = Columnref <$> arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary Columnref where
+  arbitrary = Columnref <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

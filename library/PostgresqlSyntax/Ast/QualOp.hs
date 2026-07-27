@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Op
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,9 +29,9 @@ instance IsAst QualOp where
         OperatorQualOp <$> inParensWithClause (keyword "operator") parser
       ]
 
-instance Arbitrary QualOp where
+instance Qc.Arbitrary QualOp where
   arbitrary =
-    oneof
-      [ OpQualOp <$> arbitrary,
-        OperatorQualOp <$> arbitrary
+    Qc.oneof
+      [ OpQualOp <$> Qc.arbitrary,
+        OperatorQualOp <$> Qc.arbitrary
       ]

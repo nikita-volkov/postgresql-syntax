@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.WithClause where
 
 import Control.Applicative.Combinators (option)
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CommonTableExpr
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -23,17 +23,17 @@ data WithClause = WithClause Bool (NonEmpty CommonTableExpr)
 instance IsAst WithClause where
   toTextBuilder (WithClause a b) =
     "WITH " <> bool "" "RECURSIVE " a <> commaNonEmpty toTextBuilder b
-  parser = label "with clause" $ do
+  parser = Parser.label "with clause" $ do
     keyword "with"
-    space1
-    endHead
-    recursive <- option False (True <$ keyword "recursive" <* space1)
-    cteList <- sep1 commaSeparator parser
+    Parser.space1
+    Parser.endHead
+    recursive <- option False (True <$ keyword "recursive" <* Parser.space1)
+    cteList <- Parser.sep1 commaSeparator parser
     return (WithClause recursive cteList)
 
-instance Arbitrary WithClause where
+instance Qc.Arbitrary WithClause where
   arbitrary = WithClause <$> arbitrary <*> do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (x :| xs)

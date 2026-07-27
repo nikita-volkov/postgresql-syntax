@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.Targeting where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TargetList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -38,26 +38,26 @@ instance IsAst Targeting where
       normal = NormalTargeting <$> parser
       allWithTargetList = do
         keyword "all"
-        space1
+        Parser.space1
         AllTargeting . Just <$> parser
       allP = keyword "all" $> AllTargeting Nothing
       distinct = do
         keyword "distinct"
-        space1
-        endHead
-        optOn <- optional (onExpressionsClause <* space1)
+        Parser.space1
+        Parser.endHead
+        optOn <- optional (onExpressionsClause <* Parser.space1)
         targetList <- parser
         return (DistinctTargeting optOn targetList)
       onExpressionsClause = do
         keyword "on"
-        space1
-        endHead
-        ExprList <$> inParens (sep1 commaSeparator parser)
+        Parser.space1
+        Parser.endHead
+        ExprList <$> inParens (Parser.sep1 commaSeparator parser)
 
-instance Arbitrary Targeting where
+instance Qc.Arbitrary Targeting where
   arbitrary =
-    oneof
-      [ NormalTargeting <$> arbitrary,
-        AllTargeting <$> arbitrary,
-        DistinctTargeting <$> scale (`div` 2) arbitrary <*> arbitrary
+    Qc.oneof
+      [ NormalTargeting <$> Qc.arbitrary,
+        AllTargeting <$> Qc.arbitrary,
+        DistinctTargeting <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
       ]

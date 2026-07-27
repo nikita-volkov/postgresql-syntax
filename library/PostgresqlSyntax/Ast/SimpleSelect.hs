@@ -6,7 +6,7 @@ module PostgresqlSyntax.Ast.SimpleSelect
   )
 where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.GroupByItem
 import PostgresqlSyntax.Ast.Internal
@@ -18,10 +18,10 @@ import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -80,9 +80,9 @@ instance IsAst SimpleSelect where
     extendMany suffix a
     where
       suffix headSimpleSelect = do
-        op <- space1 *> parser <* space1
-        endHead
-        distinct <- optional (allOrDistinct <* space1)
+        op <- Parser.space1 *> parser <* Parser.space1
+        Parser.endHead
+        distinct <- optional (allOrDistinct <* Parser.space1)
         rhs <- selectClauseBase >>= extendSelectClause
         return (BinSimpleSelect op (SimpleSelectSelectClause headSimpleSelect) distinct rhs)
 
@@ -95,34 +95,34 @@ baseSimpleSelect =
   asum
     [ do
         keyword "select"
-        notFollowedBy $ satisfy isAlphaNum
-        endHead
-        targeting <- optional (space1 *> parser)
-        intoClause <- optional (space1 *> keyword "into" *> endHead *> space1 *> parser)
-        fromClause <- optional (space1 *> keyword "from" *> endHead *> space1 *> sep1 commaSeparator parser)
-        whereClause <- optional (space1 *> keyword "where" *> space1 *> endHead *> parser)
-        groupClause <- optional (space1 *> keyphrase "group by" *> endHead *> space1 *> sep1 commaSeparator parser)
-        havingClause <- optional (space1 *> keyword "having" *> endHead *> space1 *> parser)
-        windowClause <- optional (space1 *> keyword "window" *> endHead *> space1 *> sep1 commaSeparator parser)
+        Parser.notFollowedBy $ Parser.satisfy isAlphaNum
+        Parser.endHead
+        targeting <- optional (Parser.space1 *> parser)
+        intoClause <- optional (Parser.space1 *> keyword "into" *> Parser.endHead *> Parser.space1 *> parser)
+        fromClause <- optional (Parser.space1 *> keyword "from" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
+        whereClause <- optional (Parser.space1 *> keyword "where" *> Parser.space1 *> Parser.endHead *> parser)
+        groupClause <- optional (Parser.space1 *> keyphrase "group by" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
+        havingClause <- optional (Parser.space1 *> keyword "having" *> Parser.endHead *> Parser.space1 *> parser)
+        windowClause <- optional (Parser.space1 *> keyword "window" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
         return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
       do
         keyword "table"
-        space1
-        endHead
+        Parser.space1
+        Parser.endHead
         TableSimpleSelect <$> parser,
       ValuesSimpleSelect <$> valuesClause
     ]
   where
     valuesClause = do
       keyword "values"
-      space
-      sep1 commaSeparator $ do
-        char '('
-        endHead
-        space
-        a <- ExprList <$> sep1 commaSeparator parser
-        space
-        char ')'
+      Parser.space
+      Parser.sep1 commaSeparator $ do
+        Parser.char '('
+        Parser.endHead
+        Parser.space
+        a <- ExprList <$> Parser.sep1 commaSeparator parser
+        Parser.space
+        Parser.char ')'
         return a
 
 selectClauseBase :: Parser SelectClause
@@ -137,32 +137,32 @@ extendSelectClause = extendMany suffix
   where
     suffix headSelectClause = SimpleSelectSelectClause <$> extensionSimpleSelect headSelectClause
     extensionSimpleSelect headSelectClause = do
-      op <- space1 *> parser <* space1
-      endHead
-      distinct <- optional (allOrDistinct <* space1)
+      op <- Parser.space1 *> parser <* Parser.space1
+      Parser.endHead
+      distinct <- optional (allOrDistinct <* Parser.space1)
       rhs <- selectClauseBase >>= extendSelectClause
       return (BinSimpleSelect op headSelectClause distinct rhs)
 
-instance Arbitrary SimpleSelect where
+instance Qc.Arbitrary SimpleSelect where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then TableSimpleSelect <$> arbitrary
+        then TableSimpleSelect <$> Qc.arbitrary
         else
-          oneof
+          Qc.oneof
             [ NormalSimpleSelect
-                <$> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary
-                <*> scale (`div` 7) arbitrary,
+                <$> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary
+                <*> Qc.scale (`div` 7) Qc.arbitrary,
               ValuesSimpleSelect <$> do
-                len <- choose (0, 7)
-                x <- scale (`div` 2) arbitrary
-                xs <- vectorOf len (scale (`div` 2) arbitrary)
+                len <- Qc.choose (0, 7)
+                x <- Qc.scale (`div` 2) Qc.arbitrary
+                xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
                 pure (x :| xs),
-              TableSimpleSelect <$> arbitrary,
-              BinSimpleSelect <$> arbitrary <*> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary
+              TableSimpleSelect <$> Qc.arbitrary,
+              BinSimpleSelect <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

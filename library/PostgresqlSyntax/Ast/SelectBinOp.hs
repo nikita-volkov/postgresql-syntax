@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.SelectBinOp where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -26,5 +27,5 @@ instance IsAst SelectBinOp where
         keyword "except" $> ExceptSelectBinOp
       ]
 
-instance Arbitrary SelectBinOp where
-  arbitrary = elements [UnionSelectBinOp, IntersectSelectBinOp, ExceptSelectBinOp]
+instance Qc.Arbitrary SelectBinOp where
+  arbitrary = Qc.elements [UnionSelectBinOp, IntersectSelectBinOp, ExceptSelectBinOp]

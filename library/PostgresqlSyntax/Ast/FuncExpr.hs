@@ -1,16 +1,16 @@
 module PostgresqlSyntax.Ast.FuncExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -46,31 +46,31 @@ instance IsAst FuncExpr where
       [ SubexprFuncExpr <$> parser,
         do
           a <- parser
-          endHead
-          b <- optional (space1 *> withinGroupClause)
-          c <- optional (space1 *> filterClause)
-          d <- optional (space1 *> parser)
+          Parser.endHead
+          b <- optional (Parser.space1 *> withinGroupClause)
+          c <- optional (Parser.space1 *> filterClause)
+          d <- optional (Parser.space1 *> parser)
           return (ApplicationFuncExpr a b c d)
       ]
     where
       withinGroupClause = do
         keyphrase "within group"
-        endHead
-        space
+        Parser.endHead
+        Parser.space
         inParens parser
       filterClause = do
         keyword "filter"
-        endHead
-        space
-        inParens (keyword "where" *> space1 *> parser)
+        Parser.endHead
+        Parser.space
+        inParens (keyword "where" *> Parser.space1 *> parser)
 
-instance Arbitrary FuncExpr where
+instance Qc.Arbitrary FuncExpr where
   arbitrary =
-    oneof
+    Qc.oneof
       [ ApplicationFuncExpr
-          <$> scale (`div` 4) arbitrary
-          <*> scale (`div` 4) arbitrary
-          <*> scale (`div` 4) arbitrary
-          <*> scale (`div` 4) arbitrary,
-        SubexprFuncExpr <$> scale (`div` 2) arbitrary
+          <$> Qc.scale (`div` 4) Qc.arbitrary
+          <*> Qc.scale (`div` 4) Qc.arbitrary
+          <*> Qc.scale (`div` 4) Qc.arbitrary
+          <*> Qc.scale (`div` 4) Qc.arbitrary,
+        SubexprFuncExpr <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.NameList where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,16 +30,16 @@ newtype NameList = NameList (NonEmpty Ident)
 
 instance IsAst NameList where
   toTextBuilder (NameList a) = commaNonEmpty toTextBuilder a
-  parser = NameList <$> sep1 commaSeparator colIdLikeName
+  parser = NameList <$> Parser.sep1 commaSeparator colIdLikeName
     where
       colIdLikeName =
-        label "identifier"
+        Parser.label "identifier"
           $ parser
           <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
-instance Arbitrary NameList where
+instance Qc.Arbitrary NameList where
   arbitrary = do
-    len <- choose (0, 7)
-    x <- arbitrary
-    xs <- vectorOf len arbitrary
+    len <- Qc.choose (0, 7)
+    x <- Qc.arbitrary
+    xs <- Qc.vectorOf len Qc.arbitrary
     pure (NameList (x :| xs))

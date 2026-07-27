@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.CaseExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WhenClauseList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,24 +29,24 @@ instance IsAst CaseExpr where
       ]
     where
       caseDefault d = "ELSE " <> toTextBuilder d
-  parser = label "case expression" $ do
+  parser = Parser.label "case expression" $ do
     keyword "case"
-    space1
-    endHead
-    arg <- optional (parser <* space1)
+    Parser.space1
+    Parser.endHead
+    arg <- optional (parser <* Parser.space1)
     whenClauses <- parser
-    space1
+    Parser.space1
     default' <- optional elseClause
     keyword "end"
     pure (CaseExpr arg whenClauses default')
     where
       elseClause = do
         keyword "else"
-        space1
-        endHead
+        Parser.space1
+        Parser.endHead
         a <- parser
-        space1
+        Parser.space1
         return a
 
-instance Arbitrary CaseExpr where
-  arbitrary = CaseExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary CaseExpr where
+  arbitrary = CaseExpr <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

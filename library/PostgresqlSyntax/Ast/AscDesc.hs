@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.AscDesc where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -21,5 +22,5 @@ instance IsAst AscDesc where
     DescAscDesc -> "DESC"
   parser = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
 
-instance Arbitrary AscDesc where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary AscDesc where
+  arbitrary = Qc.elements [minBound .. maxBound]

@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.LimitClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import PostgresqlSyntax.Ast.SelectLimitValue
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -49,8 +49,8 @@ instance IsAst LimitClause where
   parser =
     ( do
         keyword "limit"
-        endHead
-        space1
+        Parser.endHead
+        Parser.space1
         a <- parser
         b <- optional $ do
           commaSeparator
@@ -59,21 +59,21 @@ instance IsAst LimitClause where
     )
       <|> ( do
               keyword "fetch"
-              endHead
-              space1
+              Parser.endHead
+              Parser.space1
               a <- firstOrNext
-              space1
+              Parser.space1
               asum
                 [ do
                     b <- rowOrRows
-                    space1
+                    Parser.space1
                     keyword "only"
                     return (FetchOnlyLimitClause a Nothing b),
                   do
                     b <- parser
-                    space1
+                    Parser.space1
                     c <- rowOrRows
-                    space1
+                    Parser.space1
                     keyword "only"
                     return (FetchOnlyLimitClause a (Just b) c)
                 ]
@@ -86,9 +86,9 @@ instance IsAst LimitClause where
         True <$ keyword "rows"
           <|> False <$ keyword "row"
 
-instance Arbitrary LimitClause where
+instance Qc.Arbitrary LimitClause where
   arbitrary =
-    oneof
-      [ LimitLimitClause <$> arbitrary <*> scale (`div` 2) arbitrary,
-        FetchOnlyLimitClause <$> arbitrary <*> scale (`div` 2) arbitrary <*> arbitrary
+    Qc.oneof
+      [ LimitLimitClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        FetchOnlyLimitClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
       ]

@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.OverrideKind where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -24,5 +25,5 @@ instance IsAst OverrideKind where
         SystemOverrideKind <$ keyword "system"
       ]
 
-instance Arbitrary OverrideKind where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary OverrideKind where
+  arbitrary = Qc.elements [minBound .. maxBound]

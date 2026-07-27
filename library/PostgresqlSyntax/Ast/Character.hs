@@ -4,6 +4,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptVarying
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -43,13 +44,13 @@ instance IsAst Character where
         NcharCharacter <$> (keyword "nchar" *> parser)
       ]
 
-instance Arbitrary Character where
+instance Qc.Arbitrary Character where
   arbitrary =
-    oneof
-      [ CharacterCharacter <$> arbitrary,
-        CharCharacter <$> arbitrary,
+    Qc.oneof
+      [ CharacterCharacter <$> Qc.arbitrary,
+        CharCharacter <$> Qc.arbitrary,
         pure VarcharCharacter,
-        NationalCharacterCharacter <$> arbitrary,
-        NationalCharCharacter <$> arbitrary,
-        NcharCharacter <$> arbitrary
+        NationalCharacterCharacter <$> Qc.arbitrary,
+        NationalCharCharacter <$> Qc.arbitrary,
+        NcharCharacter <$> Qc.arbitrary
       ]

@@ -4,7 +4,7 @@ module PostgresqlSyntax.Ast.CExpr
   )
 where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AexprConst
 import PostgresqlSyntax.Ast.ArrayExpr
 import PostgresqlSyntax.Ast.CaseExpr
@@ -19,11 +19,11 @@ import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (intDec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -63,7 +63,7 @@ instance IsAst CExpr where
   toTextBuilder = \case
     ColumnrefCExpr a -> toTextBuilder a
     AexprConstCExpr a -> toTextBuilder a
-    ParamCExpr a b -> "$" <> intDec a <> foldMap toTextBuilder b
+    ParamCExpr a b -> "$" <> TextBuilder.intDec a <> foldMap toTextBuilder b
     InParensCExpr a b -> renderInParens (toTextBuilder a) <> foldMap toTextBuilder b
     CaseCExpr a -> toTextBuilder a
     FuncCExpr a -> toTextBuilder a
@@ -87,33 +87,33 @@ instance IsAst CExpr where
 customizedParser :: Parser Ident -> Parser CExpr
 customizedParser colIdParser =
   asum
-    [ ParamCExpr <$> (char '$' *> decimal <* endHead) <*> optional (space *> parser),
+    [ ParamCExpr <$> (Parser.char '$' *> Parser.decimal <* Parser.endHead) <*> optional (Parser.space *> parser),
       CaseCExpr <$> parser,
       ExplicitRowCExpr <$> parser,
-      inParensWithClause (keyword "grouping") (GroupingCExpr . ExprList <$> sep1 commaSeparator parser),
-      keyword "exists" *> space *> (ExistsCExpr <$> parser),
+      inParensWithClause (keyword "grouping") (GroupingCExpr . ExprList <$> Parser.sep1 commaSeparator parser),
+      keyword "exists" *> Parser.space *> (ExistsCExpr <$> parser),
       do
         keyword "array"
-        space
+        Parser.space
         asum
           [ ArrayCExpr . Right <$> parser,
             ArrayCExpr . Left <$> parser
           ],
       do
-        a <- wrapToHead parser
-        endHead
-        b <- optional (space *> parser)
+        a <- Parser.wrapToHead parser
+        Parser.endHead
+        b <- optional (Parser.space *> parser)
         return (SelectWithParensCExpr a b),
       parenthesizedExprCExpr,
-      AexprConstCExpr <$> wrapToHead parser,
+      AexprConstCExpr <$> Parser.wrapToHead parser,
       FuncCExpr <$> parser,
       ColumnrefCExpr <$> customizedColumnref
     ]
   where
     customizedColumnref = do
-      a <- wrapToHead colIdParser
-      endHead
-      b <- optional (space *> parser)
+      a <- Parser.wrapToHead colIdParser
+      Parser.endHead
+      b <- optional (Parser.space *> parser)
       return (Columnref a b)
     -- |
     -- See 'PostgresqlSyntax.Ast.AExpr'\'s doc on the sibling parser this
@@ -121,44 +121,44 @@ customizedParser colIdParser =
     -- why the single @a_expr@ parse is shared between the two endings.
     parenthesizedExprCExpr :: Parser CExpr
     parenthesizedExprCExpr = do
-      char '('
-      space
+      Parser.char '('
+      Parser.space
       a <- parser
-      space
+      Parser.space
       asum
         [ do
-            char ','
-            endHead
-            space
-            b <- sep1 commaSeparator parser
-            space
-            char ')'
+            Parser.char ','
+            Parser.endHead
+            Parser.space
+            b <- Parser.sep1 commaSeparator parser
+            Parser.space
+            Parser.char ')'
             return $ ImplicitRowCExpr $ case NonEmpty.consAndUnsnoc a b of
               (c, d) -> ImplicitRow (ExprList c) d,
           do
-            char ')'
-            endHead
-            b <- optional (space *> parser)
+            Parser.char ')'
+            Parser.endHead
+            b <- optional (Parser.space *> parser)
             return (InParensCExpr a b)
         ]
 
-instance Arbitrary CExpr where
+instance Qc.Arbitrary CExpr where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then ColumnrefCExpr <$> arbitrary
+        then ColumnrefCExpr <$> Qc.arbitrary
         else
-          oneof
-            [ ColumnrefCExpr <$> arbitrary,
-              AexprConstCExpr <$> scale (`div` 2) arbitrary,
-              ParamCExpr <$> choose (1, 19) <*> scale (`div` 2) arbitrary,
-              InParensCExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              CaseCExpr <$> scale (`div` 2) arbitrary,
-              FuncCExpr <$> scale (`div` 2) arbitrary,
-              SelectWithParensCExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              ExistsCExpr <$> scale (`div` 2) arbitrary,
-              ArrayCExpr <$> scale (`div` 2) arbitrary,
-              ExplicitRowCExpr <$> scale (`div` 2) arbitrary,
-              ImplicitRowCExpr <$> scale (`div` 2) arbitrary,
-              GroupingCExpr <$> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ ColumnrefCExpr <$> Qc.arbitrary,
+              AexprConstCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ParamCExpr <$> Qc.choose (1, 19) <*> Qc.scale (`div` 2) Qc.arbitrary,
+              InParensCExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              CaseCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              FuncCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              SelectWithParensCExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              ExistsCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ArrayCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ExplicitRowCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ImplicitRowCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              GroupingCExpr <$> Qc.scale (`div` 2) Qc.arbitrary
             ]

@@ -2,14 +2,14 @@ module PostgresqlSyntax.Ast.IndexElem where
 
 import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.AscDesc
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.IndexElemDef
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NullsOrder
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,13 +36,13 @@ instance IsAst IndexElem where
       collate = mappend "COLLATE " . toTextBuilder
   parser =
     IndexElem
-      <$> (parser <* endHead)
-      <*> optional (space1 *> collate)
-      <*> optional (space1 *> class_)
-      <*> optional (space1 *> parser)
-      <*> optional (space1 *> parser)
+      <$> (parser <* Parser.endHead)
+      <*> optional (Parser.space1 *> collate)
+      <*> optional (Parser.space1 *> class_)
+      <*> optional (Parser.space1 *> parser)
+      <*> optional (Parser.space1 *> parser)
     where
-      collate = keyword "collate" *> space1 *> endHead *> parser
+      collate = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
       -- |
       -- Duplicated 'PostgresqlSyntax.Ast.AnyName.filteredParser' call,
       -- mirroring the pre-extraction @class_ = filteredAnyName ["asc",
@@ -50,11 +50,11 @@ instance IsAst IndexElem where
       -- position.
       class_ = filteredParser ["asc", "desc", "nulls"]
 
-instance Arbitrary IndexElem where
+instance Qc.Arbitrary IndexElem where
   arbitrary =
     IndexElem
-      <$> scale (`div` 2) arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> arbitrary
-      <*> arbitrary
+      <$> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.arbitrary

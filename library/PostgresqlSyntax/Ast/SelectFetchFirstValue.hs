@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.SelectFetchFirstValue where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CExpr
 import PostgresqlSyntax.Ast.Fconst
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (doubleDec, int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -27,20 +27,20 @@ instance IsAst SelectFetchFirstValue where
     ExprSelectFetchFirstValue a -> toTextBuilder a
     NumSelectFetchFirstValue a b -> bool "+" "-" a <> intOrFloat b
     where
-      intOrFloat = either int64Dec doubleDec
+      intOrFloat = either TextBuilder.int64Dec TextBuilder.doubleDec
   parser =
     ExprSelectFetchFirstValue
       <$> parser
       <|> NumSelectFetchFirstValue
-      <$> (plusOrMinus <* endHead <* space)
+      <$> (plusOrMinus <* Parser.endHead <* Parser.space)
       <*> iconstOrFconst
     where
-      plusOrMinus = False <$ char '+' <|> True <$ char '-'
-      iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> decimal
+      plusOrMinus = False <$ Parser.char '+' <|> True <$ Parser.char '-'
+      iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> Parser.decimal
 
-instance Arbitrary SelectFetchFirstValue where
+instance Qc.Arbitrary SelectFetchFirstValue where
   arbitrary =
-    oneof
-      [ ExprSelectFetchFirstValue <$> scale (`div` 2) arbitrary,
-        NumSelectFetchFirstValue <$> arbitrary <*> arbitrary
+    Qc.oneof
+      [ ExprSelectFetchFirstValue <$> Qc.scale (`div` 2) Qc.arbitrary,
+        NumSelectFetchFirstValue <$> Qc.arbitrary <*> Qc.arbitrary
       ]

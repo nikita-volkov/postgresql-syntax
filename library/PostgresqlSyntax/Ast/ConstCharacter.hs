@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.ConstCharacter where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -23,8 +24,8 @@ data ConstCharacter = ConstCharacter Character (Maybe Int64)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ConstCharacter where
-  toTextBuilder (ConstCharacter a b) = toTextBuilder a <> suffixMaybe (renderInParens . int64Dec) b
-  parser = ConstCharacter <$> (parser <* endHead) <*> optional (space *> inParens decimal)
+  toTextBuilder (ConstCharacter a b) = toTextBuilder a <> suffixMaybe (renderInParens . TextBuilder.int64Dec) b
+  parser = ConstCharacter <$> (parser <* Parser.endHead) <*> optional (Parser.space *> inParens Parser.decimal)
 
-instance Arbitrary ConstCharacter where
+instance Qc.Arbitrary ConstCharacter where
   arbitrary = ConstCharacter <$> arbitrary <*> arbitrary

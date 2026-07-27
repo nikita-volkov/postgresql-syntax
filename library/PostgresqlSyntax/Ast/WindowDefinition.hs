@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.WindowDefinition where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WindowSpecification
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -20,7 +20,7 @@ data WindowDefinition = WindowDefinition Ident WindowSpecification
 
 instance IsAst WindowDefinition where
   toTextBuilder (WindowDefinition a b) = toTextBuilder a <> " AS " <> toTextBuilder b
-  parser = WindowDefinition <$> (colId <* space1 <* keyword "as" <* space1 <* endHead) <*> parser
+  parser = WindowDefinition <$> (colId <* Parser.space1 <* keyword "as" <* Parser.space1 <* Parser.endHead) <*> parser
 
-instance Arbitrary WindowDefinition where
-  arbitrary = WindowDefinition <$> arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary WindowDefinition where
+  arbitrary = WindowDefinition <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

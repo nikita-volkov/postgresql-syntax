@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.SortClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortBy
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -25,13 +25,13 @@ instance IsAst SortClause where
   toTextBuilder (SortClause a) = "ORDER BY " <> commaNonEmpty toTextBuilder a
   parser = do
     keyphrase "order by"
-    endHead
-    space1
-    SortClause <$> sep1 commaSeparator parser
+    Parser.endHead
+    Parser.space1
+    SortClause <$> Parser.sep1 commaSeparator parser
 
-instance Arbitrary SortClause where
+instance Qc.Arbitrary SortClause where
   arbitrary = do
-    len <- choose (0, 7)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 7)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (SortClause (x :| xs))

@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.CommonTableExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.PreparableStmt
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -33,12 +33,12 @@ instance IsAst CommonTableExpr where
       ]
     where
       materialization = bool "NOT MATERIALIZED" "MATERIALIZED"
-  parser = label "common table expression" $ do
-    name <- colId <* space <* endHead
-    nameList <- optional (inParens (sep1 commaSeparator colId) <* space1)
+  parser = Parser.label "common table expression" $ do
+    name <- colId <* Parser.space <* Parser.endHead
+    nameList <- optional (inParens (Parser.sep1 commaSeparator colId) <* Parser.space1)
     keyword "as"
-    space1
-    materialized <- optional (materialized <* space1)
+    Parser.space1
+    materialized <- optional (materialized <* Parser.space1)
     stmt <- inParens parser
     return (CommonTableExpr name nameList materialized stmt)
     where
@@ -46,10 +46,10 @@ instance IsAst CommonTableExpr where
         True <$ keyword "materialized"
           <|> False <$ keyphrase "not materialized"
 
-instance Arbitrary CommonTableExpr where
+instance Qc.Arbitrary CommonTableExpr where
   arbitrary =
     CommonTableExpr
-      <$> arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> arbitrary
-      <*> scale (`div` 2) arbitrary
+      <$> Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary

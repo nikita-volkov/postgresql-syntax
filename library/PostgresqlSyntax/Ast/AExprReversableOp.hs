@@ -1,15 +1,15 @@
 module PostgresqlSyntax.Ast.AExprReversableOp where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.InExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TypeList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- The part of the following productions that follows @a_expr [NOT]@ /
@@ -61,51 +61,51 @@ instance IsAst AExprReversableOp where
   parser =
     asum
       [ keyword "is"
-          *> space1
-          *> endHead
+          *> Parser.space1
+          *> Parser.endHead
           *> asum
             [ NullAExprReversableOp <$ keyword "null",
               TrueAExprReversableOp <$ keyword "true",
               FalseAExprReversableOp <$ keyword "false",
               UnknownAExprReversableOp <$ keyword "unknown",
-              DistinctFromAExprReversableOp <$> (keyword "distinct" *> space1 *> keyword "from" *> space1 *> endHead *> parser),
-              OfAExprReversableOp <$> (keyword "of" *> space1 *> endHead *> inParens parser),
+              DistinctFromAExprReversableOp <$> (keyword "distinct" *> Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
+              OfAExprReversableOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
               DocumentAExprReversableOp <$ keyword "document"
             ],
         do
           keyword "between"
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           c <-
             asum
-              [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> space1),
-                BetweenAExprReversableOp True <$ (keyword "asymmetric" *> space1),
+              [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> Parser.space1),
+                BetweenAExprReversableOp True <$ (keyword "asymmetric" *> Parser.space1),
                 pure (BetweenAExprReversableOp False)
               ]
           d <- parser
-          space1
+          Parser.space1
           keyword "and"
-          space1
+          Parser.space1
           e <- parser
           return (c d e),
-        InAExprReversableOp <$> (keyword "in" *> space *> parser)
+        InAExprReversableOp <$> (keyword "in" *> Parser.space *> parser)
       ]
 
-instance Arbitrary AExprReversableOp where
+instance Qc.Arbitrary AExprReversableOp where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then oneof [pure NullAExprReversableOp, pure TrueAExprReversableOp, pure FalseAExprReversableOp, pure UnknownAExprReversableOp, pure DocumentAExprReversableOp]
+        then Qc.oneof [pure NullAExprReversableOp, pure TrueAExprReversableOp, pure FalseAExprReversableOp, pure UnknownAExprReversableOp, pure DocumentAExprReversableOp]
         else
-          oneof
+          Qc.oneof
             [ pure NullAExprReversableOp,
               pure TrueAExprReversableOp,
               pure FalseAExprReversableOp,
               pure UnknownAExprReversableOp,
-              DistinctFromAExprReversableOp <$> scale (`div` 2) arbitrary,
-              OfAExprReversableOp <$> scale (`div` 2) arbitrary,
-              BetweenAExprReversableOp <$> arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              BetweenSymmetricAExprReversableOp <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              InAExprReversableOp <$> scale (`div` 2) arbitrary,
+              DistinctFromAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
+              OfAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
+              BetweenAExprReversableOp <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              BetweenSymmetricAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              InAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
               pure DocumentAExprReversableOp
             ]

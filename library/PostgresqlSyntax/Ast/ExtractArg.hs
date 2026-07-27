@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -52,15 +53,15 @@ instance IsAst ExtractArg where
         IdentExtractArg <$> parser
       ]
 
-instance Arbitrary ExtractArg where
+instance Qc.Arbitrary ExtractArg where
   arbitrary =
-    oneof
-      [ IdentExtractArg <$> arbitrary,
+    Qc.oneof
+      [ IdentExtractArg <$> Qc.arbitrary,
         pure YearExtractArg,
         pure MonthExtractArg,
         pure DayExtractArg,
         pure HourExtractArg,
         pure MinuteExtractArg,
         pure SecondExtractArg,
-        SconstExtractArg <$> arbitrary
+        SconstExtractArg <$> Qc.arbitrary
       ]

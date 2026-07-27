@@ -1,13 +1,14 @@
 module PostgresqlSyntax.Ast.Typename where
 
 import Control.Applicative.Combinators (option)
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SimpleTypename
 import PostgresqlSyntax.Ast.TypenameArrayDimensions
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- Typename definition extended with custom question-marks for nullability specification.
@@ -39,19 +40,19 @@ instance IsAst Typename where
   toTextBuilder (Typename a b _ d) =
     bool "" "SETOF " a <> toTextBuilder b <> foldMap (toTextBuilder . fst) d
   parser = do
-    a <- option False (keyword "setof" *> space1 $> True)
+    a <- option False (keyword "setof" *> Parser.space1 $> True)
     b <- parser
-    endHead
-    c <- trueIfPresent (space *> char '?')
+    Parser.endHead
+    c <- trueIfPresent (Parser.space *> Parser.char '?')
     asum
       [ do
           d <- parser
-          e <- trueIfPresent (space *> char '?')
+          e <- trueIfPresent (Parser.space *> Parser.char '?')
           return (Typename a b c (Just (d, e))),
         return (Typename a b c Nothing)
       ]
 
-instance Arbitrary Typename where
+instance Qc.Arbitrary Typename where
   arbitrary = Typename <$> arbitrary <*> arbitrary <*> pure False <*> ((\a -> (,) a False) <$$> arbitrary)
     where
       (<$$>) = fmap . fmap

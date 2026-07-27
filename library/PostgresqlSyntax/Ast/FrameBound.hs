@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.FrameBound where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -41,15 +41,15 @@ instance IsAst FrameBound where
       <$ keyphrase "current row"
       <|> do
         a <- parser
-        space1
+        Parser.space1
         PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
 
-instance Arbitrary FrameBound where
+instance Qc.Arbitrary FrameBound where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure UnboundedPrecedingFrameBound,
         pure UnboundedFollowingFrameBound,
         pure CurrentRowFrameBound,
-        PrecedingFrameBound <$> scale (`div` 2) arbitrary,
-        FollowingFrameBound <$> scale (`div` 2) arbitrary
+        PrecedingFrameBound <$> Qc.scale (`div` 2) Qc.arbitrary,
+        FollowingFrameBound <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

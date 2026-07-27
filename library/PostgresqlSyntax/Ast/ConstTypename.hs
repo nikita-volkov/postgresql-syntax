@@ -6,6 +6,7 @@ import PostgresqlSyntax.Ast.ConstDatetime
 import PostgresqlSyntax.Ast.Numeric
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -37,11 +38,11 @@ instance IsAst ConstTypename where
         ConstDatetimeConstTypename <$> parser
       ]
 
-instance Arbitrary ConstTypename where
+instance Qc.Arbitrary ConstTypename where
   arbitrary =
-    oneof
-      [ NumericConstTypename <$> arbitrary,
-        ConstBitConstTypename <$> arbitrary,
-        ConstCharacterConstTypename <$> arbitrary,
-        ConstDatetimeConstTypename <$> arbitrary
+    Qc.oneof
+      [ NumericConstTypename <$> Qc.arbitrary,
+        ConstBitConstTypename <$> Qc.arbitrary,
+        ConstCharacterConstTypename <$> Qc.arbitrary,
+        ConstDatetimeConstTypename <$> Qc.arbitrary
       ]

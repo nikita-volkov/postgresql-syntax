@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.SubType where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -27,5 +28,5 @@ instance IsAst SubType where
         AllSubType <$ keyword "all"
       ]
 
-instance Arbitrary SubType where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary SubType where
+  arbitrary = Qc.elements [minBound .. maxBound]

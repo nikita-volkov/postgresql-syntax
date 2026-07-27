@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.FuncName where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Indirection
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- 'PostgresqlSyntax.Ast.ColId' and 'PostgresqlSyntax.Ast.TypeFunctionName'
@@ -34,24 +34,24 @@ instance IsAst FuncName where
     TypeFuncName a -> toTextBuilder a
     IndirectedFuncName a b -> toTextBuilder a <> toTextBuilder b
   parser =
-    IndirectedFuncName <$> wrapToHead colIdLikeName <*> (space *> parser)
+    IndirectedFuncName <$> Parser.wrapToHead colIdLikeName <*> (Parser.space *> parser)
       <|> TypeFuncName <$> typeFunctionNameLikeName
     where
       colIdLikeName =
-        label "identifier"
+        Parser.label "identifier"
           $ parser
           <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
       typeFunctionNameLikeName =
         keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
           <|> parser
 
-instance Arbitrary FuncName where
+instance Qc.Arbitrary FuncName where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then TypeFuncName <$> arbitrary
+        then TypeFuncName <$> Qc.arbitrary
         else
-          oneof
-            [ TypeFuncName <$> arbitrary,
-              IndirectedFuncName <$> arbitrary <*> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ TypeFuncName <$> Qc.arbitrary,
+              IndirectedFuncName <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

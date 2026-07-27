@@ -3,10 +3,10 @@ module PostgresqlSyntax.Ast.JoinedTable where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,15 +36,15 @@ instance IsAst JoinedTable where
   parser =
     InParensJoinedTable
       <$> inParens parser
-      <|> (MethJoinedTable <$> parser <*> parser <*> (space1 *> parser))
+      <|> (MethJoinedTable <$> parser <*> parser <*> (Parser.space1 *> parser))
 
-instance Arbitrary JoinedTable where
+instance Qc.Arbitrary JoinedTable where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then MethJoinedTable <$> scale (`div` 2) arbitrary <*> arbitrary <*> arbitrary
+        then MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
         else
-          oneof
-            [ InParensJoinedTable <$> scale (`div` 2) arbitrary,
-              MethJoinedTable <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ InParensJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary,
+              MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

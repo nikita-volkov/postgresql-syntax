@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.SelectWithParens where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, unparenthesizedSelectNoParens)
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (discard, frequency, scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -47,18 +47,18 @@ instance IsAst SelectWithParens where
       selectWithParensBody =
         asum
           [ do
-              a <- wrapToHead parser
+              a <- Parser.wrapToHead parser
               either WithParensSelectWithParens NoParensSelectWithParens <$> afterSelectWithParensClause a,
             NoParensSelectWithParens <$> unparenthesizedSelectNoParens
           ]
 
-instance Arbitrary SelectWithParens where
+instance Qc.Arbitrary SelectWithParens where
   arbitrary =
-    sized $ \size ->
+    Qc.sized $ \size ->
       if size <= 1
-        then discard
+        then Qc.discard
         else
-          frequency
-            [ (95, NoParensSelectWithParens <$> scale (`div` 2) arbitrary),
-              (5, WithParensSelectWithParens <$> scale (`div` 2) arbitrary)
+          Qc.frequency
+            [ (95, NoParensSelectWithParens <$> Qc.scale (`div` 2) Qc.arbitrary),
+              (5, WithParensSelectWithParens <$> Qc.scale (`div` 2) Qc.arbitrary)
             ]

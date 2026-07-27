@@ -1,14 +1,15 @@
 module PostgresqlSyntax.Ast.GenericType where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Attrs
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -32,12 +33,12 @@ instance IsAst GenericType where
   toTextBuilder (GenericType a b c) = toTextBuilder a <> foldMap toTextBuilder b <> suffixMaybe (renderInParens . toTextBuilder) c
   parser = do
     a <- typeFunctionNameLikeName
-    endHead
-    b <- optional (space *> parser)
-    c <- optional (space1 *> inParens parser)
+    Parser.endHead
+    b <- optional (Parser.space *> parser)
+    c <- optional (Parser.space1 *> inParens parser)
     return (GenericType a b c)
     where
       typeFunctionNameLikeName = keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser
 
-instance Arbitrary GenericType where
+instance Qc.Arbitrary GenericType where
   arbitrary = GenericType <$> arbitrary <*> arbitrary <*> arbitrary

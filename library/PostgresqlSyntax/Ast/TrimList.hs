@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.TrimList where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -30,15 +30,15 @@ instance IsAst TrimList where
     ExprListTrimList a -> toTextBuilder a
   parser =
     asum
-      [ ExprFromExprListTrimList <$> wrapToHead parser <*> (space1 *> keyword "from" *> space1 *> endHead *> parser),
-        FromExprListTrimList <$> (keyword "from" *> space1 *> endHead *> parser),
+      [ ExprFromExprListTrimList <$> Parser.wrapToHead parser <*> (Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
+        FromExprListTrimList <$> (keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
         ExprListTrimList <$> parser
       ]
 
-instance Arbitrary TrimList where
+instance Qc.Arbitrary TrimList where
   arbitrary =
-    oneof
-      [ ExprFromExprListTrimList <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        FromExprListTrimList <$> scale (`div` 2) arbitrary,
-        ExprListTrimList <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ ExprFromExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        FromExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

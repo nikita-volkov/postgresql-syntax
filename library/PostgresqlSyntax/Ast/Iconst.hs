@@ -1,9 +1,10 @@
 module PostgresqlSyntax.Ast.Iconst where
 
-import PostgresqlSyntax.Extras.HeadedMegaparsec (decimal)
-import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -14,11 +15,11 @@ newtype Iconst = Iconst Int64
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Iconst where
-  toTextBuilder (Iconst a) = int64Dec a
-  parser = Iconst <$> decimal
+  toTextBuilder (Iconst a) = TextBuilder.int64Dec a
+  parser = Iconst <$> Parser.decimal
 
-instance Arbitrary Iconst where
-  arbitrary = Iconst <$> sized (\n -> choose (0, cap n))
+instance Qc.Arbitrary Iconst where
+  arbitrary = Iconst <$> Qc.sized (\n -> Qc.choose (0, cap n))
     where
       cap n
         | n >= 62 = maxBound

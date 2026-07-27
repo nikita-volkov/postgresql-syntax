@@ -3,10 +3,10 @@ module PostgresqlSyntax.Ast.JoinQual where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -26,17 +26,17 @@ instance IsAst JoinQual where
     OnJoinQual a -> "ON " <> toTextBuilder a
   parser =
     asum
-      [ keyword "using" *> space1 *> inParens (sep1 commaSeparator colId) <&> UsingJoinQual,
-        keyword "on" *> space1 *> parser <&> OnJoinQual
+      [ keyword "using" *> Parser.space1 *> inParens (Parser.sep1 commaSeparator colId) <&> UsingJoinQual,
+        keyword "on" *> Parser.space1 *> parser <&> OnJoinQual
       ]
 
-instance Arbitrary JoinQual where
+instance Qc.Arbitrary JoinQual where
   arbitrary =
-    oneof
+    Qc.oneof
       [ do
-          len <- choose (0, 7)
-          x <- arbitrary
-          xs <- vectorOf len arbitrary
+          len <- Qc.choose (0, 7)
+          x <- Qc.arbitrary
+          xs <- Qc.vectorOf len Qc.arbitrary
           pure (UsingJoinQual (x :| xs)),
-        OnJoinQual <$> scale (`div` 2) arbitrary
+        OnJoinQual <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

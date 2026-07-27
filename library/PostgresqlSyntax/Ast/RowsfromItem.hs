@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.RowsfromItem where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElementList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -27,11 +27,11 @@ instance IsAst RowsfromItem where
       colDefList a' = "AS (" <> toTextBuilder a' <> ")"
   parser = do
     a <- parser
-    endHead
-    b <- optional (space1 *> colDefList)
+    Parser.endHead
+    b <- optional (Parser.space1 *> colDefList)
     return (RowsfromItem a b)
     where
-      colDefList = keyword "as" *> space *> inParens (endHead *> parser)
+      colDefList = keyword "as" *> Parser.space *> inParens (Parser.endHead *> parser)
 
-instance Arbitrary RowsfromItem where
-  arbitrary = RowsfromItem <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary RowsfromItem where
+  arbitrary = RowsfromItem <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

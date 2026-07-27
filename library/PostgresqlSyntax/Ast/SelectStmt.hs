@@ -4,7 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -24,9 +24,9 @@ instance IsAst SelectStmt where
     WithParensSelectStmt a -> toTextBuilder a
   parser = NoParensSelectStmt <$> parser <|> WithParensSelectStmt <$> parser
 
-instance Arbitrary SelectStmt where
+instance Qc.Arbitrary SelectStmt where
   arbitrary =
-    oneof
-      [ NoParensSelectStmt <$> scale (`div` 2) arbitrary,
-        WithParensSelectStmt <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ NoParensSelectStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
+        WithParensSelectStmt <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

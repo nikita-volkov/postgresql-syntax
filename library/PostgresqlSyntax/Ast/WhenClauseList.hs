@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.WhenClauseList where
 
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WhenClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,11 +19,11 @@ newtype WhenClauseList = WhenClauseList (NonEmpty WhenClause)
 
 instance IsAst WhenClauseList where
   toTextBuilder (WhenClauseList a) = spaceNonEmpty toTextBuilder a
-  parser = WhenClauseList <$> sep1 space1 parser
+  parser = WhenClauseList <$> Parser.sep1 Parser.space1 parser
 
-instance Arbitrary WhenClauseList where
+instance Qc.Arbitrary WhenClauseList where
   arbitrary = do
-    len <- choose (0, 6)
-    x <- scale (`div` 2) arbitrary
-    xs <- vectorOf len (scale (`div` 2) arbitrary)
+    len <- Qc.choose (0, 6)
+    x <- Qc.scale (`div` 2) Qc.arbitrary
+    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
     pure (WhenClauseList (x :| xs))

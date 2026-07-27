@@ -1,11 +1,12 @@
 module PostgresqlSyntax.Ast.Interval where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.IntervalSecond
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -62,10 +63,10 @@ instance IsAst Interval where
       [ YearToMonthInterval <$ keyphrase "year to month",
         DayToHourInterval <$ keyphrase "day to hour",
         DayToMinuteInterval <$ keyphrase "day to minute",
-        DayToSecondInterval <$> (keyphrase "day to" *> space1 *> endHead *> parser),
+        DayToSecondInterval <$> (keyphrase "day to" *> Parser.space1 *> Parser.endHead *> parser),
         HourToMinuteInterval <$ keyphrase "hour to minute",
-        HourToSecondInterval <$> (keyphrase "hour to" *> space1 *> endHead *> parser),
-        MinuteToSecondInterval <$> (keyphrase "minute to" *> space1 *> endHead *> parser),
+        HourToSecondInterval <$> (keyphrase "hour to" *> Parser.space1 *> Parser.endHead *> parser),
+        MinuteToSecondInterval <$> (keyphrase "minute to" *> Parser.space1 *> Parser.endHead *> parser),
         YearInterval <$ keyword "year",
         MonthInterval <$ keyword "month",
         DayInterval <$ keyword "day",
@@ -74,20 +75,20 @@ instance IsAst Interval where
         SecondInterval <$> parser
       ]
 
-instance Arbitrary Interval where
+instance Qc.Arbitrary Interval where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure YearInterval,
         pure MonthInterval,
         pure DayInterval,
         pure HourInterval,
         pure MinuteInterval,
-        SecondInterval <$> arbitrary,
+        SecondInterval <$> Qc.arbitrary,
         pure YearToMonthInterval,
         pure DayToHourInterval,
         pure DayToMinuteInterval,
-        DayToSecondInterval <$> arbitrary,
+        DayToSecondInterval <$> Qc.arbitrary,
         pure HourToMinuteInterval,
-        HourToSecondInterval <$> arbitrary,
-        MinuteToSecondInterval <$> arbitrary
+        HourToSecondInterval <$> Qc.arbitrary,
+        MinuteToSecondInterval <$> Qc.arbitrary
       ]

@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.OffsetClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,10 +34,10 @@ instance IsAst OffsetClause where
       rowOrRows = bool "ROW" "ROWS"
   parser = do
     keyword "offset"
-    endHead
-    space1
+    Parser.endHead
+    Parser.space1
     asum
-      [ FetchFirstOffsetClause <$> wrapToHead parser <*> (space1 *> rowOrRows),
+      [ FetchFirstOffsetClause <$> Parser.wrapToHead parser <*> (Parser.space1 *> rowOrRows),
         ExprOffsetClause <$> parser
       ]
     where
@@ -45,9 +45,9 @@ instance IsAst OffsetClause where
         True <$ keyword "rows"
           <|> False <$ keyword "row"
 
-instance Arbitrary OffsetClause where
+instance Qc.Arbitrary OffsetClause where
   arbitrary =
-    oneof
-      [ ExprOffsetClause <$> scale (`div` 2) arbitrary,
-        FetchFirstOffsetClause <$> scale (`div` 2) arbitrary <*> arbitrary
+    Qc.oneof
+      [ ExprOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+        FetchFirstOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
       ]

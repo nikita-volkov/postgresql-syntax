@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.FuncAliasClause where
 
 import PostgresqlSyntax.Ast.AliasClause
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElementList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -39,20 +39,20 @@ instance IsAst FuncAliasClause where
           _ <- keyword "as"
           asum
             [ do
-                space
+                Parser.space
                 inParens $ do
-                  endHead
+                  Parser.endHead
                   AsFuncAliasClause <$> parser,
               do
-                space1
+                Parser.space1
                 a <- colId
                 asum
                   [ do
-                      space
+                      Parser.space
                       inParens $ do
-                        endHead
+                        Parser.endHead
                         asum
-                          [ AsColIdFuncAliasClause a <$> wrapToHead parser,
+                          [ AsColIdFuncAliasClause a <$> Parser.wrapToHead parser,
                             AliasFuncAliasClause . AliasClause True a . Just <$> parser
                           ],
                     pure (AliasFuncAliasClause (AliasClause True a Nothing))
@@ -62,22 +62,22 @@ instance IsAst FuncAliasClause where
           a <- colId
           asum
             [ do
-                space
+                Parser.space
                 inParens $ do
-                  endHead
+                  Parser.endHead
                   asum
-                    [ ColIdFuncAliasClause a <$> wrapToHead parser,
+                    [ ColIdFuncAliasClause a <$> Parser.wrapToHead parser,
                       AliasFuncAliasClause . AliasClause False a . Just <$> parser
                     ],
               pure (AliasFuncAliasClause (AliasClause False a Nothing))
             ]
       ]
 
-instance Arbitrary FuncAliasClause where
+instance Qc.Arbitrary FuncAliasClause where
   arbitrary =
-    oneof
-      [ AliasFuncAliasClause <$> arbitrary,
-        AsFuncAliasClause <$> scale (`div` 2) arbitrary,
-        AsColIdFuncAliasClause <$> arbitrary <*> scale (`div` 2) arbitrary,
-        ColIdFuncAliasClause <$> arbitrary <*> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ AliasFuncAliasClause <$> Qc.arbitrary,
+        AsFuncAliasClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+        AsColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        ColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
       ]

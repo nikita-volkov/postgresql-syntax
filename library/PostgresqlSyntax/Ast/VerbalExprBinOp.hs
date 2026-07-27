@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.VerbalExprBinOp where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -32,5 +33,5 @@ instance IsAst VerbalExprBinOp where
         SimilarToVerbalExprBinOp <$ keyphrase "similar to"
       ]
 
-instance Arbitrary VerbalExprBinOp where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary VerbalExprBinOp where
+  arbitrary = Qc.elements [minBound .. maxBound]

@@ -1,16 +1,16 @@
 module PostgresqlSyntax.Ast.InsertStmt where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertRest
 import PostgresqlSyntax.Ast.InsertTarget
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflict
 import PostgresqlSyntax.Ast.TargetList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,26 +36,26 @@ instance IsAst InsertStmt where
     where
       returningClause = mappend "RETURNING " . toTextBuilder
   parser = do
-    a <- optional (wrapToHead parser <* space1)
+    a <- optional (Parser.wrapToHead parser <* Parser.space1)
     keyword "insert"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     keyword "into"
-    space1
+    Parser.space1
     b <- parser
-    space1
+    Parser.space1
     c <- parser
-    d <- optional (space1 *> parser)
-    e <- optional (space1 *> returningClause)
+    d <- optional (Parser.space1 *> parser)
+    e <- optional (Parser.space1 *> returningClause)
     return (InsertStmt a b c d e)
     where
-      returningClause = keyword "returning" *> space1 *> endHead *> parser
+      returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
 
-instance Arbitrary InsertStmt where
+instance Qc.Arbitrary InsertStmt where
   arbitrary =
     InsertStmt
-      <$> scale (`div` 4) arbitrary
-      <*> arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
+      <$> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary

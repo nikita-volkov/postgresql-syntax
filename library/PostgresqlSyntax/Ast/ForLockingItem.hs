@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.ForLockingItem where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ForLockingStrength
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualifiedName
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -37,11 +37,11 @@ instance IsAst ForLockingItem where
       nowaitOrSkip = bool "NOWAIT" "SKIP LOCKED"
   parser = do
     strength <- parser
-    rels <- optional $ space1 *> keyword "of" *> space1 *> endHead *> sep1 commaSeparator parser
-    nowaitOrSkip <- optional (space1 *> nowaitOrSkip)
+    rels <- optional $ Parser.space1 *> keyword "of" *> Parser.space1 *> Parser.endHead *> Parser.sep1 commaSeparator parser
+    nowaitOrSkip <- optional (Parser.space1 *> nowaitOrSkip)
     return (ForLockingItem strength rels nowaitOrSkip)
     where
       nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
-instance Arbitrary ForLockingItem where
-  arbitrary = ForLockingItem <$> arbitrary <*> scale (`div` 2) arbitrary <*> arbitrary
+instance Qc.Arbitrary ForLockingItem where
+  arbitrary = ForLockingItem <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> arbitrary

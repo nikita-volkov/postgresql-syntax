@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.InsertRest where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.InsertColumnList
 import PostgresqlSyntax.Ast.OverrideKind
 import PostgresqlSyntax.Ast.SelectStmt
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -38,25 +38,25 @@ instance IsAst InsertRest where
       insertRestOverriding a = "OVERRIDING " <> toTextBuilder a <> " VALUE"
   parser =
     asum
-      [ DefaultValuesInsertRest <$ (keyword "default" *> space1 *> endHead *> keyword "values"),
+      [ DefaultValuesInsertRest <$ (keyword "default" *> Parser.space1 *> Parser.endHead *> keyword "values"),
         do
-          a <- optional (inParens parser <* space1)
+          a <- optional (inParens parser <* Parser.space1)
           b <- optional $ do
             keyword "overriding"
-            space1
-            endHead
+            Parser.space1
+            Parser.endHead
             b <- parser
-            space1
+            Parser.space1
             keyword "value"
-            space1
+            Parser.space1
             return b
           c <- parser
           return (SelectInsertRest a b c)
       ]
 
-instance Arbitrary InsertRest where
+instance Qc.Arbitrary InsertRest where
   arbitrary =
-    oneof
-      [ SelectInsertRest <$> scale (`div` 2) arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary,
+    Qc.oneof
+      [ SelectInsertRest <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
         pure DefaultValuesInsertRest
       ]

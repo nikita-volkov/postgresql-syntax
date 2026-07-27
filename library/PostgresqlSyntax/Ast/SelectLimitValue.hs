@@ -4,7 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,9 +28,9 @@ instance IsAst SelectLimitValue where
       <|> ExprSelectLimitValue
       <$> parser
 
-instance Arbitrary SelectLimitValue where
+instance Qc.Arbitrary SelectLimitValue where
   arbitrary =
-    oneof
-      [ ExprSelectLimitValue <$> scale (`div` 2) arbitrary,
+    Qc.oneof
+      [ ExprSelectLimitValue <$> Qc.scale (`div` 2) Qc.arbitrary,
         pure AllSelectLimitValue
       ]

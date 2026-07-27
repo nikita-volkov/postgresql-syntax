@@ -1,15 +1,15 @@
 module PostgresqlSyntax.Ast.WindowSpecification where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FrameClause
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -50,28 +50,28 @@ instance IsAst WindowSpecification where
             return (WindowSpecification Nothing Nothing Nothing (Just a)),
           do
             a <- parser
-            b <- optional (space1 *> parser)
+            b <- optional (Parser.space1 *> parser)
             return (WindowSpecification Nothing Nothing (Just a) b),
           do
             a <- partitionByClause
-            b <- optional (space1 *> parser)
-            c <- optional (space1 *> parser)
+            b <- optional (Parser.space1 *> parser)
+            c <- optional (Parser.space1 *> parser)
             return (WindowSpecification Nothing (Just a) b c),
           do
             a <- colId
-            b <- optional (space1 *> partitionByClause)
-            c <- optional (space1 *> parser)
-            d <- optional (space1 *> parser)
+            b <- optional (Parser.space1 *> partitionByClause)
+            c <- optional (Parser.space1 *> parser)
+            d <- optional (Parser.space1 *> parser)
             return (WindowSpecification (Just a) b c d),
           pure (WindowSpecification Nothing Nothing Nothing Nothing)
         ]
     where
-      partitionByClause = keyphrase "partition by" *> space1 *> endHead *> (ExprList <$> sep1 commaSeparator parser)
+      partitionByClause = keyphrase "partition by" *> Parser.space1 *> Parser.endHead *> (ExprList <$> Parser.sep1 commaSeparator parser)
 
-instance Arbitrary WindowSpecification where
+instance Qc.Arbitrary WindowSpecification where
   arbitrary =
     WindowSpecification
-      <$> arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> scale (`div` 2) arbitrary
-      <*> scale (`div` 2) arbitrary
+      <$> Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.scale (`div` 2) Qc.arbitrary

@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.IntervalSecond where
 
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -19,16 +20,16 @@ newtype IntervalSecond = IntervalSecond (Maybe Int64)
 instance IsAst IntervalSecond where
   toTextBuilder (IntervalSecond a) = case a of
     Nothing -> "SECOND"
-    Just a' -> "SECOND " <> renderInParens (int64Dec a')
+    Just a' -> "SECOND " <> renderInParens (TextBuilder.int64Dec a')
   parser = do
     keyword "second"
-    a <- optional (space *> inParens decimal)
+    a <- optional (Parser.space *> inParens Parser.decimal)
     return (IntervalSecond a)
 
-instance Arbitrary IntervalSecond where
-  arbitrary = IntervalSecond <$> oneof [pure Nothing, Just <$> nonNegative]
+instance Qc.Arbitrary IntervalSecond where
+  arbitrary = IntervalSecond <$> Qc.oneof [pure Nothing, Just <$> nonNegative]
     where
-      nonNegative = sized (\n -> choose (0, cap n))
+      nonNegative = Qc.sized (\n -> Qc.choose (0, cap n))
       cap n
         | n >= 62 = maxBound
         | otherwise = 2 ^ n

@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.OverClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.WindowSpecification
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,16 +28,16 @@ instance IsAst OverClause where
     ColIdOverClause a -> "OVER " <> toTextBuilder a
   parser = do
     keyword "over"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     asum
       [ WindowOverClause <$> parser,
         ColIdOverClause <$> colId
       ]
 
-instance Arbitrary OverClause where
+instance Qc.Arbitrary OverClause where
   arbitrary =
-    oneof
-      [ WindowOverClause <$> scale (`div` 2) arbitrary,
-        ColIdOverClause <$> arbitrary
+    Qc.oneof
+      [ WindowOverClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+        ColIdOverClause <$> Qc.arbitrary
       ]

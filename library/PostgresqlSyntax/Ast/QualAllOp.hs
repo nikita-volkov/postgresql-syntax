@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.QualAllOp where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -26,13 +27,13 @@ instance IsAst QualAllOp where
     AnyQualAllOp a -> "OPERATOR (" <> toTextBuilder a <> ")"
   parser =
     asum
-      [ AnyQualAllOp <$> (keyword "operator" *> space *> inParens (endHead *> parser)),
+      [ AnyQualAllOp <$> (keyword "operator" *> Parser.space *> inParens (Parser.endHead *> parser)),
         AllQualAllOp <$> parser
       ]
 
-instance Arbitrary QualAllOp where
+instance Qc.Arbitrary QualAllOp where
   arbitrary =
-    oneof
-      [ AllQualAllOp <$> arbitrary,
-        AnyQualAllOp <$> arbitrary
+    Qc.oneof
+      [ AllQualAllOp <$> Qc.arbitrary,
+        AnyQualAllOp <$> Qc.arbitrary
       ]

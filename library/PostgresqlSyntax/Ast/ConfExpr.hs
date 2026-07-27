@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.ConfExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.IndexParams
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -34,15 +34,15 @@ instance IsAst ConfExpr where
       whereClause a = "WHERE " <> toTextBuilder a
   parser =
     asum
-      [ WhereConfExpr <$> inParens parser <*> optional (space *> whereClause),
-        ConstraintConfExpr <$> (keyword "on" *> space1 *> keyword "constraint" *> space1 *> endHead *> colId)
+      [ WhereConfExpr <$> inParens parser <*> optional (Parser.space *> whereClause),
+        ConstraintConfExpr <$> (keyword "on" *> Parser.space1 *> keyword "constraint" *> Parser.space1 *> Parser.endHead *> colId)
       ]
     where
-      whereClause = keyword "where" *> space1 *> endHead *> parser
+      whereClause = keyword "where" *> Parser.space1 *> Parser.endHead *> parser
 
-instance Arbitrary ConfExpr where
+instance Qc.Arbitrary ConfExpr where
   arbitrary =
-    oneof
-      [ WhereConfExpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        ConstraintConfExpr <$> arbitrary
+    Qc.oneof
+      [ WhereConfExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        ConstraintConfExpr <$> Qc.arbitrary
       ]

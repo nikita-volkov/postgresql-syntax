@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.FrameClauseMode where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -28,5 +29,5 @@ instance IsAst FrameClauseMode where
         GroupsFrameClauseMode <$ keyword "groups"
       ]
 
-instance Arbitrary FrameClauseMode where
-  arbitrary = elements [RangeFrameClauseMode, RowsFrameClauseMode, GroupsFrameClauseMode]
+instance Qc.Arbitrary FrameClauseMode where
+  arbitrary = Qc.elements [RangeFrameClauseMode, RowsFrameClauseMode, GroupsFrameClauseMode]

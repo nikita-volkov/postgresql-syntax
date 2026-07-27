@@ -1,11 +1,12 @@
 module PostgresqlSyntax.Ast.RelationExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualifiedName
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -27,11 +28,11 @@ instance IsAst RelationExpr where
     SimpleRelationExpr a b -> toTextBuilder a <> bool "" " *" b
     OnlyRelationExpr a b -> "ONLY " <> bool toTextBuilder (renderInParens . toTextBuilder) b a
   parser =
-    label "relation expression"
+    Parser.label "relation expression"
       $ asum
         [ do
             keyword "only"
-            space1
+            Parser.space1
             name <- parser
             return (OnlyRelationExpr name False),
           inParensWithClause (keyword "only") parser <&> \a -> OnlyRelationExpr a True,
@@ -39,15 +40,15 @@ instance IsAst RelationExpr where
             name <- parser
             asterisk <-
               asum
-                [ True <$ (space1 *> char '*'),
+                [ True <$ (Parser.space1 *> Parser.char '*'),
                   pure False
                 ]
             return (SimpleRelationExpr name asterisk)
         ]
 
-instance Arbitrary RelationExpr where
+instance Qc.Arbitrary RelationExpr where
   arbitrary =
-    oneof
-      [ SimpleRelationExpr <$> arbitrary <*> arbitrary,
-        OnlyRelationExpr <$> arbitrary <*> arbitrary
+    Qc.oneof
+      [ SimpleRelationExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+        OnlyRelationExpr <$> Qc.arbitrary <*> Qc.arbitrary
       ]

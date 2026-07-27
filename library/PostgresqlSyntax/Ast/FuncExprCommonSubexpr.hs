@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.FuncExprCommonSubexpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.ExtractList
 import PostgresqlSyntax.Ast.Internal
@@ -11,11 +11,11 @@ import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.TrimList
 import PostgresqlSyntax.Ast.TrimModifier
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (int64Dec)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -96,10 +96,10 @@ instance IsAst FuncExprCommonSubexpr where
   toTextBuilder = \case
     CollationForFuncExprCommonSubexpr a -> "COLLATION FOR (" <> toTextBuilder a <> ")"
     CurrentDateFuncExprCommonSubexpr -> "CURRENT_DATE"
-    CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> suffixMaybe (renderInParens . int64Dec) a
-    CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> suffixMaybe (renderInParens . int64Dec) a
-    LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> suffixMaybe (renderInParens . int64Dec) a
-    LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> suffixMaybe (renderInParens . int64Dec) a
+    CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
+    CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
+    LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
+    LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
     CurrentRoleFuncExprCommonSubexpr -> "CURRENT_ROLE"
     CurrentUserFuncExprCommonSubexpr -> "CURRENT_USER"
     SessionUserFuncExprCommonSubexpr -> "SESSION_USER"
@@ -131,45 +131,45 @@ instance IsAst FuncExprCommonSubexpr where
         UserFuncExprCommonSubexpr <$ keyword "user",
         CurrentCatalogFuncExprCommonSubexpr <$ keyword "current_catalog",
         CurrentSchemaFuncExprCommonSubexpr <$ keyword "current_schema",
-        inParensWithClause (keyword "cast") (CastFuncExprCommonSubexpr <$> parser <*> (space1 *> keyword "as" *> space1 *> parser)),
+        inParensWithClause (keyword "cast") (CastFuncExprCommonSubexpr <$> parser <*> (Parser.space1 *> keyword "as" *> Parser.space1 *> parser)),
         inParensWithClause (keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional parser),
         inParensWithClause (keyword "overlay") (OverlayFuncExprCommonSubexpr <$> parser),
         inParensWithClause (keyword "position") (PositionFuncExprCommonSubexpr <$> optional parser),
         inParensWithClause (keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional parser),
-        inParensWithClause (keyword "treat") (TreatFuncExprCommonSubexpr <$> parser <*> (space1 *> keyword "as" *> space1 *> parser)),
-        inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* space1) <*> parser),
+        inParensWithClause (keyword "treat") (TreatFuncExprCommonSubexpr <$> parser <*> (Parser.space1 *> keyword "as" *> Parser.space1 *> parser)),
+        inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* Parser.space1) <*> parser),
         inParensWithClause (keyword "nullif") (NullIfFuncExprCommonSubexpr <$> parser <*> (commaSeparator *> parser)),
         inParensWithClause (keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> parser),
         inParensWithClause (keyword "greatest") (GreatestFuncExprCommonSubexpr <$> parser),
         inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> parser)
       ]
     where
-      labeledIconst lbl = keyword lbl *> endHead *> optional (space *> inParens decimal)
+      labeledIconst lbl = keyword lbl *> Parser.endHead *> optional (Parser.space *> inParens Parser.decimal)
 
-instance Arbitrary FuncExprCommonSubexpr where
+instance Qc.Arbitrary FuncExprCommonSubexpr where
   arbitrary =
-    oneof
-      [ CollationForFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
+    Qc.oneof
+      [ CollationForFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
         pure CurrentDateFuncExprCommonSubexpr,
-        CurrentTimeFuncExprCommonSubexpr <$> arbitrary,
-        CurrentTimestampFuncExprCommonSubexpr <$> arbitrary,
-        LocalTimeFuncExprCommonSubexpr <$> arbitrary,
-        LocalTimestampFuncExprCommonSubexpr <$> arbitrary,
+        CurrentTimeFuncExprCommonSubexpr <$> Qc.arbitrary,
+        CurrentTimestampFuncExprCommonSubexpr <$> Qc.arbitrary,
+        LocalTimeFuncExprCommonSubexpr <$> Qc.arbitrary,
+        LocalTimestampFuncExprCommonSubexpr <$> Qc.arbitrary,
         pure CurrentRoleFuncExprCommonSubexpr,
         pure CurrentUserFuncExprCommonSubexpr,
         pure SessionUserFuncExprCommonSubexpr,
         pure UserFuncExprCommonSubexpr,
         pure CurrentCatalogFuncExprCommonSubexpr,
         pure CurrentSchemaFuncExprCommonSubexpr,
-        CastFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-        ExtractFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        OverlayFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        PositionFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        SubstringFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        TreatFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary <*> arbitrary,
-        TrimFuncExprCommonSubexpr <$> arbitrary <*> scale (`div` 2) arbitrary,
-        NullIfFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-        CoalesceFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        GreatestFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary,
-        LeastFuncExprCommonSubexpr <$> scale (`div` 2) arbitrary
+        CastFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        ExtractFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        OverlayFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        PositionFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        SubstringFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        TreatFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        TrimFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        NullIfFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        CoalesceFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        GreatestFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+        LeastFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

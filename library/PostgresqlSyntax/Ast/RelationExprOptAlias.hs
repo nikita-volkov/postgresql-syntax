@@ -7,9 +7,10 @@ where
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExpr
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -38,11 +39,11 @@ customizedParser :: [Text] -> Parser RelationExprOptAlias
 customizedParser reservedKeywords = do
   a <- parser
   b <- optional $ do
-    space1
-    b <- trueIfPresent (keyword "as" *> space1)
+    Parser.space1
+    b <- trueIfPresent (keyword "as" *> Parser.space1)
     c <- filteredColIdLike UnquotedIdent parser reservedKeywords
     return (b, c)
   return (RelationExprOptAlias a b)
 
-instance Arbitrary RelationExprOptAlias where
+instance Qc.Arbitrary RelationExprOptAlias where
   arbitrary = RelationExprOptAlias <$> arbitrary <*> arbitrary

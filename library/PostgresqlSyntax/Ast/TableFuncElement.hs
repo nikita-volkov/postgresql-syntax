@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.TableFuncElement where
 
 import PostgresqlSyntax.Ast.AnyName
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Typename
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -26,13 +26,13 @@ instance IsAst TableFuncElement where
     where
       collateClause a' = "COLLATE " <> toTextBuilder a'
   parser = do
-    a <- wrapToHead colId
-    space1
+    a <- Parser.wrapToHead colId
+    Parser.space1
     b <- parser
-    c <- optional (space1 *> collateClause)
+    c <- optional (Parser.space1 *> collateClause)
     return (TableFuncElement a b c)
     where
-      collateClause = keyword "collate" *> space1 *> endHead *> parser
+      collateClause = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
 
-instance Arbitrary TableFuncElement where
-  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary TableFuncElement where
+  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Qc.scale (`div` 2) arbitrary

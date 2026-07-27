@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.FrameClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.FrameExtent
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WindowExclusionClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -30,10 +30,10 @@ instance IsAst FrameClause where
         fmap toTextBuilder c
       ]
   parser = do
-    a <- parser <* space1 <* endHead
+    a <- parser <* Parser.space1 <* Parser.endHead
     b <- parser
-    c <- optional (space1 *> parser)
+    c <- optional (Parser.space1 *> parser)
     return (FrameClause a b c)
 
-instance Arbitrary FrameClause where
-  arbitrary = FrameClause <$> arbitrary <*> scale (`div` 2) arbitrary <*> arbitrary
+instance Qc.Arbitrary FrameClause where
+  arbitrary = FrameClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> arbitrary

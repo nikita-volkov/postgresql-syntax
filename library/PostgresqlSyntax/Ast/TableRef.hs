@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.TableRef where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.FuncAliasClause
 import PostgresqlSyntax.Ast.FuncTable
@@ -10,10 +10,10 @@ import PostgresqlSyntax.Ast.JoinedTable
 import PostgresqlSyntax.Ast.RelationExpr
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.TablesampleClause
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, head, many, some, tail, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -102,7 +102,7 @@ instance IsAst TableRef where
   -- >>> testParser tableRef "a left join b on (a.i = b.i)"
   -- JoinTableRef (MethJoinedTable (QualJoinMeth...
   parser =
-    label "table reference"
+    Parser.label "table reference"
       $ do
         tr <- nonTrailingTableRef
         recur tr
@@ -110,42 +110,42 @@ instance IsAst TableRef where
       recur tr =
         asum
           [ do
-              tr2 <- wrapToHead (space1 *> trailingTableRef tr)
-              endHead
+              tr2 <- Parser.wrapToHead (Parser.space1 *> trailingTableRef tr)
+              Parser.endHead
               recur tr2,
             pure tr
           ]
       nonTrailingTableRef =
         asum
-          [lateralTableRef <|> wrapToHead nonLateralTableRef <|> relationExprTableRef <|> joinedTableWithAliasTableRef <|> inParensJoinedTableTableRef]
+          [lateralTableRef <|> Parser.wrapToHead nonLateralTableRef <|> relationExprTableRef <|> joinedTableWithAliasTableRef <|> inParensJoinedTableTableRef]
         where
           relationExprTableRef = do
             relationExpr <- parser
-            endHead
-            optAliasClause <- optional (space1 *> parser)
-            optTablesampleClause <- optional (space1 *> parser)
+            Parser.endHead
+            optAliasClause <- optional (Parser.space1 *> parser)
+            optTablesampleClause <- optional (Parser.space1 *> parser)
             return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
           lateralTableRef = do
             keyword "lateral"
-            space1
-            endHead
+            Parser.space1
+            Parser.endHead
             lateralableTableRef True
           nonLateralTableRef = lateralableTableRef False
           lateralableTableRef lateral =
             asum
               [ do
                   a <- parser
-                  b <- optional (space1 *> parser)
+                  b <- optional (Parser.space1 *> parser)
                   return (FuncTableRef lateral a b),
                 do
                   select <- parser
-                  optAliasClause <- optional $ space1 *> parser
+                  optAliasClause <- optional $ Parser.space1 *> parser
                   return (SelectTableRef lateral select optAliasClause)
               ]
           inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable <*> pure Nothing
           joinedTableWithAliasTableRef = do
-            joinedTable <- wrapToHead (inParens joinedTable)
-            space1
+            joinedTable <- Parser.wrapToHead (inParens joinedTable)
+            Parser.space1
             alias <- parser
             return (JoinTableRef joinedTable (Just alias))
       trailingTableRef tableRef =
@@ -156,16 +156,16 @@ instance IsAst TableRef where
           headP =
             asum
               [ do
-                  tr <- wrapToHead nonTrailingTableRef
-                  space1
+                  tr <- Parser.wrapToHead nonTrailingTableRef
+                  Parser.space1
                   trailingJoinedTable tr,
                 inParensJoinedTable
               ]
           tailP jt =
             asum
               [ do
-                  jt2 <- wrapToHead (space1 *> trailingJoinedTable (JoinTableRef jt Nothing))
-                  endHead
+                  jt2 <- Parser.wrapToHead (Parser.space1 *> trailingJoinedTable (JoinTableRef jt Nothing))
+                  Parser.endHead
                   tailP jt2,
                 pure jt
               ]
@@ -188,43 +188,43 @@ instance IsAst TableRef where
         asum
           [ do
               keyphrase "cross join"
-              endHead
-              space1
+              Parser.endHead
+              Parser.space1
               tr2 <- nonTrailingTableRef
               return (MethJoinedTable CrossJoinMeth tr1 tr2),
             do
               jt <- joinTypedJoin
-              endHead
-              space1
+              Parser.endHead
+              Parser.space1
               tr2 <- parser
-              space1
+              Parser.space1
               jq <- parser
               return (MethJoinedTable (QualJoinMeth jt jq) tr1 tr2),
             do
               keyword "natural"
-              endHead
-              space1
+              Parser.endHead
+              Parser.space1
               jt <- joinTypedJoin
-              space1
+              Parser.space1
               tr2 <- nonTrailingTableRef
               return (MethJoinedTable (NaturalJoinMeth jt) tr1 tr2)
           ]
         where
           joinTypedJoin =
             Just
-              <$> (parser <* endHead <* space1 <* keyword "join")
+              <$> (parser <* Parser.endHead <* Parser.space1 <* keyword "join")
               <|> Nothing
               <$ keyword "join"
 
-instance Arbitrary TableRef where
+instance Qc.Arbitrary TableRef where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then RelationExprTableRef <$> arbitrary <*> pure Nothing <*> pure Nothing
+        then RelationExprTableRef <$> Qc.arbitrary <*> pure Nothing <*> pure Nothing
         else
-          oneof
-            [ RelationExprTableRef <$> arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              FuncTableRef <$> arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              SelectTableRef <$> arbitrary <*> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary,
-              JoinTableRef <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ RelationExprTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              FuncTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              SelectTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+              JoinTableRef <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
             ]

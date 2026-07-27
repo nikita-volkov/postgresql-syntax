@@ -7,7 +7,7 @@ import PostgresqlSyntax.Ast.SelectStmt
 import PostgresqlSyntax.Ast.UpdateStmt
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -43,12 +43,12 @@ instance IsAst PreparableStmt where
         CallPreparableStmt <$> parser
       ]
 
-instance Arbitrary PreparableStmt where
+instance Qc.Arbitrary PreparableStmt where
   arbitrary =
-    oneof
-      [ SelectPreparableStmt <$> scale (`div` 2) arbitrary,
-        InsertPreparableStmt <$> scale (`div` 2) arbitrary,
-        UpdatePreparableStmt <$> scale (`div` 2) arbitrary,
-        DeletePreparableStmt <$> scale (`div` 2) arbitrary,
-        CallPreparableStmt <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ SelectPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
+        InsertPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
+        UpdatePreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
+        DeletePreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
+        CallPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

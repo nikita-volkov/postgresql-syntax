@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.OverlayList where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,23 +36,23 @@ instance IsAst OverlayList where
       suffixMaybe f = foldMap (mappend " " . f)
   parser = do
     a <- parser
-    space1
+    Parser.space1
     keyword "placing"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     b <- parser
-    space1
+    Parser.space1
     keyword "from"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     c <- parser
-    d <- optional (space1 *> keyword "for" *> space1 *> endHead *> parser)
+    d <- optional (Parser.space1 *> keyword "for" *> Parser.space1 *> Parser.endHead *> parser)
     return (OverlayList a b c d)
 
-instance Arbitrary OverlayList where
+instance Qc.Arbitrary OverlayList where
   arbitrary =
     OverlayList
-      <$> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
-      <*> scale (`div` 4) arbitrary
+      <$> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.scale (`div` 4) Qc.arbitrary

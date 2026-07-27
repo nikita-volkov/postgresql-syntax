@@ -1,9 +1,10 @@
 module PostgresqlSyntax.Ast.MathOp where
 
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import PostgresqlSyntax.Extras.TextBuilder (char7)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (many, some, try)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -40,35 +41,35 @@ data MathOp
 
 instance IsAst MathOp where
   toTextBuilder = \case
-    PlusMathOp -> char7 '+'
-    MinusMathOp -> char7 '-'
-    AsteriskMathOp -> char7 '*'
-    SlashMathOp -> char7 '/'
-    PercentMathOp -> char7 '%'
-    ArrowUpMathOp -> char7 '^'
-    ArrowLeftMathOp -> char7 '<'
-    ArrowRightMathOp -> char7 '>'
-    EqualsMathOp -> char7 '='
+    PlusMathOp -> TextBuilder.char7 '+'
+    MinusMathOp -> TextBuilder.char7 '-'
+    AsteriskMathOp -> TextBuilder.char7 '*'
+    SlashMathOp -> TextBuilder.char7 '/'
+    PercentMathOp -> TextBuilder.char7 '%'
+    ArrowUpMathOp -> TextBuilder.char7 '^'
+    ArrowLeftMathOp -> TextBuilder.char7 '<'
+    ArrowRightMathOp -> TextBuilder.char7 '>'
+    EqualsMathOp -> TextBuilder.char7 '='
     LessEqualsMathOp -> "<="
     GreaterEqualsMathOp -> ">="
     ArrowLeftArrowRightMathOp -> "<>"
     ExclamationEqualsMathOp -> "!="
   parser =
     asum
-      [ ArrowLeftArrowRightMathOp <$ string' "<>",
-        GreaterEqualsMathOp <$ string' ">=",
-        ExclamationEqualsMathOp <$ string' "!=",
-        LessEqualsMathOp <$ string' "<=",
-        PlusMathOp <$ char '+',
-        MinusMathOp <$ char '-',
-        AsteriskMathOp <$ char '*',
-        SlashMathOp <$ char '/',
-        PercentMathOp <$ char '%',
-        ArrowUpMathOp <$ char '^',
-        ArrowLeftMathOp <$ char '<',
-        ArrowRightMathOp <$ char '>',
-        EqualsMathOp <$ char '='
+      [ ArrowLeftArrowRightMathOp <$ Parser.string' "<>",
+        GreaterEqualsMathOp <$ Parser.string' ">=",
+        ExclamationEqualsMathOp <$ Parser.string' "!=",
+        LessEqualsMathOp <$ Parser.string' "<=",
+        PlusMathOp <$ Parser.char '+',
+        MinusMathOp <$ Parser.char '-',
+        AsteriskMathOp <$ Parser.char '*',
+        SlashMathOp <$ Parser.char '/',
+        PercentMathOp <$ Parser.char '%',
+        ArrowUpMathOp <$ Parser.char '^',
+        ArrowLeftMathOp <$ Parser.char '<',
+        ArrowRightMathOp <$ Parser.char '>',
+        EqualsMathOp <$ Parser.char '='
       ]
 
-instance Arbitrary MathOp where
-  arbitrary = elements [minBound .. maxBound]
+instance Qc.Arbitrary MathOp where
+  arbitrary = Qc.elements [minBound .. maxBound]

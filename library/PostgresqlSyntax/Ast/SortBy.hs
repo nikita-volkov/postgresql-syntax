@@ -1,15 +1,15 @@
 module PostgresqlSyntax.Ast.SortBy where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -31,22 +31,22 @@ instance IsAst SortBy where
     a <- filteredParser ["using", "asc", "desc", "nulls"]
     asum
       [ do
-          space1
+          Parser.space1
           keyword "using"
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           b <- parser
-          c <- optional (space1 *> parser)
+          c <- optional (Parser.space1 *> parser)
           return (UsingSortBy a b c),
         do
-          b <- optional (space1 *> parser)
-          c <- optional (space1 *> parser)
+          b <- optional (Parser.space1 *> parser)
+          c <- optional (Parser.space1 *> parser)
           return (AscDescSortBy a b c)
       ]
 
-instance Arbitrary SortBy where
+instance Qc.Arbitrary SortBy where
   arbitrary =
-    oneof
-      [ UsingSortBy <$> scale (`div` 2) arbitrary <*> arbitrary <*> arbitrary,
-        AscDescSortBy <$> scale (`div` 2) arbitrary <*> arbitrary <*> arbitrary
+    Qc.oneof
+      [ UsingSortBy <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+        AscDescSortBy <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
       ]

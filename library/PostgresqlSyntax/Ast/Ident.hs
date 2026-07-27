@@ -1,15 +1,15 @@
 module PostgresqlSyntax.Ast.Ident where
 
 import qualified Data.Text as Text
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.TextBuilder (char7)
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, try)
-import Test.QuickCheck (frequency, suchThat)
-import TextBuilder (text)
+import qualified Test.QuickCheck as Qc
+import qualified TextBuilder
 
 -- |
 -- ==== References
@@ -21,11 +21,11 @@ data Ident = QuotedIdent Text | UnquotedIdent Text
 
 instance IsAst Ident where
   toTextBuilder = \case
-    QuotedIdent a -> char7 '"' <> text (Text.replace "\"" "\"\"" a) <> char7 '"'
-    UnquotedIdent a -> text a
+    QuotedIdent a -> TextBuilder.char7 '"' <> TextBuilder.text (Text.replace "\"" "\"\"" a) <> TextBuilder.char7 '"'
+    UnquotedIdent a -> TextBuilder.text a
   parser = quotedName <|> keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
     where
-      quotedName = filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
+      quotedName = Parser.filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
 
 -- |
 -- ==== References
@@ -43,7 +43,7 @@ instance IsAst Ident where
 -- 'parser' only accepts the strict @IDENT@ token (no keyword fallback).
 colId :: Parser Ident
 colId =
-  label "identifier"
+  Parser.label "identifier"
     $ parser
     <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
@@ -59,7 +59,7 @@ colId =
 -- @
 colLabel :: Parser Ident
 colLabel =
-  label "column label"
+  Parser.label "column label"
     $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
     <|> parser
 
@@ -76,23 +76,23 @@ typeFunctionName =
   keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
     <|> parser
 
-instance Arbitrary Ident where
+instance Qc.Arbitrary Ident where
   arbitrary =
-    frequency
+    Qc.frequency
       [ (95, UnquotedIdent <$> unquotedIdentText),
         (5, QuotedIdent <$> quotedIdentText)
       ]
     where
       unquotedIdentText =
         ( do
-            firstChar <- elements startChars
-            restLength <- choose (0, 29)
-            rest <- vectorOf restLength (elements contChars)
+            firstChar <- Qc.elements startChars
+            restLength <- Qc.choose (0, 29)
+            rest <- Qc.vectorOf restLength (Qc.elements contChars)
             pure (Text.pack (firstChar : rest))
         )
-          `suchThat` (not . Predicate.keyword)
+          `Qc.suchThat` (not . Predicate.keyword)
       startChars = ['a' .. 'z'] <> ['_']
       contChars = startChars <> ['0' .. '9'] <> ['$']
       quotedIdentText = do
-        len <- choose (1, 30)
-        Text.pack <$> vectorOf len (arbitrary `suchThat` (not . isControl))
+        len <- Qc.choose (1, 30)
+        Text.pack <$> Qc.vectorOf len (Qc.arbitrary `Qc.suchThat` (not . isControl))

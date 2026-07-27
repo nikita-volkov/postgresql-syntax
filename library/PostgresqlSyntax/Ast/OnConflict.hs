@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.OnConflict where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ConfExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflictDo
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -24,15 +24,15 @@ instance IsAst OnConflict where
   toTextBuilder (OnConflict a b) = "ON CONFLICT" <> suffixMaybe toTextBuilder a <> " DO " <> toTextBuilder b
   parser = do
     keyword "on"
-    space1
+    Parser.space1
     keyword "conflict"
-    space1
-    endHead
-    a <- optional (parser <* space1)
+    Parser.space1
+    Parser.endHead
+    a <- optional (parser <* Parser.space1)
     keyword "do"
-    space1
+    Parser.space1
     b <- parser
     return (OnConflict a b)
 
-instance Arbitrary OnConflict where
-  arbitrary = OnConflict <$> scale (`div` 2) arbitrary <*> scale (`div` 2) arbitrary
+instance Qc.Arbitrary OnConflict where
+  arbitrary = OnConflict <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

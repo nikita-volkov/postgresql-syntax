@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.InExpr where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 
 -- |
@@ -26,16 +26,16 @@ instance IsAst InExpr where
     SelectInExpr a -> toTextBuilder a
     ExprListInExpr a -> renderInParens (toTextBuilder a)
   parser =
-    (ExprListInExpr <$> parse (Megaparsec.try (toParsec (inParens parser))))
-      <|> (SelectInExpr <$> wrapToHead parser)
+    (ExprListInExpr <$> Parser.parse (Megaparsec.try (Parser.toParsec (inParens parser))))
+      <|> (SelectInExpr <$> Parser.wrapToHead parser)
 
-instance Arbitrary InExpr where
+instance Qc.Arbitrary InExpr where
   arbitrary =
-    sized $ \n ->
+    Qc.sized $ \n ->
       if n <= 1
-        then ExprListInExpr <$> arbitrary
+        then ExprListInExpr <$> Qc.arbitrary
         else
-          oneof
-            [ SelectInExpr <$> scale (`div` 2) arbitrary,
-              ExprListInExpr <$> scale (`div` 2) arbitrary
+          Qc.oneof
+            [ SelectInExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+              ExprListInExpr <$> Qc.scale (`div` 2) Qc.arbitrary
             ]

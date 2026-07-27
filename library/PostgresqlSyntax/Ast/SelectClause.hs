@@ -4,7 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect (SimpleSelect)
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,9 +36,9 @@ instance IsAst SelectClause where
         SimpleSelectSelectClause <$> parser
       ]
 
-instance Arbitrary SelectClause where
+instance Qc.Arbitrary SelectClause where
   arbitrary =
-    oneof
-      [ SimpleSelectSelectClause <$> scale (`div` 2) arbitrary,
-        WithParensSelectClause <$> scale (`div` 2) arbitrary
+    Qc.oneof
+      [ SimpleSelectSelectClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+        WithParensSelectClause <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

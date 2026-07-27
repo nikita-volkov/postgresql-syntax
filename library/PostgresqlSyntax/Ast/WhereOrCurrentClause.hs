@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.WhereOrCurrentClause where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,23 +29,23 @@ instance IsAst WhereOrCurrentClause where
     CursorWhereOrCurrentClause a -> "WHERE CURRENT OF " <> toTextBuilder a
   parser = do
     keyword "where"
-    space1
-    endHead
+    Parser.space1
+    Parser.endHead
     asum
       [ do
           keyword "current"
-          space1
+          Parser.space1
           keyword "of"
-          space1
-          endHead
+          Parser.space1
+          Parser.endHead
           a <- colId
           return (CursorWhereOrCurrentClause a),
         ExprWhereOrCurrentClause <$> parser
       ]
 
-instance Arbitrary WhereOrCurrentClause where
+instance Qc.Arbitrary WhereOrCurrentClause where
   arbitrary =
-    oneof
-      [ ExprWhereOrCurrentClause <$> scale (`div` 2) arbitrary,
-        CursorWhereOrCurrentClause <$> arbitrary
+    Qc.oneof
+      [ ExprWhereOrCurrentClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+        CursorWhereOrCurrentClause <$> Qc.arbitrary
       ]

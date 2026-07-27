@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.ExplicitRow where
 
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -29,12 +29,12 @@ instance IsAst ExplicitRow where
         )
   parser =
     keyword "row"
-      *> space
+      *> Parser.space
       *> inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional parser)
 
-instance Arbitrary ExplicitRow where
+instance Qc.Arbitrary ExplicitRow where
   arbitrary =
-    oneof
+    Qc.oneof
       [ pure EmptyExplicitRow,
-        ExprListExplicitRow <$> scale (`div` 2) arbitrary
+        ExprListExplicitRow <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

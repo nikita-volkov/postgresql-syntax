@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.FuncTable where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptOrdinality
 import PostgresqlSyntax.Ast.RowsfromList
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -30,21 +30,21 @@ instance IsAst FuncTable where
     asum
       [ do
           keyword "rows"
-          space1
+          Parser.space1
           keyword "from"
-          space
-          a <- inParens (endHead *> parser)
-          b <- OptOrdinality <$> trueIfPresent (space *> keyword "with" *> space1 *> keyword "ordinality")
+          Parser.space
+          a <- inParens (Parser.endHead *> parser)
+          b <- OptOrdinality <$> trueIfPresent (Parser.space *> keyword "with" *> Parser.space1 *> keyword "ordinality")
           return (RowsFromFuncTable a b),
         do
           a <- parser
-          b <- OptOrdinality <$> trueIfPresent (space1 *> keyword "with" *> space1 *> keyword "ordinality")
+          b <- OptOrdinality <$> trueIfPresent (Parser.space1 *> keyword "with" *> Parser.space1 *> keyword "ordinality")
           return (FuncExprFuncTable a b)
       ]
 
-instance Arbitrary FuncTable where
+instance Qc.Arbitrary FuncTable where
   arbitrary =
-    oneof
-      [ FuncExprFuncTable <$> scale (`div` 2) arbitrary <*> arbitrary,
-        RowsFromFuncTable <$> scale (`div` 2) arbitrary <*> arbitrary
+    Qc.oneof
+      [ FuncExprFuncTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        RowsFromFuncTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
       ]

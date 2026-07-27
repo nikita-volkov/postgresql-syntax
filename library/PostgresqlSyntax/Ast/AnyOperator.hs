@@ -1,14 +1,14 @@
 module PostgresqlSyntax.Ast.AnyOperator where
 
-import HeadedMegaparsec
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
-import Test.QuickCheck (scale)
+import qualified Test.QuickCheck as Qc
 
 -- |
 -- ==== References
@@ -36,20 +36,20 @@ instance IsAst AnyOperator where
   parser =
     asum
       [ AllOpAnyOperator <$> parser,
-        QualifiedAnyOperator <$> colIdLikeName <*> (space *> char '.' *> space *> parser)
+        QualifiedAnyOperator <$> colIdLikeName <*> (Parser.space *> Parser.char '.' *> Parser.space *> parser)
       ]
     where
       colIdLikeName =
-        label "identifier"
+        Parser.label "identifier"
           $ parser
           <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
-instance Arbitrary AnyOperator where
-  arbitrary = sized $ \n ->
+instance Qc.Arbitrary AnyOperator where
+  arbitrary = Qc.sized $ \n ->
     if n <= 1
-      then AllOpAnyOperator <$> arbitrary
+      then AllOpAnyOperator <$> Qc.arbitrary
       else
-        oneof
-          [ AllOpAnyOperator <$> arbitrary,
-            QualifiedAnyOperator <$> arbitrary <*> scale (`div` 2) arbitrary
+        Qc.oneof
+          [ AllOpAnyOperator <$> Qc.arbitrary,
+            QualifiedAnyOperator <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
           ]
