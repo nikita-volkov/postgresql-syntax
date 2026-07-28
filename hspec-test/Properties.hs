@@ -251,7 +251,7 @@ arbitrarySpec =
         -- Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
         -- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't
         -- bound.
-        maxGenSizeMaxLen = 100000
+        maxGenSizeMaxLen = 1000000
 
 byTypeName :: forall a. (Typeable.Typeable a) => Spec -> Spec
 byTypeName = describe typeName
