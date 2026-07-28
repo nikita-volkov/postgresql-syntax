@@ -115,7 +115,7 @@ customizedParser colIdParser =
       Parser.endHead
       b <- optional (Parser.space *> parser)
       return (Columnref a b)
-    -- \|
+
     -- See 'PostgresqlSyntax.Ast.AExpr'\'s doc on the sibling parser this
     -- replaces (@parenthesizedExprCExpr@\/implicit-row sharing trick) for
     -- why the single @a_expr@ parse is shared between the two endings.

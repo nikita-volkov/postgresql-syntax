@@ -30,7 +30,7 @@ instance IsAst ConstCharacter where
 instance Qc.Arbitrary ConstCharacter where
   shrink = Qc.genericShrink
 
-  -- \| The length here is parsed via 'Parser.decimal' (unsigned), so it must
+  -- The length here is parsed via 'Parser.decimal' (unsigned), so it must
   -- never be negative — mirroring 'PostgresqlSyntax.Ast.IntervalSecond'\'s
   -- own @nonNegative@.
   arbitrary = ConstCharacter <$> arbitrary <*> Qc.oneof [pure Nothing, Just <$> nonNegativeInt64]

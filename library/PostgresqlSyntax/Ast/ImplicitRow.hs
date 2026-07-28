@@ -22,7 +22,6 @@ data ImplicitRow = ImplicitRow ExprList AExpr
 instance IsAst ImplicitRow where
   toTextBuilder (ImplicitRow a b) = renderInParens (toTextBuilder a <> ", " <> toTextBuilder b)
 
-  -- \|
   -- Parses the shared @a_expr@ once and then decides, from what follows,
   -- whether it's the sole element of the leading 'ExprList' or the trailing
   -- @a_expr@ — see 'PostgresqlSyntax.Extras.NonEmpty.consAndUnsnoc'.

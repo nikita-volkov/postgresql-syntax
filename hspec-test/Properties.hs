@@ -205,8 +205,8 @@ onlyArbitrarySpec = byTypeName @a (arbitrarySpec @a)
 -- 'onlyArbitrarySpec'.
 arbitrarySpec :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 arbitrarySpec =
-  describe "Arbitrary"
-    $ prop "Has proper generator bounds" generatorBoundsProperty
+  describe "Arbitrary" $ do
+    prop "Has proper generator bounds" generatorBoundsProperty
   where
     -- Two invariants every 'Arbitrary' instance in this library must satisfy,
     -- independent of parsing (hence the only property run for the node types
@@ -226,15 +226,15 @@ arbitrarySpec =
     generatorBoundsProperty =
       terminatesAtZero Qc..&&. growsBounded
       where
-        -- \| Rendered-length ceiling for size-0 generation. A well-behaved
+        -- Rendered-length ceiling for size-0 generation. A well-behaved
         -- generator produces a leaf at size 0, so this only ever trips on a
         -- non-terminating base case (which renders unbounded nesting).
         zeroSizeMaxLen = 500
-        -- \| The size at which the growth bound is measured. Matches hspec's
+        -- The size at which the growth bound is measured. Matches hspec's
         -- default 'maxSize', i.e. the largest size any prop in this suite is
         -- run at.
         maxGenSize = 100
-        -- \| Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
+        -- Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
         -- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't
         -- bound.
         maxGenSizeMaxLen = 10000

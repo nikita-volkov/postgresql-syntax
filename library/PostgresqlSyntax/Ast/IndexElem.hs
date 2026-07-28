@@ -43,7 +43,7 @@ instance IsAst IndexElem where
       <*> optional (Parser.space1 *> parser)
     where
       collate = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
-      -- \|
+
       -- Duplicated 'PostgresqlSyntax.Ast.AnyName.filteredParser' call,
       -- mirroring the pre-extraction @class_ = filteredAnyName ["asc",
       -- "desc", "nulls"]@ — excludes the words that terminate this

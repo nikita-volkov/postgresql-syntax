@@ -82,7 +82,7 @@ instance Qc.Arbitrary Numeric where
         pure SmallintNumeric,
         pure BigintNumeric,
         pure RealNumeric,
-        -- \| The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so,
+        -- The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so,
         -- unlike a plain 'Int64', it must never be negative — mirroring
         -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
         FloatNumeric <$> Qc.oneof [pure Nothing, Just <$> nonNegativeInt64],

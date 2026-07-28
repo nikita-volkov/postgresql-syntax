@@ -65,7 +65,7 @@ instance IsAst FuncApplicationParams where
         arg <- parser
         optSortClause <- optional (Parser.space1 *> parser)
         return (VariadicFuncApplicationParams Nothing arg optSortClause)
-      -- \|
+
       -- @func_arg_list ',' VARIADIC func_arg_expr@: one or more
       -- comma-separated 'FuncArgExpr's, where the final comma is
       -- immediately followed by (and the @VARIADIC@ keyword itself consumed

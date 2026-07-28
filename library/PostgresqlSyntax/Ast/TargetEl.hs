@@ -34,7 +34,6 @@ instance IsAst TargetEl where
     ExprTargetEl a -> toTextBuilder a
     AsteriskTargetEl -> "*"
 
-  -- \|
   -- >>> testParser targetEl "a.b as c"
   -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
   parser =
@@ -54,7 +53,6 @@ instance IsAst TargetEl where
           AsteriskTargetEl <$ Parser.char '*'
         ]
     where
-      -- \|
       -- Duplicated from "PostgresqlSyntax.Parsing"'s @colLabel@ (a
       -- bare-aliased 'PostgresqlSyntax.Ast.Ident' whose own, more
       -- permissive parser lives above this module in the dependency
@@ -70,7 +68,7 @@ instance Qc.Arbitrary TargetEl where
     Qc.oneof
       [ pure AsteriskTargetEl,
         AliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-        -- \| Unlike 'AliasedExprTargetEl' (separated from its alias by the
+        -- Unlike 'AliasedExprTargetEl' (separated from its alias by the
         -- reserved @AS@ keyword) or 'ExprTargetEl' (followed only by a
         -- comma\/end of list, neither valid @a_expr@ continuations), the
         -- expr here is followed directly by a bare alias identifier with

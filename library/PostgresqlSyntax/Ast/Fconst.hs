@@ -21,7 +21,7 @@ instance IsAst Fconst where
 instance Qc.Arbitrary Fconst where
   shrink = Qc.genericShrink
 
-  -- \| Parsed via 'Parser.float' (unsigned — the sign, when present, is a
+  -- Parsed via 'Parser.float' (unsigned — the sign, when present, is a
   -- separate unary @AExpr@\/@BExpr@ operator applied outside this type), so
   -- it must never be negative, mirroring
   -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.

@@ -51,7 +51,6 @@ instance IsAst FuncArgExpr where
         ExprFuncArgExpr <$> parser
       ]
     where
-      -- \|
       -- Duplicated from "PostgresqlSyntax.Parsing"'s @typeFunctionName@
       -- (a bare-aliased 'PostgresqlSyntax.Ast.Ident' whose own parser lives
       -- above this module in the dependency order), mirroring the
