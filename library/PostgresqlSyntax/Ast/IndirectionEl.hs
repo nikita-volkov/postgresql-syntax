@@ -89,7 +89,12 @@ instance Qc.Arbitrary IndirectionEl where
   arbitrary =
     Qc.sized $ \size ->
       if size <= 1
-        then AttrNameIndirectionEl <$> Qc.arbitrary
+        then
+          Qc.oneof
+            [ AttrNameIndirectionEl <$> Qc.arbitrary,
+              pure AllIndirectionEl,
+              pure (SliceIndirectionEl Nothing Nothing)
+            ]
         else
           Qc.oneof
             [ AttrNameIndirectionEl <$> Qc.arbitrary,

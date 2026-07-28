@@ -40,7 +40,7 @@ instance IsAst SelectClause where
 instance Qc.Arbitrary SelectClause where
   shrink = Qc.genericShrink
   arbitrary =
-    Qc.oneof
-      [ SimpleSelectSelectClause <$> Gens.downscale Qc.arbitrary,
-        WithParensSelectClause <$> Gens.downscale Qc.arbitrary
+    Qc.frequency
+      [ (3, SimpleSelectSelectClause <$> Gens.downscale Qc.arbitrary),
+        (1, WithParensSelectClause <$> Gens.downscale Qc.arbitrary)
       ]

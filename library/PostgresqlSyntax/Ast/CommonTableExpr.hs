@@ -54,6 +54,6 @@ instance Qc.Arbitrary CommonTableExpr where
   arbitrary =
     CommonTableExpr
       <$> Qc.arbitrary
-      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe (Gens.nonEmptyUpTo 6 Qc.arbitrary)
       <*> Gens.terminatingMaybe Qc.arbitrary
       <*> Qc.arbitrary

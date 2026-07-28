@@ -56,8 +56,7 @@ instance IsAst SelectWithParens where
 instance Qc.Arbitrary SelectWithParens where
   shrink = Qc.genericShrink
   arbitrary =
-    Gens.oneofRec
-      [ NoParensSelectWithParens <$> Qc.arbitrary
-      ]
-      [ WithParensSelectWithParens <$> Qc.arbitrary
+    Qc.frequency
+      [ (3, NoParensSelectWithParens <$> Gens.downscale Qc.arbitrary),
+        (1, WithParensSelectWithParens <$> Gens.downscale Qc.arbitrary)
       ]
