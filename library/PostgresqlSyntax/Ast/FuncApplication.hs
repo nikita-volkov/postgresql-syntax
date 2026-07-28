@@ -2,9 +2,8 @@ module PostgresqlSyntax.Ast.FuncApplication where
 
 import PostgresqlSyntax.Ast.FuncApplicationParams
 import PostgresqlSyntax.Ast.FuncName
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -32,8 +31,8 @@ instance IsAst FuncApplication where
   -- literally named \"operator\", mirroring how real PostgreSQL's grammar
   -- resolves the conflict between these two productions in favor of qual_op.
   parser =
-    Parser.notFollowedBy (keyword "operator" *> Parser.space *> Parser.char '(')
-      *> inParensWithLabel FuncApplication parser (optional parser)
+    Parsers.notFollowedBy (Parsers.keyword "operator" *> Parsers.space *> Parsers.char '(')
+      *> Parsers.inParensWithLabel FuncApplication parser (optional parser)
 
 instance Qc.Arbitrary FuncApplication where
   shrink = Qc.genericShrink

@@ -6,9 +6,8 @@ import PostgresqlSyntax.Ast.CExpr (CExpr)
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -79,37 +78,37 @@ instance IsAst BExpr where
       -- this fallback).
       renderOperand a
         | isBoundedBExprOperand a = toTextBuilder a
-        | otherwise = renderInParens (toTextBuilder a)
+        | otherwise = TextBuilders.renderInParens (toTextBuilder a)
       renderBExprIsOp a =
         mappend (bool "IS " "IS NOT " a) . \case
           DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder b
-          OfBExprIsOp b -> "OF " <> renderInParens (toTextBuilder b)
+          OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder b)
           DocumentBExprIsOp -> "DOCUMENT"
   parser = suffixRec base suffix
     where
       bExpr = suffixRec base suffix
       base =
         asum
-          [ qualOpExpr bExpr QualOpBExpr,
-            PlusBExpr <$> plusedExpr bExpr,
-            MinusBExpr <$> minusedExpr bExpr,
+          [ Parsers.qualOpExpr bExpr QualOpBExpr,
+            PlusBExpr <$> Parsers.plusedExpr bExpr,
+            MinusBExpr <$> Parsers.minusedExpr bExpr,
             CExprBExpr <$> parser
           ]
       suffix a =
         asum
-          [ typecastExpr a TypecastBExpr,
-            symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
+          [ Parsers.typecastExpr a TypecastBExpr,
+            Parsers.symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
             do
-              Parser.space1
-              keyword "is"
-              Parser.space1
+              Parsers.space1
+              Parsers.keyword "is"
+              Parsers.space1
               Parser.endHead
-              b <- trueIfPresent (keyword "not" *> Parser.space1)
+              b <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
               c <-
                 asum
-                  [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> Parser.space1 *> Parser.endHead *> bExpr),
-                    OfBExprIsOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
-                    DocumentBExprIsOp <$ keyword "document"
+                  [ DistinctFromBExprIsOp <$> (Parsers.keyphrase "distinct from" *> Parsers.space1 *> Parser.endHead *> bExpr),
+                    OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+                    DocumentBExprIsOp <$ Parsers.keyword "document"
                   ]
               return (IsOpBExpr a b c)
           ]

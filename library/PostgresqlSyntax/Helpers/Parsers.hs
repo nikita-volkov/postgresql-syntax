@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints -Wno-missing-signatures -Wno-dodgy-imports #-}
 
--- |
--- Parsing helpers shared by 2+ AST node modules.
-module PostgresqlSyntax.Helpers.Parsers where
+module PostgresqlSyntax.Helpers.Parsers
+  ( module PostgresqlSyntax.Extras.HeadedMegaparsec,
+    module PostgresqlSyntax.Helpers.Parsers,
+  )
+where
 
 import Control.Applicative.Combinators hiding (some)
 import qualified Data.HashSet as HashSet

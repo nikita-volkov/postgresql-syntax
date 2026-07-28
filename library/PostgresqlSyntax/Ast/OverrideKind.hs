@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.OverrideKind where
 
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -21,8 +21,8 @@ instance IsAst OverrideKind where
     SystemOverrideKind -> "SYSTEM"
   parser =
     asum
-      [ UserOverrideKind <$ keyword "user",
-        SystemOverrideKind <$ keyword "system"
+      [ UserOverrideKind <$ Parsers.keyword "user",
+        SystemOverrideKind <$ Parsers.keyword "system"
       ]
 
 instance Qc.Arbitrary OverrideKind where

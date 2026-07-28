@@ -5,10 +5,9 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.InExpr
 import PostgresqlSyntax.Ast.TypeList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -18,7 +17,7 @@ import qualified Test.QuickCheck as Qc
 -- @b_expr [NOT]@ — the leading @IS@\/@NOT@ toggle itself is external to this
 -- type (it lives alongside it, e.g. in @ReversableOpAExpr AExpr Bool
 -- AExprReversableOp@), mirroring how 'PostgresqlSyntax.Ast.VerbalExprBinOp'
--- keeps @NOT_LA@ external. Only the @IS@\/@BETWEEN@\/@IN@ keyword that's
+-- keeps @NOT_LA@ external. Only the @IS@\/@BETWEEN@\/@IN@ Parsers.keyword that's
 -- intrinsic to each specific alternative (as opposed to the shared negation)
 -- is captured here.
 --
@@ -55,42 +54,42 @@ instance IsAst AExprReversableOp where
     FalseAExprReversableOp -> "IS FALSE"
     UnknownAExprReversableOp -> "IS UNKNOWN"
     DistinctFromAExprReversableOp b -> "IS DISTINCT FROM " <> toTextBuilder b
-    OfAExprReversableOp b -> "IS OF " <> renderInParens (toTextBuilder b)
+    OfAExprReversableOp b -> "IS OF " <> TextBuilders.renderInParens (toTextBuilder b)
     BetweenAExprReversableOp b c d -> bool "BETWEEN " "BETWEEN ASYMMETRIC " b <> toTextBuilder c <> " AND " <> toTextBuilder d
     BetweenSymmetricAExprReversableOp b c -> "BETWEEN SYMMETRIC " <> toTextBuilder b <> " AND " <> toTextBuilder c
     InAExprReversableOp b -> "IN " <> toTextBuilder b
     DocumentAExprReversableOp -> "IS DOCUMENT"
   parser =
     asum
-      [ keyword "is"
-          *> Parser.space1
+      [ Parsers.keyword "is"
+          *> Parsers.space1
           *> Parser.endHead
           *> asum
-            [ NullAExprReversableOp <$ keyword "null",
-              TrueAExprReversableOp <$ keyword "true",
-              FalseAExprReversableOp <$ keyword "false",
-              UnknownAExprReversableOp <$ keyword "unknown",
-              DistinctFromAExprReversableOp <$> (keyword "distinct" *> Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
-              OfAExprReversableOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
-              DocumentAExprReversableOp <$ keyword "document"
+            [ NullAExprReversableOp <$ Parsers.keyword "null",
+              TrueAExprReversableOp <$ Parsers.keyword "true",
+              FalseAExprReversableOp <$ Parsers.keyword "false",
+              UnknownAExprReversableOp <$ Parsers.keyword "unknown",
+              DistinctFromAExprReversableOp <$> (Parsers.keyword "distinct" *> Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
+              OfAExprReversableOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+              DocumentAExprReversableOp <$ Parsers.keyword "document"
             ],
         do
-          keyword "between"
-          Parser.space1
+          Parsers.keyword "between"
+          Parsers.space1
           Parser.endHead
           c <-
             asum
-              [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> Parser.space1),
-                BetweenAExprReversableOp True <$ (keyword "asymmetric" *> Parser.space1),
+              [ BetweenSymmetricAExprReversableOp <$ (Parsers.keyword "symmetric" *> Parsers.space1),
+                BetweenAExprReversableOp True <$ (Parsers.keyword "asymmetric" *> Parsers.space1),
                 pure (BetweenAExprReversableOp False)
               ]
           d <- parser
-          Parser.space1
-          keyword "and"
-          Parser.space1
+          Parsers.space1
+          Parsers.keyword "and"
+          Parsers.space1
           e <- parser
           return (c d e),
-        InAExprReversableOp <$> (keyword "in" *> Parser.space *> parser)
+        InAExprReversableOp <$> (Parsers.keyword "in" *> Parsers.space *> parser)
       ]
 
 instance Qc.Arbitrary AExprReversableOp where

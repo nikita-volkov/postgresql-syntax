@@ -4,10 +4,9 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.IndexParams
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -30,17 +29,17 @@ data ConfExpr
 
 instance IsAst ConfExpr where
   toTextBuilder = \case
-    WhereConfExpr a b -> renderInParens (toTextBuilder a) <> suffixMaybe whereClause b
+    WhereConfExpr a b -> TextBuilders.renderInParens (toTextBuilder a) <> TextBuilders.suffixMaybe whereClause b
     ConstraintConfExpr a -> "ON CONSTRAINT " <> toTextBuilder a
     where
       whereClause a = "WHERE " <> toTextBuilder a
   parser =
     asum
-      [ WhereConfExpr <$> inParens parser <*> optional (Parser.space *> whereClause),
-        ConstraintConfExpr <$> (keyword "on" *> Parser.space1 *> keyword "constraint" *> Parser.space1 *> Parser.endHead *> colId)
+      [ WhereConfExpr <$> Parsers.inParens parser <*> optional (Parsers.space *> whereClause),
+        ConstraintConfExpr <$> (Parsers.keyword "on" *> Parsers.space1 *> Parsers.keyword "constraint" *> Parsers.space1 *> Parser.endHead *> colId)
       ]
     where
-      whereClause = keyword "where" *> Parser.space1 *> Parser.endHead *> parser
+      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary ConfExpr where
   shrink = Qc.genericShrink

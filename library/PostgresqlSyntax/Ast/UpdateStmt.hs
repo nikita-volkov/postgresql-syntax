@@ -8,10 +8,9 @@ import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -34,35 +33,35 @@ data UpdateStmt = UpdateStmt (Maybe WithClause) RelationExprOptAlias SetClauseLi
 
 instance IsAst UpdateStmt where
   toTextBuilder (UpdateStmt a b c d e f) =
-    prefixMaybe toTextBuilder a
+    TextBuilders.prefixMaybe toTextBuilder a
       <> "UPDATE "
       <> toTextBuilder b
       <> " "
       <> "SET "
       <> toTextBuilder c
-      <> suffixMaybe fromClause d
-      <> suffixMaybe toTextBuilder e
-      <> suffixMaybe returningClause f
+      <> TextBuilders.suffixMaybe fromClause d
+      <> TextBuilders.suffixMaybe toTextBuilder e
+      <> TextBuilders.suffixMaybe returningClause f
     where
-      fromClause a' = "FROM " <> commaNonEmpty toTextBuilder a'
+      fromClause a' = "FROM " <> TextBuilders.commaNonEmpty toTextBuilder a'
       returningClause = mappend "RETURNING " . toTextBuilder
   parser = do
-    a <- optional (Parser.wrapToHead parser <* Parser.space1)
-    keyword "update"
-    Parser.space1
+    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+    Parsers.keyword "update"
+    Parsers.space1
     Parser.endHead
     b <- RelationExprOptAlias.customizedParser ["set"]
-    Parser.space1
-    keyword "set"
-    Parser.space1
+    Parsers.space1
+    Parsers.keyword "set"
+    Parsers.space1
     c <- parser
-    d <- optional (Parser.space1 *> fromClause)
-    e <- optional (Parser.space1 *> parser)
-    f <- optional (Parser.space1 *> returningClause)
+    d <- optional (Parsers.space1 *> fromClause)
+    e <- optional (Parsers.space1 *> parser)
+    f <- optional (Parsers.space1 *> returningClause)
     return (UpdateStmt a b c d e f)
     where
-      fromClause = keyword "from" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser
-      returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
+      fromClause = Parsers.keyword "from" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary UpdateStmt where
   shrink = Qc.genericShrink

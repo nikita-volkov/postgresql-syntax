@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.RowsfromList where
 
 import PostgresqlSyntax.Ast.RowsfromItem
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -20,8 +19,8 @@ newtype RowsfromList = RowsfromList (NonEmpty RowsfromItem)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RowsfromList where
-  toTextBuilder (RowsfromList a) = commaNonEmpty toTextBuilder a
-  parser = RowsfromList <$> Parser.sep1 commaSeparator parser
+  toTextBuilder (RowsfromList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = RowsfromList <$> Parsers.sep1 Parsers.commaSeparator parser
 
 instance Qc.Arbitrary RowsfromList where
   shrink = Qc.genericShrink

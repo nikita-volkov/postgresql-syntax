@@ -1,8 +1,7 @@
 module PostgresqlSyntax.Ast.PositionList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -19,7 +18,7 @@ data PositionList = PositionList BExpr BExpr
 
 instance IsAst PositionList where
   toTextBuilder (PositionList a b) = toTextBuilder a <> " IN " <> toTextBuilder b
-  parser = PositionList <$> parser <*> (Parser.space1 *> keyword "in" *> Parser.space1 *> parser)
+  parser = PositionList <$> parser <*> (Parsers.space1 *> Parsers.keyword "in" *> Parsers.space1 *> parser)
 
 instance Qc.Arbitrary PositionList where
   shrink = Qc.genericShrink

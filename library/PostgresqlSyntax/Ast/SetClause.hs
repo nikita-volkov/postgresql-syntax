@@ -3,9 +3,8 @@ module PostgresqlSyntax.Ast.SetClause where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SetTarget
 import PostgresqlSyntax.Ast.SetTargetList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -25,21 +24,21 @@ data SetClause
 instance IsAst SetClause where
   toTextBuilder = \case
     TargetSetClause a b -> toTextBuilder a <> " = " <> toTextBuilder b
-    TargetListSetClause a b -> renderInParens (toTextBuilder a) <> " = " <> toTextBuilder b
+    TargetListSetClause a b -> TextBuilders.renderInParens (toTextBuilder a) <> " = " <> toTextBuilder b
   parser =
     asum
       [ do
-          a <- inParens parser
-          Parser.space
-          Parser.char '='
-          Parser.space
+          a <- Parsers.inParens parser
+          Parsers.space
+          Parsers.char '='
+          Parsers.space
           b <- parser
           return (TargetListSetClause a b),
         do
           a <- parser
-          Parser.space
-          Parser.char '='
-          Parser.space
+          Parsers.space
+          Parsers.char '='
+          Parsers.space
           b <- parser
           return (TargetSetClause a b)
       ]

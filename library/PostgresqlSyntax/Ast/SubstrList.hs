@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.SubstrListFromFor
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -31,7 +31,7 @@ instance IsAst SubstrList where
     ExprListSubstrList a -> toTextBuilder a
   parser =
     asum
-      [ ExprSubstrList <$> Parser.wrapToHead parser <*> (Parser.space1 *> parser),
+      [ ExprSubstrList <$> Parser.wrapToHead parser <*> (Parsers.space1 *> parser),
         ExprListSubstrList <$> parser
       ]
 

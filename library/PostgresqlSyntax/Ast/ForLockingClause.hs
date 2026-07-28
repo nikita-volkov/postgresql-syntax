@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.ForLockingClause where
 
 import PostgresqlSyntax.Ast.ForLockingItem
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -26,12 +25,12 @@ data ForLockingClause
 
 instance IsAst ForLockingClause where
   toTextBuilder = \case
-    ItemsForLockingClause a -> spaceNonEmpty toTextBuilder a
+    ItemsForLockingClause a -> TextBuilders.spaceNonEmpty toTextBuilder a
     ReadOnlyForLockingClause -> "FOR READ ONLY"
   parser = readOnly <|> items
     where
-      readOnly = ReadOnlyForLockingClause <$ keyphrase "for read only"
-      items = ItemsForLockingClause <$> Parser.sep1 Parser.space1 parser
+      readOnly = ReadOnlyForLockingClause <$ Parsers.keyphrase "for read only"
+      items = ItemsForLockingClause <$> Parsers.sep1 Parsers.space1 parser
 
 instance Qc.Arbitrary ForLockingClause where
   shrink = Qc.genericShrink

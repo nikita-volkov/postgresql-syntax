@@ -4,8 +4,7 @@ import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.SimpleTypename
 import PostgresqlSyntax.Ast.TypenameArrayDimensions
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -40,14 +39,14 @@ instance IsAst Typename where
   toTextBuilder (Typename a b _ d) =
     bool "" "SETOF " a <> toTextBuilder b <> foldMap (toTextBuilder . fst) d
   parser = do
-    a <- option False (keyword "setof" *> Parser.space1 $> True)
+    a <- option False (Parsers.keyword "setof" *> Parsers.space1 $> True)
     b <- parser
     Parser.endHead
-    c <- trueIfPresent (Parser.space *> Parser.char '?')
+    c <- Parsers.trueIfPresent (Parsers.space *> Parsers.char '?')
     asum
       [ do
           d <- parser
-          e <- trueIfPresent (Parser.space *> Parser.char '?')
+          e <- Parsers.trueIfPresent (Parsers.space *> Parsers.char '?')
           return (Typename a b c (Just (d, e))),
         return (Typename a b c Nothing)
       ]

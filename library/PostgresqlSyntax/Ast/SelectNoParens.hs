@@ -14,8 +14,8 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -40,7 +40,7 @@ data SelectNoParens
 
 instance IsAst SelectNoParens where
   toTextBuilder (SelectNoParens a b c d e) =
-    optLexemes
+    TextBuilders.optLexemes
       [ fmap toTextBuilder a,
         Just (toTextBuilder b),
         fmap toTextBuilder c,
@@ -52,7 +52,7 @@ instance IsAst SelectNoParens where
       simpleSelectNoParens = sharedSelectNoParens Nothing
       withSelectNoParens = do
         with <- Parser.wrapToHead parser
-        Parser.space1
+        Parsers.space1
         sharedSelectNoParens (Just with)
 
 sharedSelectNoParens :: Maybe WithClause -> Parser SelectNoParens
@@ -68,23 +68,23 @@ unparenthesizedSelectNoParens =
   where
     withSelectNoParens = do
       with <- Parser.wrapToHead parser
-      Parser.space1
+      Parsers.space1
       sharedSelectNoParens (Just with)
 
 selectNoParensAfterClause :: Maybe WithClause -> SelectClause -> Parser SelectNoParens
 selectNoParensAfterClause with clauseBase = do
   select <- SimpleSelect.extendSelectClause clauseBase
-  sort <- optional (Parser.space1 *> parser)
+  sort <- optional (Parsers.space1 *> parser)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
   where
     limitFirst = do
-      limit <- Parser.space1 *> parser
-      forLocking <- optional (Parser.space1 *> parser)
+      limit <- Parsers.space1 *> parser
+      forLocking <- optional (Parsers.space1 *> parser)
       pure (Just limit, forLocking)
     forLockingFirst = do
-      forLocking <- Parser.space1 *> parser
-      limit <- optional (Parser.space1 *> parser)
+      forLocking <- Parsers.space1 *> parser
+      limit <- optional (Parsers.space1 *> parser)
       pure (limit, Just forLocking)
 
 -- |

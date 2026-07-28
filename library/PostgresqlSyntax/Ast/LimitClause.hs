@@ -4,10 +4,9 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import PostgresqlSyntax.Ast.SelectLimitValue
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -38,7 +37,7 @@ instance IsAst LimitClause where
   toTextBuilder = \case
     LimitLimitClause a b -> "LIMIT " <> toTextBuilder a <> foldMap (mappend ", " . toTextBuilder) b
     FetchOnlyLimitClause a b c ->
-      optLexemes
+      TextBuilders.optLexemes
         [ Just "FETCH",
           Just (firstOrNext a),
           fmap toTextBuilder b,
@@ -50,47 +49,47 @@ instance IsAst LimitClause where
       rowOrRows = bool "ROW" "ROWS"
   parser =
     ( do
-        keyword "limit"
+        Parsers.keyword "limit"
         Parser.endHead
-        Parser.space1
+        Parsers.space1
         a <- parser
         b <- optional $ do
-          commaSeparator
+          Parsers.commaSeparator
           parser
         return (LimitLimitClause a b)
     )
       <|> ( do
-              keyword "fetch"
+              Parsers.keyword "fetch"
               Parser.endHead
-              Parser.space1
+              Parsers.space1
               a <- firstOrNext
-              Parser.space1
+              Parsers.space1
               asum
                 [ do
                     b <- rowOrRows
-                    Parser.space1
-                    keyword "only"
+                    Parsers.space1
+                    Parsers.keyword "only"
                     return (FetchOnlyLimitClause a Nothing b),
                   do
                     b <- parser
-                    Parser.space1
+                    Parsers.space1
                     c <- rowOrRows
-                    Parser.space1
-                    keyword "only"
+                    Parsers.space1
+                    Parsers.keyword "only"
                     return (FetchOnlyLimitClause a (Just b) c)
                 ]
           )
     where
       firstOrNext =
         False
-          <$ keyword "first"
+          <$ Parsers.keyword "first"
             <|> True
-          <$ keyword "next"
+          <$ Parsers.keyword "next"
       rowOrRows =
         True
-          <$ keyword "rows"
+          <$ Parsers.keyword "rows"
             <|> False
-          <$ keyword "row"
+          <$ Parsers.keyword "row"
 
 instance Qc.Arbitrary LimitClause where
   shrink = Qc.genericShrink

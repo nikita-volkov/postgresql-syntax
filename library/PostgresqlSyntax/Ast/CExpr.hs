@@ -17,11 +17,10 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -65,7 +64,7 @@ instance IsAst CExpr where
     ColumnrefCExpr a -> toTextBuilder a
     AexprConstCExpr a -> toTextBuilder a
     ParamCExpr a b -> "$" <> TextBuilder.intDec a <> foldMap toTextBuilder b
-    InParensCExpr a b -> renderInParens (toTextBuilder a) <> foldMap toTextBuilder b
+    InParensCExpr a b -> TextBuilders.renderInParens (toTextBuilder a) <> foldMap toTextBuilder b
     CaseCExpr a -> toTextBuilder a
     FuncCExpr a -> toTextBuilder a
     SelectWithParensCExpr a b -> toTextBuilder a <> foldMap toTextBuilder b
@@ -73,7 +72,7 @@ instance IsAst CExpr where
     ArrayCExpr a -> "ARRAY " <> either toTextBuilder toTextBuilder a
     ExplicitRowCExpr a -> toTextBuilder a
     ImplicitRowCExpr a -> toTextBuilder a
-    GroupingCExpr a -> "GROUPING " <> renderInParens (toTextBuilder a)
+    GroupingCExpr a -> "GROUPING " <> TextBuilders.renderInParens (toTextBuilder a)
   parser = customizedParser colId
 
 -- |
@@ -88,14 +87,14 @@ instance IsAst CExpr where
 customizedParser :: Parser Ident -> Parser CExpr
 customizedParser colIdParser =
   asum
-    [ ParamCExpr <$> (Parser.char '$' *> Parser.decimal <* Parser.endHead) <*> optional (Parser.space *> parser),
+    [ ParamCExpr <$> (Parsers.char '$' *> Parsers.decimal <* Parser.endHead) <*> optional (Parsers.space *> parser),
       CaseCExpr <$> parser,
       ExplicitRowCExpr <$> parser,
-      inParensWithClause (keyword "grouping") (GroupingCExpr . ExprList <$> Parser.sep1 commaSeparator parser),
-      keyword "exists" *> Parser.space *> (ExistsCExpr <$> parser),
+      Parsers.inParensWithClause (Parsers.keyword "grouping") (GroupingCExpr . ExprList <$> Parsers.sep1 Parsers.commaSeparator parser),
+      Parsers.keyword "exists" *> Parsers.space *> (ExistsCExpr <$> parser),
       do
-        keyword "array"
-        Parser.space
+        Parsers.keyword "array"
+        Parsers.space
         asum
           [ ArrayCExpr . Right <$> parser,
             ArrayCExpr . Left <$> parser
@@ -103,7 +102,7 @@ customizedParser colIdParser =
       do
         a <- Parser.wrapToHead parser
         Parser.endHead
-        b <- optional (Parser.space *> parser)
+        b <- optional (Parsers.space *> parser)
         return (SelectWithParensCExpr a b),
       parenthesizedExprCExpr,
       AexprConstCExpr <$> Parser.wrapToHead parser,
@@ -114,7 +113,7 @@ customizedParser colIdParser =
     customizedColumnref = do
       a <- Parser.wrapToHead colIdParser
       Parser.endHead
-      b <- optional (Parser.space *> parser)
+      b <- optional (Parsers.space *> parser)
       return (Columnref a b)
 
     -- See 'PostgresqlSyntax.Ast.AExpr'\'s doc on the sibling parser this
@@ -122,24 +121,24 @@ customizedParser colIdParser =
     -- why the single @a_expr@ parse is shared between the two endings.
     parenthesizedExprCExpr :: Parser CExpr
     parenthesizedExprCExpr = do
-      Parser.char '('
-      Parser.space
+      Parsers.char '('
+      Parsers.space
       a <- parser
-      Parser.space
+      Parsers.space
       asum
         [ do
-            Parser.char ','
+            Parsers.char ','
             Parser.endHead
-            Parser.space
-            b <- Parser.sep1 commaSeparator parser
-            Parser.space
-            Parser.char ')'
+            Parsers.space
+            b <- Parsers.sep1 Parsers.commaSeparator parser
+            Parsers.space
+            Parsers.char ')'
             return $ ImplicitRowCExpr $ case NonEmpty.consAndUnsnoc a b of
               (c, d) -> ImplicitRow (ExprList c) d,
           do
-            Parser.char ')'
+            Parsers.char ')'
             Parser.endHead
-            b <- optional (Parser.space *> parser)
+            b <- optional (Parsers.space *> parser)
             return (InParensCExpr a b)
         ]
 

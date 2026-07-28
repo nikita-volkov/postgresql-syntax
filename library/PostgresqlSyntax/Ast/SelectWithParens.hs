@@ -3,8 +3,8 @@ module PostgresqlSyntax.Ast.SelectWithParens where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, unparenthesizedSelectNoParens)
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -23,7 +23,7 @@ data SelectWithParens
 
 instance IsAst SelectWithParens where
   toTextBuilder =
-    renderInParens . \case
+    TextBuilders.renderInParens . \case
       NoParensSelectWithParens a -> toTextBuilder a
       WithParensSelectWithParens a -> toTextBuilder a
 
@@ -43,7 +43,7 @@ instance IsAst SelectWithParens where
   -- parenthesised select, or @NoParensSelectWithParens@ of a
   -- @SelectNoParens@ whose clause is that same inner parenthesised select.
   -- Both render back to the same text. __The first is canonical.__
-  parser = inParens selectWithParensBody
+  parser = Parsers.inParens selectWithParensBody
     where
       selectWithParensBody =
         asum

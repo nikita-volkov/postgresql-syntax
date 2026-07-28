@@ -2,9 +2,8 @@ module PostgresqlSyntax.Ast.JoinMeth where
 
 import PostgresqlSyntax.Ast.JoinQual
 import PostgresqlSyntax.Ast.JoinType
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,22 +35,22 @@ data JoinMeth
 instance IsAst JoinMeth where
   toTextBuilder = \case
     CrossJoinMeth -> "CROSS JOIN"
-    QualJoinMeth a b -> optLexemes [fmap toTextBuilder a, Just "JOIN", Just (toTextBuilder b)]
-    NaturalJoinMeth a -> optLexemes [Just "NATURAL", fmap toTextBuilder a, Just "JOIN"]
+    QualJoinMeth a b -> TextBuilders.optLexemes [fmap toTextBuilder a, Just "JOIN", Just (toTextBuilder b)]
+    NaturalJoinMeth a -> TextBuilders.optLexemes [Just "NATURAL", fmap toTextBuilder a, Just "JOIN"]
   parser =
     asum
-      [ CrossJoinMeth <$ keyphrase "cross join",
+      [ CrossJoinMeth <$ Parsers.keyphrase "cross join",
         do
-          a <- optional (parser <* Parser.space1)
-          keyword "join"
-          Parser.space1
+          a <- optional (parser <* Parsers.space1)
+          Parsers.keyword "join"
+          Parsers.space1
           b <- parser
           return (QualJoinMeth a b),
         do
-          keyword "natural"
-          Parser.space1
-          a <- optional (parser <* Parser.space1)
-          keyword "join"
+          Parsers.keyword "natural"
+          Parsers.space1
+          a <- optional (parser <* Parsers.space1)
+          Parsers.keyword "join"
           return (NaturalJoinMeth a)
       ]
 

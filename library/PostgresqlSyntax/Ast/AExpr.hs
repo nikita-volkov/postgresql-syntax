@@ -20,10 +20,9 @@ import PostgresqlSyntax.Ast.SubqueryOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -139,7 +138,7 @@ instance IsAst AExpr where
     IsnullAExpr a -> renderOperand a <> " ISNULL"
     NotnullAExpr a -> renderOperand a <> " NOTNULL"
     OverlapsAExpr a b -> toTextBuilder a <> " OVERLAPS " <> toTextBuilder b
-    SubqueryAExpr a b c d -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c <> " " <> either toTextBuilder (renderInParens . toTextBuilder) d
+    SubqueryAExpr a b c d -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c <> " " <> either toTextBuilder (TextBuilders.renderInParens . toTextBuilder) d
     UniqueAExpr a -> "UNIQUE " <> toTextBuilder a
     DefaultAExpr -> "DEFAULT"
     where
@@ -164,7 +163,7 @@ instance IsAst AExpr where
       -- produced it in that position.
       renderOperand a
         | isBoundedAExprOperand a = toTextBuilder a
-        | otherwise = renderInParens (toTextBuilder a)
+        | otherwise = TextBuilders.renderInParens (toTextBuilder a)
       -- The @d@ operand of a @LIKE@\/@ILIKE@\/@SIMILAR TO@ production, when
       -- it has a trailing @ESCAPE@ clause of its own (@e@). Since @d@ is
       -- parsed via an unrestricted recursive @a_expr@, rendered bare it
@@ -182,10 +181,10 @@ instance IsAst AExpr where
         -- layer of parens.
         Just _
           | CExprAExpr (CExpr.InParensCExpr _ _) <- d -> toTextBuilder d
-          | otherwise -> renderInParens (toTextBuilder d)
+          | otherwise -> TextBuilders.renderInParens (toTextBuilder d)
       -- Distinct from 'PostgresqlSyntax.Ast.AExprReversableOp'\'s own
       -- @toTextBuilder@ (which bakes in the "positive" @IS@\/@BETWEEN@\/@IN@
-      -- keyword but not the negation) — this one threads the external
+      -- Parsers.keyword but not the negation) — this one threads the external
       -- @Bool@ (@NOT@) in, mirroring the pre-extraction top-level
       -- @aExprReversableOp@ renderer.
       renderAExprReversableOp a = \case
@@ -194,7 +193,7 @@ instance IsAst AExpr where
         FalseAExprReversableOp -> bool "IS " "IS NOT " a <> "FALSE"
         UnknownAExprReversableOp -> bool "IS " "IS NOT " a <> "UNKNOWN"
         DistinctFromAExprReversableOp b -> bool "IS " "IS NOT " a <> "DISTINCT FROM " <> toTextBuilder b
-        OfAExprReversableOp b -> bool "IS " "IS NOT " a <> "OF " <> renderInParens (toTextBuilder b)
+        OfAExprReversableOp b -> bool "IS " "IS NOT " a <> "OF " <> TextBuilders.renderInParens (toTextBuilder b)
         BetweenAExprReversableOp b c d -> bool "" "NOT " a <> bool "BETWEEN " "BETWEEN ASYMMETRIC " b <> toTextBuilder c <> " AND " <> toTextBuilder d
         BetweenSymmetricAExprReversableOp b c -> bool "" "NOT " a <> "BETWEEN SYMMETRIC " <> toTextBuilder b <> " AND " <> toTextBuilder c
         InAExprReversableOp b -> bool "" "NOT " a <> "IN " <> toTextBuilder b
@@ -215,85 +214,85 @@ customizedParser cExpr = suffixRec base suffix
     aExpr = customizedParser cExpr
     base =
       asum
-        [ DefaultAExpr <$ keyword "default",
-          UniqueAExpr <$> (keyword "unique" *> Parser.space1 *> parser),
-          qualOpExpr aExpr PrefixQualOpAExpr,
-          PlusAExpr <$> plusedExpr aExpr,
-          MinusAExpr <$> minusedExpr aExpr,
-          NotAExpr <$> (keyword "not" *> Parser.space1 *> aExpr),
+        [ DefaultAExpr <$ Parsers.keyword "default",
+          UniqueAExpr <$> (Parsers.keyword "unique" *> Parsers.space1 *> parser),
+          Parsers.qualOpExpr aExpr PrefixQualOpAExpr,
+          PlusAExpr <$> Parsers.plusedExpr aExpr,
+          MinusAExpr <$> Parsers.minusedExpr aExpr,
+          NotAExpr <$> (Parsers.keyword "not" *> Parsers.space1 *> aExpr),
           CExprAExpr <$> cExpr
         ]
     suffix a =
       asum
         [ overlapsSuffix a,
           do
-            Parser.space1
+            Parsers.space1
             b <- Parser.wrapToHead parser
-            Parser.space1
+            Parsers.space1
             c <- Parser.wrapToHead parser
-            Parser.space
-            d <- Left <$> Parser.wrapToHead parser <|> Right <$> inParens aExpr
+            Parsers.space
+            d <- Left <$> Parser.wrapToHead parser <|> Right <$> Parsers.inParens aExpr
             return (SubqueryAExpr a b c d),
-          typecastExpr a TypecastAExpr,
-          CollateAExpr a <$> (Parser.space1 *> keyword "collate" *> Parser.space1 *> Parser.endHead *> parser),
-          AtTimeZoneAExpr a <$> (Parser.space1 *> keyphrase "at time zone" *> Parser.space1 *> Parser.endHead *> aExpr),
-          symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (Parser.space *> parser),
-          AndAExpr a <$> (Parser.space1 *> keyword "and" *> Parser.space1 *> Parser.endHead *> aExpr),
-          OrAExpr a <$> (Parser.space1 *> keyword "or" *> Parser.space1 *> Parser.endHead *> aExpr),
+          Parsers.typecastExpr a TypecastAExpr,
+          CollateAExpr a <$> (Parsers.space1 *> Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser),
+          AtTimeZoneAExpr a <$> (Parsers.space1 *> Parsers.keyphrase "at time zone" *> Parsers.space1 *> Parser.endHead *> aExpr),
+          Parsers.symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
+          SuffixQualOpAExpr a <$> (Parsers.space *> parser),
+          AndAExpr a <$> (Parsers.space1 *> Parsers.keyword "and" *> Parsers.space1 *> Parser.endHead *> aExpr),
+          OrAExpr a <$> (Parsers.space1 *> Parsers.keyword "or" *> Parsers.space1 *> Parser.endHead *> aExpr),
           do
-            Parser.space1
-            b <- trueIfPresent (keyword "not" *> Parser.space1)
+            Parsers.space1
+            b <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
             c <- parser
-            Parser.space1
+            Parsers.space1
             Parser.endHead
             d <- aExpr
-            e <- optional (Parser.space1 *> keyword "escape" *> Parser.space1 *> Parser.endHead *> aExpr)
+            e <- optional (Parsers.space1 *> Parsers.keyword "escape" *> Parsers.space1 *> Parser.endHead *> aExpr)
             return (VerbalExprBinOpAExpr a b c d e),
           do
-            Parser.space1
-            keyword "is"
-            Parser.space1
+            Parsers.space1
+            Parsers.keyword "is"
+            Parsers.space1
             Parser.endHead
-            b <- trueIfPresent (keyword "not" *> Parser.space1)
+            b <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
             c <-
               asum
-                [ NullAExprReversableOp <$ keyword "null",
-                  TrueAExprReversableOp <$ keyword "true",
-                  FalseAExprReversableOp <$ keyword "false",
-                  UnknownAExprReversableOp <$ keyword "unknown",
-                  DistinctFromAExprReversableOp <$> (keyword "distinct" *> Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> aExpr),
-                  OfAExprReversableOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
-                  DocumentAExprReversableOp <$ keyword "document"
+                [ NullAExprReversableOp <$ Parsers.keyword "null",
+                  TrueAExprReversableOp <$ Parsers.keyword "true",
+                  FalseAExprReversableOp <$ Parsers.keyword "false",
+                  UnknownAExprReversableOp <$ Parsers.keyword "unknown",
+                  DistinctFromAExprReversableOp <$> (Parsers.keyword "distinct" *> Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> aExpr),
+                  OfAExprReversableOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+                  DocumentAExprReversableOp <$ Parsers.keyword "document"
                 ]
             return (ReversableOpAExpr a b c),
           do
-            Parser.space1
-            b <- trueIfPresent (keyword "not" *> Parser.space1)
-            keyword "between"
-            Parser.space1
+            Parsers.space1
+            b <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
+            Parsers.keyword "between"
+            Parsers.space1
             Parser.endHead
             c <-
               asum
-                [ BetweenSymmetricAExprReversableOp <$ (keyword "symmetric" *> Parser.space1),
-                  BetweenAExprReversableOp True <$ (keyword "asymmetric" *> Parser.space1),
+                [ BetweenSymmetricAExprReversableOp <$ (Parsers.keyword "symmetric" *> Parsers.space1),
+                  BetweenAExprReversableOp True <$ (Parsers.keyword "asymmetric" *> Parsers.space1),
                   pure (BetweenAExprReversableOp False)
                 ]
             d <- parser
-            Parser.space1
-            keyword "and"
-            Parser.space1
+            Parsers.space1
+            Parsers.keyword "and"
+            Parsers.space1
             e <- aExpr
             return (ReversableOpAExpr a b (c d e)),
           do
-            Parser.space1
-            b <- trueIfPresent (keyword "not" *> Parser.space1)
-            keyword "in"
-            Parser.space
+            Parsers.space1
+            b <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
+            Parsers.keyword "in"
+            Parsers.space
             c <- InAExprReversableOp <$> parser
             return (ReversableOpAExpr a b c),
-          IsnullAExpr a <$ (Parser.space1 *> keyword "isnull"),
-          NotnullAExpr a <$ (Parser.space1 *> keyword "notnull")
+          IsnullAExpr a <$ (Parsers.space1 *> Parsers.keyword "isnull"),
+          NotnullAExpr a <$ (Parsers.space1 *> Parsers.keyword "notnull")
         ]
 
 -- |
@@ -305,10 +304,10 @@ customizedParser cExpr = suffixRec base suffix
 overlapsSuffix :: AExpr -> Parser AExpr
 overlapsSuffix a = do
   b <- maybe empty pure (aExprRow a)
-  Parser.space1
-  keyword "overlaps"
+  Parsers.space1
+  Parsers.keyword "overlaps"
   Parser.endHead
-  Parser.space1
+  Parsers.space1
   c <- parser
   return (OverlapsAExpr b c)
   where
@@ -320,9 +319,9 @@ overlapsSuffix a = do
 -- | 'parser', but rejecting the given words when they'd otherwise be
 -- accepted as a trailing bare column-reference identifier. Needed by
 -- "PostgresqlSyntax.Ast.SortBy", which must not let @a_expr@ swallow a
--- keyword (@USING@\/@ASC@\/@DESC@\/@NULLS@) that is meant to terminate it.
+-- Parsers.keyword (@USING@\/@ASC@\/@DESC@\/@NULLS@) that is meant to terminate it.
 filteredParser :: [Text] -> Parser AExpr
-filteredParser excluded = customizedParser (CExpr.customizedParser (filteredColIdLike UnquotedIdent parser excluded))
+filteredParser excluded = customizedParser (CExpr.customizedParser (Parsers.filteredColIdLike UnquotedIdent parser excluded))
 
 -- |
 -- Whether the given 'AExpr' is safe to place in the left\/accumulator
@@ -331,7 +330,7 @@ filteredParser excluded = customizedParser (CExpr.customizedParser (filteredColI
 -- special. A shape is bounded when parsing it can never end in an
 -- unrestricted recursive @a_expr@ call, i.e. control is guaranteed to
 -- return to @suffixRec@'s loop once it's done, __and__ nothing that could
--- follow (a keyword introducing the next suffix, e.g. @AT@ of @AT TIME
+-- follow (a Parsers.keyword introducing the next suffix, e.g. @AT@ of @AT TIME
 -- ZONE@, or an @ESCAPE@ clause external to this value entirely) could be
 -- mistaken for the start of a fresh operand.
 --
@@ -339,7 +338,7 @@ filteredParser excluded = customizedParser (CExpr.customizedParser (filteredColI
 -- has no operand of its own yet, @suffixRec@'s loop tries
 -- @symbolicBinOpExpr@ again on whatever follows — and if that's a bare word
 -- that isn't reserved (like @AT@), it gets swallowed as this "postfix"
--- operator's operand instead of being left for the keyword that was
+-- operator's operand instead of being left for the Parsers.keyword that was
 -- actually meant to follow. E.g. @x +# AT TIME ZONE y@, meant as
 -- @AtTimeZoneAExpr (SuffixQualOpAExpr x (+#)) y@, reparses instead as
 -- @SymbolicBinOpAExpr x (+#) (CExprAExpr (ColumnrefCExpr "AT"))@ followed by

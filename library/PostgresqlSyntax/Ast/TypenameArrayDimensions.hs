@@ -3,9 +3,8 @@ module PostgresqlSyntax.Ast.TypenameArrayDimensions where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ArrayBounds
 import PostgresqlSyntax.Ast.Iconst
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -26,15 +25,15 @@ data TypenameArrayDimensions
 instance IsAst TypenameArrayDimensions where
   toTextBuilder = \case
     BoundsTypenameArrayDimensions a -> toTextBuilder a
-    ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (renderInBrackets . toTextBuilder) a
+    ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (TextBuilders.renderInBrackets . toTextBuilder) a
   parser =
     asum
       [ do
-          Parser.space1
-          keyword "array"
+          Parsers.space1
+          Parsers.keyword "array"
           Parser.endHead
-          ExplicitTypenameArrayDimensions <$> optional (Parser.space *> inBrackets parser),
-        BoundsTypenameArrayDimensions <$> (Parser.space *> parser)
+          ExplicitTypenameArrayDimensions <$> optional (Parsers.space *> Parsers.inBrackets parser),
+        BoundsTypenameArrayDimensions <$> (Parsers.space *> parser)
       ]
 
 instance Qc.Arbitrary TypenameArrayDimensions where

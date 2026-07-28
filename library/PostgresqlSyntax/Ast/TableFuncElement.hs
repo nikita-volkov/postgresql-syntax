@@ -4,10 +4,9 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,17 +23,17 @@ data TableFuncElement = TableFuncElement Ident Typename (Maybe AnyName)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TableFuncElement where
-  toTextBuilder (TableFuncElement a b c) = toTextBuilder a <> " " <> toTextBuilder b <> suffixMaybe collateClause c
+  toTextBuilder (TableFuncElement a b c) = toTextBuilder a <> " " <> toTextBuilder b <> TextBuilders.suffixMaybe collateClause c
     where
       collateClause a' = "COLLATE " <> toTextBuilder a'
   parser = do
     a <- Parser.wrapToHead colId
-    Parser.space1
+    Parsers.space1
     b <- parser
-    c <- optional (Parser.space1 *> collateClause)
+    c <- optional (Parsers.space1 *> collateClause)
     return (TableFuncElement a b c)
     where
-      collateClause = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
+      collateClause = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary TableFuncElement where
   shrink = Qc.genericShrink

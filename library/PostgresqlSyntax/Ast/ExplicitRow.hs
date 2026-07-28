@@ -1,9 +1,8 @@
 module PostgresqlSyntax.Ast.ExplicitRow where
 
 import PostgresqlSyntax.Ast.ExprList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -23,15 +22,15 @@ data ExplicitRow
 instance IsAst ExplicitRow where
   toTextBuilder a =
     "ROW "
-      <> renderInParens
+      <> TextBuilders.renderInParens
         ( case a of
             EmptyExplicitRow -> mempty
             ExprListExplicitRow b -> toTextBuilder b
         )
   parser =
-    keyword "row"
-      *> Parser.space
-      *> inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional parser)
+    Parsers.keyword "row"
+      *> Parsers.space
+      *> Parsers.inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional parser)
 
 instance Qc.Arbitrary ExplicitRow where
   shrink = Qc.genericShrink

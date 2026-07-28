@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.RowsfromItem where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.TableFuncElementList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,16 +23,16 @@ data RowsfromItem = RowsfromItem FuncExprWindowless (Maybe TableFuncElementList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RowsfromItem where
-  toTextBuilder (RowsfromItem a b) = toTextBuilder a <> suffixMaybe colDefList b
+  toTextBuilder (RowsfromItem a b) = toTextBuilder a <> TextBuilders.suffixMaybe colDefList b
     where
       colDefList a' = "AS (" <> toTextBuilder a' <> ")"
   parser = do
     a <- parser
     Parser.endHead
-    b <- optional (Parser.space1 *> colDefList)
+    b <- optional (Parsers.space1 *> colDefList)
     return (RowsfromItem a b)
     where
-      colDefList = keyword "as" *> Parser.space *> inParens (Parser.endHead *> parser)
+      colDefList = Parsers.keyword "as" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser)
 
 instance Qc.Arbitrary RowsfromItem where
   shrink = Qc.genericShrink

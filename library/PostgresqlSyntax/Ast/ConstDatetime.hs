@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.ConstDatetime where
 
 import PostgresqlSyntax.Ast.Timezone
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -26,35 +25,35 @@ data ConstDatetime
 instance IsAst ConstDatetime where
   toTextBuilder = \case
     TimestampConstDatetime a b ->
-      optLexemes
+      TextBuilders.optLexemes
         [ Just "TIMESTAMP",
-          fmap (renderInParens . TextBuilder.int64Dec) a,
+          fmap (TextBuilders.renderInParens . TextBuilder.int64Dec) a,
           fmap toTextBuilder b
         ]
     TimeConstDatetime a b ->
-      optLexemes
+      TextBuilders.optLexemes
         [ Just "TIME",
-          fmap (renderInParens . TextBuilder.int64Dec) a,
+          fmap (TextBuilders.renderInParens . TextBuilder.int64Dec) a,
           fmap toTextBuilder b
         ]
   parser =
     asum
       [ do
-          keyword "timestamp"
-          a <- optional (Parser.space1 *> inParens Parser.decimal)
-          b <- optional (Parser.space1 *> parser)
+          Parsers.keyword "timestamp"
+          a <- optional (Parsers.space1 *> Parsers.inParens Parsers.decimal)
+          b <- optional (Parsers.space1 *> parser)
           return (TimestampConstDatetime a b),
         do
-          keyword "time"
-          a <- optional (Parser.space1 *> inParens Parser.decimal)
-          b <- optional (Parser.space1 *> parser)
+          Parsers.keyword "time"
+          a <- optional (Parsers.space1 *> Parsers.inParens Parsers.decimal)
+          b <- optional (Parsers.space1 *> parser)
           return (TimeConstDatetime a b)
       ]
 
 instance Qc.Arbitrary ConstDatetime where
   shrink = Qc.genericShrink
 
-  -- The precision here is parsed via 'Parser.decimal' (unsigned), so it
+  -- The precision here is parsed via 'Parsers.decimal' (unsigned), so it
   -- must never be negative — mirroring
   -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
   arbitrary =

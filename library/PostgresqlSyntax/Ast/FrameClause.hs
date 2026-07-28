@@ -4,8 +4,8 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.FrameExtent
 import PostgresqlSyntax.Ast.WindowExclusionClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -24,15 +24,15 @@ data FrameClause = FrameClause FrameClauseMode FrameExtent (Maybe WindowExclusio
 
 instance IsAst FrameClause where
   toTextBuilder (FrameClause a b c) =
-    optLexemes
+    TextBuilders.optLexemes
       [ Just (toTextBuilder a),
         Just (toTextBuilder b),
         fmap toTextBuilder c
       ]
   parser = do
-    a <- parser <* Parser.space1 <* Parser.endHead
+    a <- parser <* Parsers.space1 <* Parser.endHead
     b <- parser
-    c <- optional (Parser.space1 *> parser)
+    c <- optional (Parsers.space1 *> parser)
     return (FrameClause a b c)
 
 instance Qc.Arbitrary FrameClause where

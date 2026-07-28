@@ -2,10 +2,9 @@ module PostgresqlSyntax.Ast.Numeric where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -53,25 +52,25 @@ instance IsAst Numeric where
     SmallintNumeric -> "SMALLINT"
     BigintNumeric -> "BIGINT"
     RealNumeric -> "REAL"
-    FloatNumeric a -> "FLOAT" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
+    FloatNumeric a -> "FLOAT" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
     DoublePrecisionNumeric -> "DOUBLE PRECISION"
-    DecimalNumeric a -> "DECIMAL" <> suffixMaybe (renderInParens . toTextBuilder) a
-    DecNumeric a -> "DEC" <> suffixMaybe (renderInParens . toTextBuilder) a
-    NumericNumeric a -> "NUMERIC" <> suffixMaybe (renderInParens . toTextBuilder) a
+    DecimalNumeric a -> "DECIMAL" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
+    DecNumeric a -> "DEC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
+    NumericNumeric a -> "NUMERIC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
     BooleanNumeric -> "BOOLEAN"
   parser =
     asum
-      [ IntegerNumeric <$ keyword "integer",
-        IntNumeric <$ keyword "int",
-        SmallintNumeric <$ keyword "smallint",
-        BigintNumeric <$ keyword "bigint",
-        RealNumeric <$ keyword "real",
-        FloatNumeric <$> (keyword "float" *> Parser.endHead *> optional (Parser.space *> inParens Parser.decimal)),
-        DoublePrecisionNumeric <$ keyphrase "double precision",
-        DecimalNumeric <$> (keyword "decimal" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
-        DecNumeric <$> (keyword "dec" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
-        NumericNumeric <$> (keyword "numeric" *> Parser.endHead *> optional (Parser.space *> inParens parser)),
-        BooleanNumeric <$ keyword "boolean"
+      [ IntegerNumeric <$ Parsers.keyword "integer",
+        IntNumeric <$ Parsers.keyword "int",
+        SmallintNumeric <$ Parsers.keyword "smallint",
+        BigintNumeric <$ Parsers.keyword "bigint",
+        RealNumeric <$ Parsers.keyword "real",
+        FloatNumeric <$> (Parsers.keyword "float" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens Parsers.decimal)),
+        DoublePrecisionNumeric <$ Parsers.keyphrase "double precision",
+        DecimalNumeric <$> (Parsers.keyword "decimal" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
+        DecNumeric <$> (Parsers.keyword "dec" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
+        NumericNumeric <$> (Parsers.keyword "numeric" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
+        BooleanNumeric <$ Parsers.keyword "boolean"
       ]
 
 instance Qc.Arbitrary Numeric where
@@ -83,7 +82,7 @@ instance Qc.Arbitrary Numeric where
         pure SmallintNumeric,
         pure BigintNumeric,
         pure RealNumeric,
-        -- The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so,
+        -- The @Iconst@ here is parsed via 'Parsers.decimal' (unsigned), so,
         -- unlike a plain 'Int64', it must never be negative — mirroring
         -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
         FloatNumeric <$> Qc.oneof [pure Nothing, Just <$> nonNegativeInt64],

@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.AscDesc where
 
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -20,7 +20,7 @@ instance IsAst AscDesc where
   toTextBuilder = \case
     AscAscDesc -> "ASC"
     DescAscDesc -> "DESC"
-  parser = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
+  parser = Parsers.keyword "asc" $> AscAscDesc <|> Parsers.keyword "desc" $> DescAscDesc
 
 instance Qc.Arbitrary AscDesc where
   shrink = Qc.genericShrink

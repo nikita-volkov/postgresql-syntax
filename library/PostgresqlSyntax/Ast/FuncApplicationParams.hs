@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.FuncApplicationParams where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -32,14 +31,14 @@ data FuncApplicationParams
 instance IsAst FuncApplicationParams where
   toTextBuilder = \case
     NormalFuncApplicationParams a b c ->
-      optLexemes
-        [ fmap renderAllOrDistinct a,
-          Just (commaNonEmpty toTextBuilder b),
+      TextBuilders.optLexemes
+        [ fmap TextBuilders.renderAllOrDistinct a,
+          Just (TextBuilders.commaNonEmpty toTextBuilder b),
           fmap toTextBuilder c
         ]
     VariadicFuncApplicationParams a b c ->
-      optLexemes
-        [ fmap (flip mappend "," . commaNonEmpty toTextBuilder) a,
+      TextBuilders.optLexemes
+        [ fmap (flip mappend "," . TextBuilders.commaNonEmpty toTextBuilder) a,
           Just "VARIADIC",
           Just (toTextBuilder b),
           fmap toTextBuilder c
@@ -54,38 +53,38 @@ instance IsAst FuncApplicationParams where
       ]
     where
       normalFuncApplicationParams = do
-        optAllOrDistinct <- optional (allOrDistinct <* Parser.space1)
-        argList <- Parser.sep1 commaSeparator parser
+        optAllOrDistinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
+        argList <- Parsers.sep1 Parsers.commaSeparator parser
         Parser.endHead
-        optSortClause <- optional (Parser.space1 *> parser)
+        optSortClause <- optional (Parsers.space1 *> parser)
         return (NormalFuncApplicationParams optAllOrDistinct argList optSortClause)
       singleVariadicFuncApplicationParams = do
-        keyword "variadic"
-        Parser.space1
+        Parsers.keyword "variadic"
+        Parsers.space1
         Parser.endHead
         arg <- parser
-        optSortClause <- optional (Parser.space1 *> parser)
+        optSortClause <- optional (Parsers.space1 *> parser)
         return (VariadicFuncApplicationParams Nothing arg optSortClause)
 
       -- @func_arg_list ',' VARIADIC func_arg_expr@: one or more
       -- comma-separated 'FuncArgExpr's, where the final comma is
-      -- immediately followed by (and the @VARIADIC@ keyword itself consumed
+      -- immediately followed by (and the @VARIADIC@ Parsers.keyword itself consumed
       -- by) the terminating branch — equivalent to the pre-extraction
-      -- @sepEnd1 commaSeparator (keyword "variadic" <* space1) funcArgExpr@.
+      -- @sepEnd1 Parsers.commaSeparator (Parsers.keyword "variadic" <* space1) funcArgExpr@.
       listVariadicFuncApplicationParams = do
         argList <- Parser.wrapToHead argListEndingInVariadic
         Parser.endHead
         arg <- parser
-        optSortClause <- optional (Parser.space1 *> parser)
+        optSortClause <- optional (Parsers.space1 *> parser)
         return (VariadicFuncApplicationParams (Just argList) arg optSortClause)
       argListEndingInVariadic = do
         a <- parser
-        commaSeparator
+        Parsers.commaSeparator
         asum
-          [ pure (a :| []) <* (keyword "variadic" *> Parser.space1),
+          [ pure (a :| []) <* (Parsers.keyword "variadic" *> Parsers.space1),
             (\(b :| bs) -> a :| b : bs) <$> argListEndingInVariadic
           ]
-      starFuncApplicationParams = Parser.space *> Parser.char '*' *> Parser.endHead *> Parser.space $> StarFuncApplicationParams
+      starFuncApplicationParams = Parsers.space *> Parsers.char '*' *> Parser.endHead *> Parsers.space $> StarFuncApplicationParams
 
 instance Qc.Arbitrary FuncApplicationParams where
   shrink = Qc.genericShrink

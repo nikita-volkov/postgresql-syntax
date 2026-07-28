@@ -2,10 +2,9 @@ module PostgresqlSyntax.Ast.NameList where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -31,13 +30,13 @@ newtype NameList = NameList (NonEmpty Ident)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst NameList where
-  toTextBuilder (NameList a) = commaNonEmpty toTextBuilder a
-  parser = NameList <$> Parser.sep1 commaSeparator colIdLikeName
+  toTextBuilder (NameList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = NameList <$> Parsers.sep1 Parsers.commaSeparator colIdLikeName
     where
       colIdLikeName =
         Parser.label "identifier" $
           parser
-            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+            <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary NameList where
   shrink = Qc.genericShrink

@@ -4,9 +4,8 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Attrs
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -31,15 +30,15 @@ data GenericType = GenericType Ident (Maybe Attrs) (Maybe ExprList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst GenericType where
-  toTextBuilder (GenericType a b c) = toTextBuilder a <> foldMap toTextBuilder b <> suffixMaybe (renderInParens . toTextBuilder) c
+  toTextBuilder (GenericType a b c) = toTextBuilder a <> foldMap toTextBuilder b <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) c
   parser = do
     a <- typeFunctionNameLikeName
     Parser.endHead
-    b <- optional (Parser.space *> parser)
-    c <- optional (Parser.space1 *> inParens parser)
+    b <- optional (Parsers.space *> parser)
+    c <- optional (Parsers.space1 *> Parsers.inParens parser)
     return (GenericType a b c)
     where
-      typeFunctionNameLikeName = keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser
+      typeFunctionNameLikeName = Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser
 
 instance Qc.Arbitrary GenericType where
   shrink = Qc.genericShrink

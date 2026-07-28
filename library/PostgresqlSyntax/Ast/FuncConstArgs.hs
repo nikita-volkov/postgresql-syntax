@@ -2,10 +2,9 @@ module PostgresqlSyntax.Ast.FuncConstArgs where
 
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -23,8 +22,8 @@ data FuncConstArgs = FuncConstArgs (NonEmpty FuncArgExpr) (Maybe SortClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncConstArgs where
-  toTextBuilder (FuncConstArgs a b) = commaNonEmpty toTextBuilder a <> suffixMaybe toTextBuilder b
-  parser = FuncConstArgs <$> Parser.sep1 commaSeparator parser <*> optional (Parser.space1 *> parser)
+  toTextBuilder (FuncConstArgs a b) = TextBuilders.commaNonEmpty toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
+  parser = FuncConstArgs <$> Parsers.sep1 Parsers.commaSeparator parser <*> optional (Parsers.space1 *> parser)
 
 instance Qc.Arbitrary FuncConstArgs where
   shrink = Qc.genericShrink

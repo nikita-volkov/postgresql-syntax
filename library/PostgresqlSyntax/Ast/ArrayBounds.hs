@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.ArrayBounds where
 
 import PostgresqlSyntax.Ast.Iconst
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -21,8 +20,8 @@ newtype ArrayBounds = ArrayBounds (NonEmpty (Maybe Iconst))
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ArrayBounds where
-  toTextBuilder (ArrayBounds a) = spaceNonEmpty (renderInBrackets . foldMap toTextBuilder) a
-  parser = ArrayBounds <$> Parser.sep1 Parser.space (inBrackets (optional parser))
+  toTextBuilder (ArrayBounds a) = TextBuilders.spaceNonEmpty (TextBuilders.renderInBrackets . foldMap toTextBuilder) a
+  parser = ArrayBounds <$> Parsers.sep1 Parsers.space (Parsers.inBrackets (optional parser))
 
 instance Qc.Arbitrary ArrayBounds where
   shrink = Qc.genericShrink

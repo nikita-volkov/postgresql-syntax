@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.BExprIsOp where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.TypeList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,13 +35,13 @@ data BExprIsOp
 instance IsAst BExprIsOp where
   toTextBuilder = \case
     DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder b
-    OfBExprIsOp b -> "OF " <> renderInParens (toTextBuilder b)
+    OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder b)
     DocumentBExprIsOp -> "DOCUMENT"
   parser =
     asum
-      [ DistinctFromBExprIsOp <$> (keyphrase "distinct from" *> Parser.space1 *> Parser.endHead *> parser),
-        OfBExprIsOp <$> (keyword "of" *> Parser.space1 *> Parser.endHead *> inParens parser),
-        DocumentBExprIsOp <$ keyword "document"
+      [ DistinctFromBExprIsOp <$> (Parsers.keyphrase "distinct from" *> Parsers.space1 *> Parser.endHead *> parser),
+        OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+        DocumentBExprIsOp <$ Parsers.keyword "document"
       ]
 
 instance Qc.Arbitrary BExprIsOp where

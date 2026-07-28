@@ -1,7 +1,6 @@
 module PostgresqlSyntax.Ast.OptVarying where
 
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -18,7 +17,7 @@ newtype OptVarying = OptVarying Bool
 
 instance IsAst OptVarying where
   toTextBuilder (OptVarying a) = if a then "VARYING" else mempty
-  parser = OptVarying <$> (True <$ Parser.space1 <* keyword "varying" <|> pure False)
+  parser = OptVarying <$> (True <$ Parsers.space1 <* Parsers.keyword "varying" <|> pure False)
 
 instance Qc.Arbitrary OptVarying where
   shrink = Qc.genericShrink

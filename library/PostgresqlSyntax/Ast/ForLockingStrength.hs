@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.ForLockingStrength where
 
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -29,13 +29,13 @@ instance IsAst ForLockingStrength where
     KeyForLockingStrength -> "FOR KEY SHARE"
   parser =
     UpdateForLockingStrength
-      <$ keyphrase "for update"
+      <$ Parsers.keyphrase "for update"
         <|> NoKeyUpdateForLockingStrength
-      <$ keyphrase "for no key update"
+      <$ Parsers.keyphrase "for no key update"
         <|> ShareForLockingStrength
-      <$ keyphrase "for share"
+      <$ Parsers.keyphrase "for share"
         <|> KeyForLockingStrength
-      <$ keyphrase "for key share"
+      <$ Parsers.keyphrase "for key share"
 
 instance Qc.Arbitrary ForLockingStrength where
   shrink = Qc.genericShrink

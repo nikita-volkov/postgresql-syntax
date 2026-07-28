@@ -5,10 +5,9 @@ import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.IndexElemDef
 import PostgresqlSyntax.Ast.NullsOrder
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -30,21 +29,21 @@ data IndexElem = IndexElem IndexElemDef (Maybe AnyName) (Maybe AnyName) (Maybe A
 instance IsAst IndexElem where
   toTextBuilder (IndexElem a b c d e) =
     toTextBuilder a
-      <> suffixMaybe collate b
-      <> suffixMaybe toTextBuilder c
-      <> suffixMaybe toTextBuilder d
-      <> suffixMaybe toTextBuilder e
+      <> TextBuilders.suffixMaybe collate b
+      <> TextBuilders.suffixMaybe toTextBuilder c
+      <> TextBuilders.suffixMaybe toTextBuilder d
+      <> TextBuilders.suffixMaybe toTextBuilder e
     where
       collate = mappend "COLLATE " . toTextBuilder
   parser =
     IndexElem
       <$> (parser <* Parser.endHead)
-      <*> optional (Parser.space1 *> collate)
-      <*> optional (Parser.space1 *> class_)
-      <*> optional (Parser.space1 *> parser)
-      <*> optional (Parser.space1 *> parser)
+      <*> optional (Parsers.space1 *> collate)
+      <*> optional (Parsers.space1 *> class_)
+      <*> optional (Parsers.space1 *> parser)
+      <*> optional (Parsers.space1 *> parser)
     where
-      collate = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
+      collate = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser
 
       -- Duplicated 'PostgresqlSyntax.Ast.AnyName.filteredParser' call,
       -- mirroring the pre-extraction @class_ = filteredAnyName ["asc",

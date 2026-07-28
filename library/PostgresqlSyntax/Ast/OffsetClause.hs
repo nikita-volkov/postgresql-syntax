@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.OffsetClause where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -33,19 +32,19 @@ instance IsAst OffsetClause where
     where
       rowOrRows = bool "ROW" "ROWS"
   parser = do
-    keyword "offset"
+    Parsers.keyword "offset"
     Parser.endHead
-    Parser.space1
+    Parsers.space1
     asum
-      [ FetchFirstOffsetClause <$> Parser.wrapToHead parser <*> (Parser.space1 *> rowOrRows),
+      [ FetchFirstOffsetClause <$> Parser.wrapToHead parser <*> (Parsers.space1 *> rowOrRows),
         ExprOffsetClause <$> parser
       ]
     where
       rowOrRows =
         True
-          <$ keyword "rows"
+          <$ Parsers.keyword "rows"
             <|> False
-          <$ keyword "row"
+          <$ Parsers.keyword "row"
 
 instance Qc.Arbitrary OffsetClause where
   shrink = Qc.genericShrink

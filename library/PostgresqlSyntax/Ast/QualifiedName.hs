@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.QualifiedName where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Indirection
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -30,7 +30,7 @@ instance IsAst QualifiedName where
   parser =
     IndirectedQualifiedName
       <$> Parser.wrapToHead colId
-      <*> (Parser.space *> parser)
+      <*> (Parsers.space *> parser)
         <|> SimpleQualifiedName
       <$> colId
 

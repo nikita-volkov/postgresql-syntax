@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.TrimModifier where
 
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,11 +22,11 @@ instance IsAst TrimModifier where
     TrailingTrimModifier -> "TRAILING"
   parser =
     BothTrimModifier
-      <$ keyword "both"
+      <$ Parsers.keyword "both"
         <|> LeadingTrimModifier
-      <$ keyword "leading"
+      <$ Parsers.keyword "leading"
         <|> TrailingTrimModifier
-      <$ keyword "trailing"
+      <$ Parsers.keyword "trailing"
 
 instance Qc.Arbitrary TrimModifier where
   shrink = Qc.genericShrink

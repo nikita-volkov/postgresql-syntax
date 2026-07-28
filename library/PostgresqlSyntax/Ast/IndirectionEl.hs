@@ -3,9 +3,8 @@ module PostgresqlSyntax.Ast.IndirectionEl where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -41,47 +40,47 @@ instance IsAst IndirectionEl where
   toTextBuilder = \case
     AttrNameIndirectionEl a -> "." <> toTextBuilder a
     AllIndirectionEl -> ".*"
-    ExprIndirectionEl a -> renderInBrackets (toTextBuilder a)
-    SliceIndirectionEl a b -> renderInBrackets (foldMap toTextBuilder a <> ":" <> foldMap toTextBuilder b)
+    ExprIndirectionEl a -> TextBuilders.renderInBrackets (toTextBuilder a)
+    SliceIndirectionEl a b -> TextBuilders.renderInBrackets (foldMap toTextBuilder a <> ":" <> foldMap toTextBuilder b)
   parser =
     asum
       [ do
-          Parser.char '.'
+          Parsers.char '.'
           Parser.endHead
-          Parser.space
-          AllIndirectionEl <$ Parser.char '*' <|> AttrNameIndirectionEl <$> colLabelLikeName,
+          Parsers.space
+          AllIndirectionEl <$ Parsers.char '*' <|> AttrNameIndirectionEl <$> colLabelLikeName,
         do
-          Parser.char '['
+          Parsers.char '['
           Parser.endHead
-          Parser.space
+          Parsers.space
           a <-
             asum
               [ do
-                  Parser.char ':'
+                  Parsers.char ':'
                   Parser.endHead
-                  Parser.space
+                  Parsers.space
                   b <- optional parser
                   return (SliceIndirectionEl Nothing b),
                 do
                   a <- parser
                   asum
                     [ do
-                        Parser.space
-                        Parser.char ':'
-                        Parser.space
+                        Parsers.space
+                        Parsers.char ':'
+                        Parsers.space
                         b <- optional parser
                         return (SliceIndirectionEl (Just a) b),
                       return (ExprIndirectionEl a)
                     ]
               ]
-          Parser.space
-          Parser.char ']'
+          Parsers.space
+          Parsers.char ']'
           return a
       ]
     where
       colLabelLikeName =
         Parser.label "column label" $
-          keywordNameFromSet UnquotedIdent KeywordSet.keyword
+          Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
             <|> parser
 
 instance Qc.Arbitrary IndirectionEl where

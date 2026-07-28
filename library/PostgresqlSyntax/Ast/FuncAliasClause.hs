@@ -4,8 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.TableFuncElementList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,20 +35,20 @@ instance IsAst FuncAliasClause where
   parser =
     asum
       [ do
-          _ <- keyword "as"
+          _ <- Parsers.keyword "as"
           asum
             [ do
-                Parser.space
-                inParens $ do
+                Parsers.space
+                Parsers.inParens $ do
                   Parser.endHead
                   AsFuncAliasClause <$> parser,
               do
-                Parser.space1
+                Parsers.space1
                 a <- colId
                 asum
                   [ do
-                      Parser.space
-                      inParens $ do
+                      Parsers.space
+                      Parsers.inParens $ do
                         Parser.endHead
                         asum
                           [ AsColIdFuncAliasClause a <$> Parser.wrapToHead parser,
@@ -62,8 +61,8 @@ instance IsAst FuncAliasClause where
           a <- colId
           asum
             [ do
-                Parser.space
-                inParens $ do
+                Parsers.space
+                Parsers.inParens $ do
                   Parser.endHead
                   asum
                     [ ColIdFuncAliasClause a <$> Parser.wrapToHead parser,

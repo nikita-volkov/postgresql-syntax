@@ -2,8 +2,8 @@ module PostgresqlSyntax.Ast.ArrayExpr where
 
 import PostgresqlSyntax.Ast.ArrayExprList
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -24,12 +24,12 @@ data ArrayExpr
 
 instance IsAst ArrayExpr where
   toTextBuilder =
-    renderInBrackets . \case
+    TextBuilders.renderInBrackets . \case
       ExprListArrayExpr a -> toTextBuilder a
       ArrayExprListArrayExpr a -> toTextBuilder a
       EmptyArrayExpr -> mempty
   parser =
-    inBrackets $
+    Parsers.inBrackets $
       asum
         [ ArrayExprListArrayExpr <$> parser,
           ExprListArrayExpr <$> parser,

@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.WithClause where
 import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CommonTableExpr
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,13 +23,13 @@ data WithClause = WithClause Bool (NonEmpty CommonTableExpr)
 
 instance IsAst WithClause where
   toTextBuilder (WithClause a b) =
-    "WITH " <> bool "" "RECURSIVE " a <> commaNonEmpty toTextBuilder b
+    "WITH " <> bool "" "RECURSIVE " a <> TextBuilders.commaNonEmpty toTextBuilder b
   parser = Parser.label "with clause" $ do
-    keyword "with"
-    Parser.space1
+    Parsers.keyword "with"
+    Parsers.space1
     Parser.endHead
-    recursive <- option False (True <$ keyword "recursive" <* Parser.space1)
-    cteList <- Parser.sep1 commaSeparator parser
+    recursive <- option False (True <$ Parsers.keyword "recursive" <* Parsers.space1)
+    cteList <- Parsers.sep1 Parsers.commaSeparator parser
     return (WithClause recursive cteList)
 
 instance Qc.Arbitrary WithClause where

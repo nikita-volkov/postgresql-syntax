@@ -1,8 +1,7 @@
 module PostgresqlSyntax.Ast.CallStmt where
 
 import PostgresqlSyntax.Ast.FuncApplication
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -14,8 +13,8 @@ newtype CallStmt
 instance IsAst CallStmt where
   toTextBuilder (CallStmt a) = "CALL " <> toTextBuilder a
   parser = do
-    keyword "call"
-    Parser.space1
+    Parsers.keyword "call"
+    Parsers.space1
     CallStmt <$> parser
 
 instance Qc.Arbitrary CallStmt where

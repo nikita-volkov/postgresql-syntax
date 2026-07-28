@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.InsertTarget where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.QualifiedName
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,7 +23,7 @@ instance IsAst InsertTarget where
   parser = do
     a <- parser
     Parser.endHead
-    b <- optional (Parser.space1 *> keyword "as" *> Parser.space1 *> Parser.endHead *> colId)
+    b <- optional (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colId)
     return (InsertTarget a b)
 
 instance Qc.Arbitrary InsertTarget where

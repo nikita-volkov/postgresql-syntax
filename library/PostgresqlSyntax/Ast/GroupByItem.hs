@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.GroupByItem where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -43,13 +42,13 @@ instance IsAst GroupByItem where
     EmptyGroupingSetGroupByItem -> "()"
     RollupGroupByItem a -> "ROLLUP (" <> toTextBuilder a <> ")"
     CubeGroupByItem a -> "CUBE (" <> toTextBuilder a <> ")"
-    GroupingSetsGroupByItem a -> "GROUPING SETS (" <> commaNonEmpty toTextBuilder a <> ")"
+    GroupingSetsGroupByItem a -> "GROUPING SETS (" <> TextBuilders.commaNonEmpty toTextBuilder a <> ")"
   parser =
     asum
-      [ EmptyGroupingSetGroupByItem <$ (Parser.char '(' *> Parser.space *> Parser.char ')'),
-        RollupGroupByItem . ExprList <$> (keyword "rollup" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
-        CubeGroupByItem . ExprList <$> (keyword "cube" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
-        GroupingSetsGroupByItem <$> (keyphrase "grouping sets" *> Parser.endHead *> Parser.space *> inParens (Parser.sep1 commaSeparator parser)),
+      [ EmptyGroupingSetGroupByItem <$ (Parsers.char '(' *> Parsers.space *> Parsers.char ')'),
+        RollupGroupByItem . ExprList <$> (Parsers.keyword "rollup" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
+        CubeGroupByItem . ExprList <$> (Parsers.keyword "cube" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
+        GroupingSetsGroupByItem <$> (Parsers.keyphrase "grouping sets" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
         ExprGroupByItem <$> parser
       ]
 

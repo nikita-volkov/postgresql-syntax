@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.WhereOrCurrentClause where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -28,15 +27,15 @@ instance IsAst WhereOrCurrentClause where
     ExprWhereOrCurrentClause a -> "WHERE " <> toTextBuilder a
     CursorWhereOrCurrentClause a -> "WHERE CURRENT OF " <> toTextBuilder a
   parser = do
-    keyword "where"
-    Parser.space1
+    Parsers.keyword "where"
+    Parsers.space1
     Parser.endHead
     asum
       [ do
-          keyword "current"
-          Parser.space1
-          keyword "of"
-          Parser.space1
+          Parsers.keyword "current"
+          Parsers.space1
+          Parsers.keyword "of"
+          Parsers.space1
           Parser.endHead
           a <- colId
           return (CursorWhereOrCurrentClause a),

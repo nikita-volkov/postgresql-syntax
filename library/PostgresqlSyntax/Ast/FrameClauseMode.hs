@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.FrameClauseMode where
 
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -24,9 +24,9 @@ instance IsAst FrameClauseMode where
     GroupsFrameClauseMode -> "GROUPS"
   parser =
     asum
-      [ RangeFrameClauseMode <$ keyword "range",
-        RowsFrameClauseMode <$ keyword "rows",
-        GroupsFrameClauseMode <$ keyword "groups"
+      [ RangeFrameClauseMode <$ Parsers.keyword "range",
+        RowsFrameClauseMode <$ Parsers.keyword "rows",
+        GroupsFrameClauseMode <$ Parsers.keyword "groups"
       ]
 
 instance Qc.Arbitrary FrameClauseMode where

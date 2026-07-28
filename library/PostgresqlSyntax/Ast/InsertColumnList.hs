@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.InsertColumnList where
 
 import PostgresqlSyntax.Ast.InsertColumnItem
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -20,8 +19,8 @@ newtype InsertColumnList = InsertColumnList (NonEmpty InsertColumnItem)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertColumnList where
-  toTextBuilder (InsertColumnList a) = commaNonEmpty toTextBuilder a
-  parser = InsertColumnList <$> Parser.sep1 commaSeparator parser
+  toTextBuilder (InsertColumnList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = InsertColumnList <$> Parsers.sep1 Parsers.commaSeparator parser
 
 instance Qc.Arbitrary InsertColumnList where
   shrink = Qc.genericShrink

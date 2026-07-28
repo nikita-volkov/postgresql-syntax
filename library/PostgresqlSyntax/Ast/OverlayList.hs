@@ -2,10 +2,9 @@ module PostgresqlSyntax.Ast.OverlayList where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -33,22 +32,22 @@ instance IsAst OverlayList where
       <> toTextBuilder b
       <> " FROM "
       <> toTextBuilder c
-      <> suffixMaybe (mappend "FOR " . toTextBuilder) d
+      <> TextBuilders.suffixMaybe (mappend "FOR " . toTextBuilder) d
     where
       suffixMaybe f = foldMap (mappend " " . f)
   parser = do
     a <- parser
-    Parser.space1
-    keyword "placing"
-    Parser.space1
+    Parsers.space1
+    Parsers.keyword "placing"
+    Parsers.space1
     Parser.endHead
     b <- parser
-    Parser.space1
-    keyword "from"
-    Parser.space1
+    Parsers.space1
+    Parsers.keyword "from"
+    Parsers.space1
     Parser.endHead
     c <- parser
-    d <- optional (Parser.space1 *> keyword "for" *> Parser.space1 *> Parser.endHead *> parser)
+    d <- optional (Parsers.space1 *> Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser)
     return (OverlayList a b c d)
 
 instance Qc.Arbitrary OverlayList where

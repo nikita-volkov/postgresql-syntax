@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.OnConflictDo where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SetClauseList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -28,25 +27,25 @@ data OnConflictDo
 
 instance IsAst OnConflictDo where
   toTextBuilder = \case
-    UpdateOnConflictDo a b -> "UPDATE SET " <> toTextBuilder a <> suffixMaybe whereClause b
+    UpdateOnConflictDo a b -> "UPDATE SET " <> toTextBuilder a <> TextBuilders.suffixMaybe whereClause b
     NothingOnConflictDo -> "NOTHING"
     where
       whereClause a = "WHERE " <> toTextBuilder a
   parser =
     asum
-      [ NothingOnConflictDo <$ keyword "nothing",
+      [ NothingOnConflictDo <$ Parsers.keyword "nothing",
         do
-          keyword "update"
-          Parser.space1
+          Parsers.keyword "update"
+          Parsers.space1
           Parser.endHead
-          keyword "set"
-          Parser.space1
+          Parsers.keyword "set"
+          Parsers.space1
           a <- parser
-          b <- optional (Parser.space1 *> whereClause)
+          b <- optional (Parsers.space1 *> whereClause)
           return (UpdateOnConflictDo a b)
       ]
     where
-      whereClause = keyword "where" *> Parser.space1 *> Parser.endHead *> parser
+      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary OnConflictDo where
   shrink = Qc.genericShrink

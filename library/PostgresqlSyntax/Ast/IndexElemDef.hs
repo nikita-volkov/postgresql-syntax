@@ -3,8 +3,8 @@ module PostgresqlSyntax.Ast.IndexElemDef where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -26,10 +26,10 @@ instance IsAst IndexElemDef where
   toTextBuilder = \case
     IdIndexElemDef a -> toTextBuilder a
     FuncIndexElemDef a -> toTextBuilder a
-    ExprIndexElemDef a -> renderInParens (toTextBuilder a)
+    ExprIndexElemDef a -> TextBuilders.renderInParens (toTextBuilder a)
   parser =
     ExprIndexElemDef
-      <$> inParens parser
+      <$> Parsers.inParens parser
         <|> FuncIndexElemDef
       <$> parser
         <|> IdIndexElemDef

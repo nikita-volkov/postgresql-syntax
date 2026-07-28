@@ -3,10 +3,9 @@ module PostgresqlSyntax.Ast.Targeting where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.TargetList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
-import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -31,30 +30,30 @@ data Targeting
 instance IsAst Targeting where
   toTextBuilder = \case
     NormalTargeting a -> toTextBuilder a
-    AllTargeting a -> "ALL" <> suffixMaybe toTextBuilder a
-    DistinctTargeting a b -> "DISTINCT" <> suffixMaybe onExpressionsClause a <> " " <> toTextBuilder b
+    AllTargeting a -> "ALL" <> TextBuilders.suffixMaybe toTextBuilder a
+    DistinctTargeting a b -> "DISTINCT" <> TextBuilders.suffixMaybe onExpressionsClause a <> " " <> toTextBuilder b
     where
       onExpressionsClause a = "ON (" <> toTextBuilder a <> ")"
   parser = distinct <|> allWithTargetList <|> allP <|> normal
     where
       normal = NormalTargeting <$> parser
       allWithTargetList = do
-        keyword "all"
-        Parser.space1
+        Parsers.keyword "all"
+        Parsers.space1
         AllTargeting . Just <$> parser
-      allP = keyword "all" $> AllTargeting Nothing
+      allP = Parsers.keyword "all" $> AllTargeting Nothing
       distinct = do
-        keyword "distinct"
-        Parser.space1
+        Parsers.keyword "distinct"
+        Parsers.space1
         Parser.endHead
-        optOn <- optional (onExpressionsClause <* Parser.space1)
+        optOn <- optional (onExpressionsClause <* Parsers.space1)
         targetList <- parser
         return (DistinctTargeting optOn targetList)
       onExpressionsClause = do
-        keyword "on"
-        Parser.space1
+        Parsers.keyword "on"
+        Parsers.space1
         Parser.endHead
-        ExprList <$> inParens (Parser.sep1 commaSeparator parser)
+        ExprList <$> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)
 
 instance Qc.Arbitrary Targeting where
   shrink = Qc.genericShrink

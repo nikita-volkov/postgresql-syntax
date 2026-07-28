@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Fconst where
 
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -16,12 +16,12 @@ newtype Fconst = Fconst Double
 
 instance IsAst Fconst where
   toTextBuilder (Fconst a) = TextBuilder.doubleDec a
-  parser = Fconst <$> Parser.float
+  parser = Fconst <$> Parsers.float
 
 instance Qc.Arbitrary Fconst where
   shrink = Qc.genericShrink
 
-  -- Parsed via 'Parser.float' (unsigned — the sign, when present, is a
+  -- Parsed via 'Parsers.float' (unsigned — the sign, when present, is a
   -- separate unary @AExpr@\/@BExpr@ operator applied outside this type), so
   -- it must never be negative, mirroring
   -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.

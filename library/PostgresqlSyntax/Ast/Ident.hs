@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.Ident where
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -24,9 +24,9 @@ instance IsAst Ident where
   toTextBuilder = \case
     QuotedIdent a -> TextBuilder.char7 '"' <> TextBuilder.text (Text.replace "\"" "\"\"" a) <> TextBuilder.char7 '"'
     UnquotedIdent a -> TextBuilder.text a
-  parser = quotedName <|> keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
+  parser = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
     where
-      quotedName = Parser.filter (const "Empty name") (not . Text.null) (quotedString '"') & fmap QuotedIdent
+      quotedName = Parser.filter (const "Empty name") (not . Text.null) (Parsers.quotedString '"') & fmap QuotedIdent
 
 -- |
 -- ==== References
@@ -41,12 +41,12 @@ instance IsAst Ident where
 -- names, ...) are actually @ColId@, not bare @IDENT@ — this is the
 -- permissive variant that most 'Ident'-typed fields elsewhere in
 -- "PostgresqlSyntax.Ast" should parse with, since 'Ident'\'s own generic
--- 'parser' only accepts the strict @IDENT@ token (no keyword fallback).
+-- 'parser' only accepts the strict @IDENT@ token (no Parsers.keyword fallback).
 colId :: Parser Ident
 colId =
   Parser.label "identifier" $
     parser
-      <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+      <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 -- |
 -- ==== References
@@ -61,7 +61,7 @@ colId =
 colLabel :: Parser Ident
 colLabel =
   Parser.label "column label" $
-    keywordNameFromSet UnquotedIdent KeywordSet.keyword
+    Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
       <|> parser
 
 -- |
@@ -74,7 +74,7 @@ colLabel =
 -- @
 typeFunctionName :: Parser Ident
 typeFunctionName =
-  keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
+  Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
     <|> parser
 
 instance Qc.Arbitrary Ident where

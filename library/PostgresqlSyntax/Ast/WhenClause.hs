@@ -2,8 +2,7 @@ module PostgresqlSyntax.Ast.WhenClause where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -20,13 +19,13 @@ data WhenClause = WhenClause AExpr AExpr
 instance IsAst WhenClause where
   toTextBuilder (WhenClause a b) = "WHEN " <> toTextBuilder a <> " THEN " <> toTextBuilder b
   parser = do
-    keyword "when"
-    Parser.space1
+    Parsers.keyword "when"
+    Parsers.space1
     Parser.endHead
     a <- parser
-    Parser.space1
-    keyword "then"
-    Parser.space1
+    Parsers.space1
+    Parsers.keyword "then"
+    Parsers.space1
     b <- parser
     return (WhenClause a b)
 

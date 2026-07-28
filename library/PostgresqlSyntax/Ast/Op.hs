@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Op where
 
 import qualified Data.Text as Text
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
@@ -21,7 +21,7 @@ newtype Op = Op Text
 instance IsAst Op where
   toTextBuilder (Op a) = TextBuilder.text a
   parser = do
-    a <- Parser.takeWhile1P Nothing Predicate.opChar
+    a <- Parsers.takeWhile1P Nothing Predicate.opChar
     case Validation.op a of
       Nothing -> return (Op a)
       Just err -> fail (Text.unpack err)

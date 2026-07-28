@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Sconst where
 
 import qualified Data.Text as Text
-import PostgresqlSyntax.Helpers.Parsers
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -18,7 +18,7 @@ newtype Sconst = Sconst Text
 
 instance IsAst Sconst where
   toTextBuilder (Sconst a) = "'" <> TextBuilder.text (Text.replace "'" "''" a) <> "'"
-  parser = Sconst <$> (quotedString '\'' <|> dollarQuotedSconst)
+  parser = Sconst <$> (Parsers.quotedString '\'' <|> Parsers.dollarQuotedSconst)
 
 instance Qc.Arbitrary Sconst where
   shrink (Sconst a) = Sconst <$> shrinkText a
