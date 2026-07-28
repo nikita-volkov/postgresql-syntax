@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.Op where
 
 import qualified Data.Text as Text
+import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
@@ -26,6 +27,7 @@ instance IsAst Op where
       Just err -> fail (Text.unpack err)
 
 instance Qc.Arbitrary Op where
+  shrink (Op a) = Op <$> filter (isNothing . Validation.op) (shrinkText a)
   arbitrary = Op <$> genOpText `Qc.suchThat` (isNothing . Validation.op)
     where
       genOpText = do

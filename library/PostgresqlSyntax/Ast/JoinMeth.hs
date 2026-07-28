@@ -55,6 +55,7 @@ instance IsAst JoinMeth where
       ]
 
 instance Qc.Arbitrary JoinMeth where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure CrossJoinMeth,

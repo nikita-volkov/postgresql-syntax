@@ -36,4 +36,5 @@ instance IsAst FrameClause where
     return (FrameClause a b c)
 
 instance Qc.Arbitrary FrameClause where
+  shrink = Qc.genericShrink
   arbitrary = FrameClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> arbitrary

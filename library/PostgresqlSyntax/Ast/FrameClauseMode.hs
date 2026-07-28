@@ -30,4 +30,5 @@ instance IsAst FrameClauseMode where
       ]
 
 instance Qc.Arbitrary FrameClauseMode where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [RangeFrameClauseMode, RowsFrameClauseMode, GroupsFrameClauseMode]

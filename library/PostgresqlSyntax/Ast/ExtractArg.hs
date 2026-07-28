@@ -54,6 +54,7 @@ instance IsAst ExtractArg where
       ]
 
 instance Qc.Arbitrary ExtractArg where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ IdentExtractArg <$> Qc.arbitrary,

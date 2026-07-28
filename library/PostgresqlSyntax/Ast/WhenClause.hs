@@ -31,4 +31,5 @@ instance IsAst WhenClause where
     return (WhenClause a b)
 
 instance Qc.Arbitrary WhenClause where
+  shrink = Qc.genericShrink
   arbitrary = WhenClause <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

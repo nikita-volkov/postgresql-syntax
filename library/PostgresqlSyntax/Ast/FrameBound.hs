@@ -45,6 +45,7 @@ instance IsAst FrameBound where
           PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
 
 instance Qc.Arbitrary FrameBound where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure UnboundedPrecedingFrameBound,

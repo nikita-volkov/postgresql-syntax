@@ -42,4 +42,5 @@ instance IsAst Attrs where
             <|> parser
 
 instance Qc.Arbitrary Attrs where
+  shrink = Qc.genericShrink
   arbitrary = Attrs <$> Qc.nonEmptyUpTo 9 Qc.arbitrary

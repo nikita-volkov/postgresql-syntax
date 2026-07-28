@@ -43,6 +43,7 @@ instance IsAst SubqueryOp where
       ]
 
 instance Qc.Arbitrary SubqueryOp where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ AllSubqueryOp <$> Qc.arbitrary,

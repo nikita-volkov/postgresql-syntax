@@ -27,4 +27,5 @@ instance IsAst InsertColumnItem where
     return (InsertColumnItem a b)
 
 instance Qc.Arbitrary InsertColumnItem where
+  shrink = Qc.genericShrink
   arbitrary = InsertColumnItem <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

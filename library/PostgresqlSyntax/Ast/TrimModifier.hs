@@ -29,4 +29,5 @@ instance IsAst TrimModifier where
       <$ keyword "trailing"
 
 instance Qc.Arbitrary TrimModifier where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

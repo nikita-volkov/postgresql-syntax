@@ -23,4 +23,5 @@ instance IsAst InsertColumnList where
   parser = InsertColumnList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary InsertColumnList where
+  shrink = Qc.genericShrink
   arbitrary = InsertColumnList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

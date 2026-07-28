@@ -34,4 +34,5 @@ instance IsAst VerbalExprBinOp where
       ]
 
 instance Qc.Arbitrary VerbalExprBinOp where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

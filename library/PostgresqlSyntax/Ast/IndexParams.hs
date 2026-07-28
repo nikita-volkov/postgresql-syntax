@@ -23,4 +23,5 @@ instance IsAst IndexParams where
   parser = IndexParams <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary IndexParams where
+  shrink = Qc.genericShrink
   arbitrary = IndexParams <$> Qc.nonEmptyUpTo 4 Qc.arbitrary

@@ -53,6 +53,7 @@ instance IsAst Typename where
       ]
 
 instance Qc.Arbitrary Typename where
+  shrink = Qc.genericShrink
   arbitrary = Typename <$> arbitrary <*> arbitrary <*> pure False <*> ((\a -> (,) a False) <$$> arbitrary)
     where
       (<$$>) = fmap . fmap

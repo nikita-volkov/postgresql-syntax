@@ -23,4 +23,5 @@ instance IsAst ArrayExprList where
   parser = ArrayExprList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary ArrayExprList where
+  shrink = Qc.genericShrink
   arbitrary = ArrayExprList <$> Qc.nonEmptyUpTo 100 (Qc.scale (`div` 2) Qc.arbitrary)

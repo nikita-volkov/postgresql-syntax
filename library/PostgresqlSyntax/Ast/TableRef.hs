@@ -217,6 +217,7 @@ instance IsAst TableRef where
               <$ keyword "join"
 
 instance Qc.Arbitrary TableRef where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

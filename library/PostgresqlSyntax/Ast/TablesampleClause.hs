@@ -42,4 +42,5 @@ instance IsAst TablesampleClause where
         inParens (Parser.endHead *> parser)
 
 instance Qc.Arbitrary TablesampleClause where
+  shrink = Qc.genericShrink
   arbitrary = TablesampleClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

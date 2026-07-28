@@ -35,4 +35,5 @@ instance IsAst FuncApplication where
       *> inParensWithLabel FuncApplication parser (optional parser)
 
 instance Qc.Arbitrary FuncApplication where
+  shrink = Qc.genericShrink
   arbitrary = FuncApplication <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

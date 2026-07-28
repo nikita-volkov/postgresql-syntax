@@ -45,6 +45,7 @@ instance IsAst AnyOperator where
             <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyOperator where
+  shrink = Qc.genericShrink
   arbitrary = Qc.sized $ \n ->
     if n <= 1
       then AllOpAnyOperator <$> Qc.arbitrary

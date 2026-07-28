@@ -91,6 +91,7 @@ instance IsAst LimitClause where
           <$ keyword "row"
 
 instance Qc.Arbitrary LimitClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ LimitLimitClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

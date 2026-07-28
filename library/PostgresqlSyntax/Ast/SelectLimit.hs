@@ -41,6 +41,7 @@ instance IsAst SelectLimit where
       ]
 
 instance Qc.Arbitrary SelectLimit where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ LimitOffsetSelectLimit <$> Qc.arbitrary <*> Qc.arbitrary,

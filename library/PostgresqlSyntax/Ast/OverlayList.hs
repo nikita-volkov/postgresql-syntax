@@ -50,6 +50,7 @@ instance IsAst OverlayList where
     return (OverlayList a b c d)
 
 instance Qc.Arbitrary OverlayList where
+  shrink = Qc.genericShrink
   arbitrary =
     OverlayList
       <$> Qc.scale (`div` 4) Qc.arbitrary

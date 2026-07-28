@@ -29,6 +29,7 @@ instance IsAst AllOp where
       ]
 
 instance Qc.Arbitrary AllOp where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ OpAllOp <$> Qc.arbitrary,

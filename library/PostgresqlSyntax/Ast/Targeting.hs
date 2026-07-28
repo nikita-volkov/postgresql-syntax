@@ -55,6 +55,7 @@ instance IsAst Targeting where
         ExprList <$> inParens (Parser.sep1 commaSeparator parser)
 
 instance Qc.Arbitrary Targeting where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ NormalTargeting <$> Qc.arbitrary,

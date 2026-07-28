@@ -19,4 +19,5 @@ instance IsAst CallStmt where
     CallStmt <$> parser
 
 instance Qc.Arbitrary CallStmt where
+  shrink = Qc.genericShrink
   arbitrary = CallStmt <$> Qc.scale (`div` 2) arbitrary

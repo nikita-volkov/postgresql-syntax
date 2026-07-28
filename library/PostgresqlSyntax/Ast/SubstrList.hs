@@ -36,6 +36,7 @@ instance IsAst SubstrList where
       ]
 
 instance Qc.Arbitrary SubstrList where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

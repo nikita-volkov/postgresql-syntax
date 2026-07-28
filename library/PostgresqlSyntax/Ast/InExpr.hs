@@ -30,6 +30,7 @@ instance IsAst InExpr where
       <|> (SelectInExpr <$> Parser.wrapToHead parser)
 
 instance Qc.Arbitrary InExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

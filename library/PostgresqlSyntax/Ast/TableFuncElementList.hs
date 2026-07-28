@@ -23,4 +23,5 @@ instance IsAst TableFuncElementList where
   parser = TableFuncElementList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary TableFuncElementList where
+  shrink = Qc.genericShrink
   arbitrary = TableFuncElementList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

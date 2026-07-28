@@ -55,6 +55,7 @@ instance IsAst InsertRest where
       ]
 
 instance Qc.Arbitrary InsertRest where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SelectInsertRest <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

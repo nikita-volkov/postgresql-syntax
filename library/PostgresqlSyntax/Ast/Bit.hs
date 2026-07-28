@@ -39,4 +39,5 @@ instance IsAst Bit where
     return (Bit a b)
 
 instance Qc.Arbitrary Bit where
+  shrink = Qc.genericShrink
   arbitrary = Bit <$> arbitrary <*> arbitrary

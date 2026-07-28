@@ -51,6 +51,7 @@ instance IsAst JoinType where
       outerAfterSpace = (Parser.space1 *> keyword "outer") $> True <|> pure False
 
 instance Qc.Arbitrary JoinType where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ FullJoinType <$> Qc.arbitrary,

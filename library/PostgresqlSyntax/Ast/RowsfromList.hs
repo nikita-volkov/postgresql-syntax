@@ -23,4 +23,5 @@ instance IsAst RowsfromList where
   parser = RowsfromList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary RowsfromList where
+  shrink = Qc.genericShrink
   arbitrary = RowsfromList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

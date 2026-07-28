@@ -36,6 +36,7 @@ instance IsAst TrimList where
       ]
 
 instance Qc.Arbitrary TrimList where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprFromExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

@@ -144,6 +144,7 @@ safeBExprOperand gen = do
     else CExprBExpr <$> Qc.arbitrary
 
 instance Qc.Arbitrary BExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

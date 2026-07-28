@@ -29,6 +29,7 @@ instance IsAst FuncExprWindowless where
       ]
 
 instance Qc.Arbitrary FuncExprWindowless where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ApplicationFuncExprWindowless <$> Qc.scale (`div` 2) Qc.arbitrary,

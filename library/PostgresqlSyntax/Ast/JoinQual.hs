@@ -32,6 +32,7 @@ instance IsAst JoinQual where
       ]
 
 instance Qc.Arbitrary JoinQual where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ UsingJoinQual <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,

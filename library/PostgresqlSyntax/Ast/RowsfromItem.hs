@@ -34,4 +34,5 @@ instance IsAst RowsfromItem where
       colDefList = keyword "as" *> Parser.space *> inParens (Parser.endHead *> parser)
 
 instance Qc.Arbitrary RowsfromItem where
+  shrink = Qc.genericShrink
   arbitrary = RowsfromItem <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

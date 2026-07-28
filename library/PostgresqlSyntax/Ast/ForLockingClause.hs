@@ -33,6 +33,7 @@ instance IsAst ForLockingClause where
       items = ItemsForLockingClause <$> Parser.sep1 Parser.space1 parser
 
 instance Qc.Arbitrary ForLockingClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ItemsForLockingClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,

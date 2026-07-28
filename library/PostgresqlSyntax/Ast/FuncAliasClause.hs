@@ -74,6 +74,7 @@ instance IsAst FuncAliasClause where
       ]
 
 instance Qc.Arbitrary FuncAliasClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ AliasFuncAliasClause <$> Qc.arbitrary,

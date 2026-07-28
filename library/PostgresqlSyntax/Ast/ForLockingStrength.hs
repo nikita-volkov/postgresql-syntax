@@ -38,6 +38,7 @@ instance IsAst ForLockingStrength where
       <$ keyphrase "for key share"
 
 instance Qc.Arbitrary ForLockingStrength where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.elements
       [ UpdateForLockingStrength,

@@ -93,6 +93,7 @@ instance IsAst AExprReversableOp where
       ]
 
 instance Qc.Arbitrary AExprReversableOp where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

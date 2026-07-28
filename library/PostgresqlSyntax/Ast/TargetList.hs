@@ -23,4 +23,5 @@ instance IsAst TargetList where
   parser = TargetList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary TargetList where
+  shrink = Qc.genericShrink
   arbitrary = TargetList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

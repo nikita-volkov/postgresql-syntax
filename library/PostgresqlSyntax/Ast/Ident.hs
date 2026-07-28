@@ -77,6 +77,9 @@ typeFunctionName =
     <|> parser
 
 instance Qc.Arbitrary Ident where
+  shrink = \case
+    QuotedIdent a -> QuotedIdent <$> shrinkText a
+    UnquotedIdent a -> UnquotedIdent <$> shrinkText a
   arbitrary =
     Qc.frequency
       [ (95, UnquotedIdent <$> unquotedIdentText),

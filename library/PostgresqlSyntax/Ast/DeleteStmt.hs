@@ -54,6 +54,7 @@ instance IsAst DeleteStmt where
       returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary DeleteStmt where
+  shrink = Qc.genericShrink
   arbitrary = Qc.sized $ \size ->
     if size <= 1
       then do

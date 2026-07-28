@@ -41,4 +41,5 @@ instance IsAst GenericType where
       typeFunctionNameLikeName = keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser
 
 instance Qc.Arbitrary GenericType where
+  shrink = Qc.genericShrink
   arbitrary = GenericType <$> arbitrary <*> arbitrary <*> arbitrary

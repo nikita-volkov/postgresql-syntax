@@ -49,6 +49,7 @@ instance IsAst FuncName where
           <|> parser
 
 instance Qc.Arbitrary FuncName where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

@@ -20,6 +20,7 @@ instance IsAst Sconst where
   parser = Sconst <$> (quotedString '\'' <|> dollarQuotedSconst)
 
 instance Qc.Arbitrary Sconst where
+  shrink (Sconst a) = Sconst <$> shrinkText a
   arbitrary = do
     len <- Qc.sized (\n -> Qc.choose (0, min 1000 (n * 20)))
     Sconst . Text.pack <$> Qc.vectorOf len (Qc.arbitrary `Qc.suchThat` (not . isControl))

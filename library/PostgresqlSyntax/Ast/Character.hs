@@ -45,6 +45,7 @@ instance IsAst Character where
       ]
 
 instance Qc.Arbitrary Character where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ CharacterCharacter <$> Qc.arbitrary,

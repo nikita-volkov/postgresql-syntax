@@ -39,6 +39,7 @@ instance IsAst WindowExclusionClause where
       <$ keyphrase "exclude no others"
 
 instance Qc.Arbitrary WindowExclusionClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.elements
       [ CurrentRowWindowExclusionClause,

@@ -19,6 +19,7 @@ instance IsAst Iconst where
   parser = Iconst <$> Parser.decimal
 
 instance Qc.Arbitrary Iconst where
+  shrink = Qc.genericShrink
   arbitrary = Iconst <$> Qc.sized (\n -> Qc.choose (0, cap n))
     where
       cap n

@@ -72,4 +72,5 @@ instance IsAst MathOp where
       ]
 
 instance Qc.Arbitrary MathOp where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

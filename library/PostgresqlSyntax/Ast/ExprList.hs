@@ -23,4 +23,5 @@ instance IsAst ExprList where
   parser = ExprList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary ExprList where
+  shrink = Qc.genericShrink
   arbitrary = ExprList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

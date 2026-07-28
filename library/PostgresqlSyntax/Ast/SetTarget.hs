@@ -27,4 +27,5 @@ instance IsAst SetTarget where
     return (SetTarget a b)
 
 instance Qc.Arbitrary SetTarget where
+  shrink = Qc.genericShrink
   arbitrary = SetTarget <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

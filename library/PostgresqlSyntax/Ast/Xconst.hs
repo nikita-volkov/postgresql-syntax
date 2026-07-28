@@ -2,6 +2,7 @@ module PostgresqlSyntax.Ast.Xconst where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
@@ -27,6 +28,7 @@ instance IsAst Xconst where
     return (Xconst a)
 
 instance Qc.Arbitrary Xconst where
+  shrink (Xconst a) = Xconst <$> shrinkText a
   arbitrary = do
     len <- Qc.choose (1, 100)
     Xconst . Text.pack <$> Qc.vectorOf len (Qc.elements "0123456789abcdefABCDEF")

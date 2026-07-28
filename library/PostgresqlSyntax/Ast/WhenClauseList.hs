@@ -23,4 +23,5 @@ instance IsAst WhenClauseList where
   parser = WhenClauseList <$> Parser.sep1 Parser.space1 parser
 
 instance Qc.Arbitrary WhenClauseList where
+  shrink = Qc.genericShrink
   arbitrary = WhenClauseList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

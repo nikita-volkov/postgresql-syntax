@@ -28,4 +28,5 @@ instance IsAst SelectBinOp where
       ]
 
 instance Qc.Arbitrary SelectBinOp where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [UnionSelectBinOp, IntersectSelectBinOp, ExceptSelectBinOp]

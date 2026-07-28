@@ -33,4 +33,5 @@ instance IsAst WithClause where
     return (WithClause recursive cteList)
 
 instance Qc.Arbitrary WithClause where
+  shrink = Qc.genericShrink
   arbitrary = WithClause <$> arbitrary <*> Qc.nonEmptyUpTo 6 Qc.arbitrary

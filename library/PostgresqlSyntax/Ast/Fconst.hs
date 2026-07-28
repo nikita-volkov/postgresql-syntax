@@ -19,6 +19,8 @@ instance IsAst Fconst where
   parser = Fconst <$> Parser.float
 
 instance Qc.Arbitrary Fconst where
+  shrink = Qc.genericShrink
+
   -- \| Parsed via 'Parser.float' (unsigned — the sign, when present, is a
   -- separate unary @AExpr@\/@BExpr@ operator applied outside this type), so
   -- it must never be negative, mirroring

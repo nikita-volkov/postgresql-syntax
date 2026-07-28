@@ -44,4 +44,5 @@ instance IsAst ForLockingItem where
       nowaitOrSkip = False <$ keyword "nowait" <|> True <$ keyphrase "skip locked"
 
 instance Qc.Arbitrary ForLockingItem where
+  shrink = Qc.genericShrink
   arbitrary = ForLockingItem <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> arbitrary

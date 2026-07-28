@@ -21,4 +21,5 @@ instance IsAst OptOrdinality where
   parser = OptOrdinality <$> trueIfPresent (keyword "with" *> Parser.space1 *> keyword "ordinality")
 
 instance Qc.Arbitrary OptOrdinality where
+  shrink = Qc.genericShrink
   arbitrary = OptOrdinality <$> arbitrary

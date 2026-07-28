@@ -26,4 +26,5 @@ instance IsAst OverrideKind where
       ]
 
 instance Qc.Arbitrary OverrideKind where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

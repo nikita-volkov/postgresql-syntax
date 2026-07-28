@@ -35,4 +35,5 @@ instance IsAst TableFuncElement where
       collateClause = keyword "collate" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary TableFuncElement where
+  shrink = Qc.genericShrink
   arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Qc.scale (`div` 2) arbitrary

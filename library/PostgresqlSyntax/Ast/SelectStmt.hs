@@ -25,6 +25,8 @@ instance IsAst SelectStmt where
   parser = NoParensSelectStmt <$> parser <|> WithParensSelectStmt <$> parser
 
 instance Qc.Arbitrary SelectStmt where
+  shrink = Qc.genericShrink
+
   -- \| @WithParensSelectStmt@ is unreachable via this type's own @parser@:
   -- @NoParensSelectStmt@'s alternative is tried first, and
   -- 'PostgresqlSyntax.Ast.SelectClause' (reachable from any

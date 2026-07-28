@@ -62,6 +62,7 @@ instance IsAst FuncArgExpr where
           <|> parser
 
 instance Qc.Arbitrary FuncArgExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprFuncArgExpr <$> Qc.scale (`div` 2) Qc.arbitrary,

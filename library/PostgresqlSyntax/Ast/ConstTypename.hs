@@ -39,6 +39,7 @@ instance IsAst ConstTypename where
       ]
 
 instance Qc.Arbitrary ConstTypename where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ NumericConstTypename <$> Qc.arbitrary,

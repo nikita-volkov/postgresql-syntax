@@ -145,6 +145,7 @@ extendSelectClause = extendMany suffix
       return (BinSimpleSelect op headSelectClause distinct rhs)
 
 instance Qc.Arbitrary SimpleSelect where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

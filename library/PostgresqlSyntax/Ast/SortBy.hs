@@ -45,6 +45,7 @@ instance IsAst SortBy where
       ]
 
 instance Qc.Arbitrary SortBy where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ UsingSortBy <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,

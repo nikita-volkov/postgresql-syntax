@@ -84,6 +84,7 @@ instance IsAst IndirectionEl where
             <|> parser
 
 instance Qc.Arbitrary IndirectionEl where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \size ->
       if size <= 1

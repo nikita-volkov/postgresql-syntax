@@ -30,6 +30,7 @@ instance IsAst FrameExtent where
       <$> parser
 
 instance Qc.Arbitrary FrameExtent where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SingularFrameExtent <$> Qc.arbitrary,

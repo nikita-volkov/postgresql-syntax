@@ -47,6 +47,7 @@ instance IsAst OnConflictDo where
       whereClause = keyword "where" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary OnConflictDo where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ UpdateOnConflictDo <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

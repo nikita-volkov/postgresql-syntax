@@ -31,4 +31,5 @@ instance IsAst SortClause where
     SortClause <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary SortClause where
+  shrink = Qc.genericShrink
   arbitrary = SortClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

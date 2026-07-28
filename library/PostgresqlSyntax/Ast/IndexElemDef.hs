@@ -35,6 +35,7 @@ instance IsAst IndexElemDef where
       <$> colId
 
 instance Qc.Arbitrary IndexElemDef where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ IdIndexElemDef <$> Qc.arbitrary,

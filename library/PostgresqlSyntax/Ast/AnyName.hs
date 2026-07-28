@@ -40,6 +40,7 @@ instance IsAst AnyName where
             <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyName where
+  shrink = Qc.genericShrink
   arbitrary = AnyName <$> arbitrary <*> arbitrary
 
 -- | 'parser', but rejecting the given words when they'd otherwise be

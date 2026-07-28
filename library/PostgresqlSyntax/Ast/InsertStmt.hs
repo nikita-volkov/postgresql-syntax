@@ -52,6 +52,7 @@ instance IsAst InsertStmt where
       returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary InsertStmt where
+  shrink = Qc.genericShrink
   arbitrary =
     InsertStmt
       <$> Qc.scale (`div` 4) Qc.arbitrary

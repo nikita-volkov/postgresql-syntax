@@ -25,4 +25,5 @@ instance IsAst NullsOrder where
   parser = keyword "nulls" *> Parser.space1 *> Parser.endHead *> (FirstNullsOrder <$ keyword "first" <|> LastNullsOrder <$ keyword "last")
 
 instance Qc.Arbitrary NullsOrder where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

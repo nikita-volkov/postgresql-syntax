@@ -147,6 +147,7 @@ instance IsAst FuncExprCommonSubexpr where
       labeledIconst lbl = keyword lbl *> Parser.endHead *> optional (Parser.space *> inParens Parser.decimal)
 
 instance Qc.Arbitrary FuncExprCommonSubexpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

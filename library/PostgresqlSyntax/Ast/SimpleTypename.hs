@@ -62,6 +62,7 @@ instance IsAst SimpleTypename where
       ]
 
 instance Qc.Arbitrary SimpleTypename where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ GenericTypeSimpleTypename <$> Qc.arbitrary,

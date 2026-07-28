@@ -49,6 +49,7 @@ instance IsAst CommonTableExpr where
           <$ keyphrase "not materialized"
 
 instance Qc.Arbitrary CommonTableExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     CommonTableExpr
       <$> Qc.arbitrary

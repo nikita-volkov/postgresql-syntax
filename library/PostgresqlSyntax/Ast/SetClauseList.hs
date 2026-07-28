@@ -23,4 +23,5 @@ instance IsAst SetClauseList where
   parser = SetClauseList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary SetClauseList where
+  shrink = Qc.genericShrink
   arbitrary = SetClauseList <$> Qc.nonEmptyUpTo 9 Qc.arbitrary

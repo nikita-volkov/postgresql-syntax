@@ -41,6 +41,7 @@ instance IsAst ConfExpr where
       whereClause = keyword "where" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary ConfExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ WhereConfExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

@@ -71,6 +71,7 @@ instance IsAst OptTempTableName where
       ]
 
 instance Qc.Arbitrary OptTempTableName where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ TemporaryOptTempTableName <$> Qc.arbitrary <*> Qc.arbitrary,

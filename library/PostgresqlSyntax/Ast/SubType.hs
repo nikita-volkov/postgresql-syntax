@@ -29,4 +29,5 @@ instance IsAst SubType where
       ]
 
 instance Qc.Arbitrary SubType where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

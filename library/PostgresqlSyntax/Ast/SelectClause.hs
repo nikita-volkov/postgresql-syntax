@@ -38,6 +38,7 @@ instance IsAst SelectClause where
       ]
 
 instance Qc.Arbitrary SelectClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SimpleSelectSelectClause <$> Qc.downscale Qc.arbitrary,

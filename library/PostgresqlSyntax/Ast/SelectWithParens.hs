@@ -53,6 +53,7 @@ instance IsAst SelectWithParens where
           ]
 
 instance Qc.Arbitrary SelectWithParens where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneofRec
       [ NoParensSelectWithParens <$> Qc.arbitrary

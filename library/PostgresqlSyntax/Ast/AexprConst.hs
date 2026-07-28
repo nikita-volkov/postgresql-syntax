@@ -108,6 +108,7 @@ instance IsAst AexprConst where
       ]
 
 instance Qc.Arbitrary AexprConst where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ IAexprConst <$> Qc.arbitrary,

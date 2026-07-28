@@ -47,6 +47,7 @@ instance IsAst RelationExpr where
         ]
 
 instance Qc.Arbitrary RelationExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SimpleRelationExpr <$> Qc.arbitrary <*> Qc.arbitrary,

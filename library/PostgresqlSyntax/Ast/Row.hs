@@ -26,6 +26,7 @@ instance IsAst Row where
   parser = ExplicitRowRow <$> parser <|> ImplicitRowRow <$> parser
 
 instance Qc.Arbitrary Row where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExplicitRowRow <$> Qc.scale (`div` 2) Qc.arbitrary,

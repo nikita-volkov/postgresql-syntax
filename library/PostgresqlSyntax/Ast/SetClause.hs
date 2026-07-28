@@ -44,6 +44,7 @@ instance IsAst SetClause where
       ]
 
 instance Qc.Arbitrary SetClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ TargetSetClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

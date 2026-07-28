@@ -36,6 +36,7 @@ instance IsAst ArrayExpr where
         ]
 
 instance Qc.Arbitrary ArrayExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

@@ -87,6 +87,7 @@ instance IsAst FuncApplicationParams where
       starFuncApplicationParams = Parser.space *> Parser.char '*' *> Parser.endHead *> Parser.space $> StarFuncApplicationParams
 
 instance Qc.Arbitrary FuncApplicationParams where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary,

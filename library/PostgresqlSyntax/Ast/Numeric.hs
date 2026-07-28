@@ -74,6 +74,7 @@ instance IsAst Numeric where
       ]
 
 instance Qc.Arbitrary Numeric where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure IntNumeric,

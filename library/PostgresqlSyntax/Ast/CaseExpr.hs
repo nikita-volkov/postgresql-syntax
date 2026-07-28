@@ -49,4 +49,5 @@ instance IsAst CaseExpr where
         return a
 
 instance Qc.Arbitrary CaseExpr where
+  shrink = Qc.genericShrink
   arbitrary = CaseExpr <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

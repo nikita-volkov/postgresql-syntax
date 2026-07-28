@@ -27,6 +27,7 @@ instance IsAst IntervalSecond where
     return (IntervalSecond a)
 
 instance Qc.Arbitrary IntervalSecond where
+  shrink = Qc.genericShrink
   arbitrary = IntervalSecond <$> Qc.oneof [pure Nothing, Just <$> nonNegative]
     where
       nonNegative = Qc.sized (\n -> Qc.choose (0, cap n))

@@ -47,4 +47,5 @@ instance IsAst AliasClause where
             <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AliasClause where
+  shrink = Qc.genericShrink
   arbitrary = AliasClause <$> arbitrary <*> arbitrary <*> arbitrary

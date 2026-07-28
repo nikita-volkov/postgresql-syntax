@@ -25,6 +25,7 @@ import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
+import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified TextBuilder
@@ -271,3 +272,21 @@ filteredColIdLike wrap identParser excluded =
   label "identifier" $
     identParser
       <|> keywordNameFromSet wrap (foldr HashSet.delete (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword) excluded)
+
+-- * Generator infrastructure
+
+-- |
+-- Shrinks a 'Text' value by shrinking it as a 'String' (dropping\/simplifying
+-- characters). Used by the handful of node types with a raw 'Text' field in
+-- their own hand-written @shrink@ (e.g. 'PostgresqlSyntax.Ast.Ident',
+-- 'PostgresqlSyntax.Ast.Sconst') — deliberately /not/ exposed as an
+-- @instance Qc.Arbitrary Text@: QuickCheck ships no such instance (it lives
+-- in the @quickcheck-instances@ package, not a dependency here), and adding
+-- one here would be an orphan instance shipped inside this library,
+-- clashing with @quickcheck-instances@'s own @Arbitrary Text@ for any
+-- downstream consumer that depends on both. Some results may violate a
+-- given node's own text invariants (non-emptiness, a restricted character
+-- set, ...), but an invalid shrink candidate just fails the property under
+-- test and is discarded by QuickCheck's shrink loop, so this is harmless.
+shrinkText :: Text -> [Text]
+shrinkText = fmap Text.pack . Qc.shrink . Text.unpack

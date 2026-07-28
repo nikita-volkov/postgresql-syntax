@@ -44,6 +44,7 @@ instance IsAst PreparableStmt where
       ]
 
 instance Qc.Arbitrary PreparableStmt where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SelectPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,

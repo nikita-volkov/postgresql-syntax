@@ -27,4 +27,5 @@ instance IsAst Columnref where
     return (Columnref a b)
 
 instance Qc.Arbitrary Columnref where
+  shrink = Qc.genericShrink
   arbitrary = Columnref <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

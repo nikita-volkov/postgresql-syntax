@@ -45,6 +45,7 @@ instance IsAst BExprIsOp where
       ]
 
 instance Qc.Arbitrary BExprIsOp where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneofRec
       [ pure DocumentBExprIsOp

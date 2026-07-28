@@ -35,6 +35,7 @@ instance IsAst QualifiedName where
       <$> colId
 
 instance Qc.Arbitrary QualifiedName where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ SimpleQualifiedName <$> Qc.arbitrary,

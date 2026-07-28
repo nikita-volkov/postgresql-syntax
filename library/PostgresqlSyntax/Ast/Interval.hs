@@ -76,6 +76,7 @@ instance IsAst Interval where
       ]
 
 instance Qc.Arbitrary Interval where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure YearInterval,

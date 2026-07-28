@@ -26,4 +26,5 @@ instance IsAst Timezone where
         ]
 
 instance Qc.Arbitrary Timezone where
+  shrink = Qc.genericShrink
   arbitrary = Timezone <$> arbitrary

@@ -51,6 +51,7 @@ instance IsAst IndexElem where
       class_ = filteredParser ["asc", "desc", "nulls"]
 
 instance Qc.Arbitrary IndexElem where
+  shrink = Qc.genericShrink
   arbitrary =
     IndexElem
       <$> Qc.scale (`div` 2) Qc.arbitrary

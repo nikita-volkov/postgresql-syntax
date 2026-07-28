@@ -34,4 +34,5 @@ instance IsAst ImplicitRow where
       (c, d) -> ImplicitRow (ExprList c) d
 
 instance Qc.Arbitrary ImplicitRow where
+  shrink = Qc.genericShrink
   arbitrary = ImplicitRow <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

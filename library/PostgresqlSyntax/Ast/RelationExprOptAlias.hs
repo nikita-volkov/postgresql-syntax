@@ -46,4 +46,5 @@ customizedParser reservedKeywords = do
   return (RelationExprOptAlias a b)
 
 instance Qc.Arbitrary RelationExprOptAlias where
+  shrink = Qc.genericShrink
   arbitrary = RelationExprOptAlias <$> arbitrary <*> arbitrary

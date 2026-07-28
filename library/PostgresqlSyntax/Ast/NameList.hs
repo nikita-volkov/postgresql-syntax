@@ -39,4 +39,5 @@ instance IsAst NameList where
             <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary NameList where
+  shrink = Qc.genericShrink
   arbitrary = NameList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

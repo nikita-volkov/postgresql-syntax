@@ -69,6 +69,7 @@ instance IsAst WindowSpecification where
       partitionByClause = keyphrase "partition by" *> Parser.space1 *> Parser.endHead *> (ExprList <$> Parser.sep1 commaSeparator parser)
 
 instance Qc.Arbitrary WindowSpecification where
+  shrink = Qc.genericShrink
   arbitrary =
     WindowSpecification
       <$> Qc.arbitrary

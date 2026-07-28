@@ -44,6 +44,7 @@ instance IsAst WhereOrCurrentClause where
       ]
 
 instance Qc.Arbitrary WhereOrCurrentClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprWhereOrCurrentClause <$> Qc.scale (`div` 2) Qc.arbitrary,

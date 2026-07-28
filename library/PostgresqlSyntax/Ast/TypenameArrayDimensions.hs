@@ -37,6 +37,7 @@ instance IsAst TypenameArrayDimensions where
       ]
 
 instance Qc.Arbitrary TypenameArrayDimensions where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ BoundsTypenameArrayDimensions <$> Qc.arbitrary,

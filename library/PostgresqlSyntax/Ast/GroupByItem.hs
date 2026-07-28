@@ -53,6 +53,7 @@ instance IsAst GroupByItem where
       ]
 
 instance Qc.Arbitrary GroupByItem where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

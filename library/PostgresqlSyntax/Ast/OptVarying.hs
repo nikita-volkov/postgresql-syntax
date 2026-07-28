@@ -21,4 +21,5 @@ instance IsAst OptVarying where
   parser = OptVarying <$> (True <$ Parser.space1 <* keyword "varying" <|> pure False)
 
 instance Qc.Arbitrary OptVarying where
+  shrink = Qc.genericShrink
   arbitrary = OptVarying <$> arbitrary

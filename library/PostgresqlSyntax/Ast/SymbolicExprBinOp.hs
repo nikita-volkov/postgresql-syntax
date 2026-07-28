@@ -22,6 +22,7 @@ instance IsAst SymbolicExprBinOp where
       <$> parser
 
 instance Qc.Arbitrary SymbolicExprBinOp where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ MathSymbolicExprBinOp <$> Qc.arbitrary,

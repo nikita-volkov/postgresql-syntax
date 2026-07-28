@@ -376,6 +376,7 @@ safeAExprOperand gen = do
       else CExprAExpr (CExpr.InParensCExpr a Nothing)
 
 instance Qc.Arbitrary AExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

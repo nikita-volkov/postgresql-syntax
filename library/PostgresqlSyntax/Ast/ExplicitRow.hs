@@ -33,6 +33,7 @@ instance IsAst ExplicitRow where
       *> inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional parser)
 
 instance Qc.Arbitrary ExplicitRow where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure EmptyExplicitRow,

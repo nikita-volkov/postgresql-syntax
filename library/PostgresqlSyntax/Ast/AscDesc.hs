@@ -23,4 +23,5 @@ instance IsAst AscDesc where
   parser = keyword "asc" $> AscAscDesc <|> keyword "desc" $> DescAscDesc
 
 instance Qc.Arbitrary AscDesc where
+  shrink = Qc.genericShrink
   arbitrary = Qc.elements [minBound .. maxBound]

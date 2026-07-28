@@ -53,6 +53,7 @@ instance IsAst SubstrListFromFor where
       substrFor = keyword "for" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary SubstrListFromFor where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ FromForSubstrListFromFor <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,

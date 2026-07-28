@@ -63,6 +63,7 @@ instance IsAst UpdateStmt where
       returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary UpdateStmt where
+  shrink = Qc.genericShrink
   arbitrary =
     UpdateStmt
       <$> Qc.scale (`div` 6) Qc.arbitrary

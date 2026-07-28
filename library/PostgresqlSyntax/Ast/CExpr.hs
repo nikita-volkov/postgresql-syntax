@@ -143,6 +143,7 @@ customizedParser colIdParser =
         ]
 
 instance Qc.Arbitrary CExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1

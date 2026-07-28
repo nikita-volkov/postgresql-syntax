@@ -65,6 +65,7 @@ instance IsAst TargetEl where
             <|> parser
 
 instance Qc.Arbitrary TargetEl where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ pure AsteriskTargetEl,

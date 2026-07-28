@@ -48,6 +48,7 @@ instance IsAst OffsetClause where
           <$ keyword "row"
 
 instance Qc.Arbitrary OffsetClause where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary,

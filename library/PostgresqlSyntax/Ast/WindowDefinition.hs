@@ -23,4 +23,5 @@ instance IsAst WindowDefinition where
   parser = WindowDefinition <$> (colId <* Parser.space1 <* keyword "as" <* Parser.space1 <* Parser.endHead) <*> parser
 
 instance Qc.Arbitrary WindowDefinition where
+  shrink = Qc.genericShrink
   arbitrary = WindowDefinition <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

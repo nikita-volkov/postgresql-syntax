@@ -22,4 +22,5 @@ instance IsAst PositionList where
   parser = PositionList <$> parser <*> (Parser.space1 *> keyword "in" *> Parser.space1 *> parser)
 
 instance Qc.Arbitrary PositionList where
+  shrink = Qc.genericShrink
   arbitrary = PositionList <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

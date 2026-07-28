@@ -24,4 +24,5 @@ instance IsAst ArrayBounds where
   parser = ArrayBounds <$> Parser.sep1 Parser.space (inBrackets (optional parser))
 
 instance Qc.Arbitrary ArrayBounds where
+  shrink = Qc.genericShrink
   arbitrary = ArrayBounds <$> Qc.nonEmptyUpTo 3 (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])

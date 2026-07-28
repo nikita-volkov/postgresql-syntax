@@ -23,4 +23,5 @@ instance IsAst ExtractList where
   parser = ExtractList <$> parser <*> (Parser.space1 *> keyword "from" *> Parser.space1 *> parser)
 
 instance Qc.Arbitrary ExtractList where
+  shrink = Qc.genericShrink
   arbitrary = ExtractList <$> arbitrary <*> Qc.scale (`div` 2) arbitrary

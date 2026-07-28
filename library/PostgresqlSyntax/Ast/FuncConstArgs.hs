@@ -26,4 +26,5 @@ instance IsAst FuncConstArgs where
   parser = FuncConstArgs <$> Parser.sep1 commaSeparator parser <*> optional (Parser.space1 *> parser)
 
 instance Qc.Arbitrary FuncConstArgs where
+  shrink = Qc.genericShrink
   arbitrary = FuncConstArgs <$> Qc.nonEmptyUpTo 6 Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary

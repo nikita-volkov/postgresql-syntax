@@ -65,6 +65,7 @@ instance IsAst FuncExpr where
         inParens (keyword "where" *> Parser.space1 *> parser)
 
 instance Qc.Arbitrary FuncExpr where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ApplicationFuncExpr

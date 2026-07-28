@@ -35,4 +35,5 @@ instance IsAst OnConflict where
     return (OnConflict a b)
 
 instance Qc.Arbitrary OnConflict where
+  shrink = Qc.genericShrink
   arbitrary = OnConflict <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary

@@ -28,6 +28,8 @@ instance IsAst ConstCharacter where
   parser = ConstCharacter <$> (parser <* Parser.endHead) <*> optional (Parser.space *> inParens Parser.decimal)
 
 instance Qc.Arbitrary ConstCharacter where
+  shrink = Qc.genericShrink
+
   -- \| The length here is parsed via 'Parser.decimal' (unsigned), so it must
   -- never be negative — mirroring 'PostgresqlSyntax.Ast.IntervalSecond'\'s
   -- own @nonNegative@.

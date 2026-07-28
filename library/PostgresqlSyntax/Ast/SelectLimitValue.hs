@@ -29,6 +29,7 @@ instance IsAst SelectLimitValue where
       <$> parser
 
 instance Qc.Arbitrary SelectLimitValue where
+  shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
       [ ExprSelectLimitValue <$> Qc.scale (`div` 2) Qc.arbitrary,

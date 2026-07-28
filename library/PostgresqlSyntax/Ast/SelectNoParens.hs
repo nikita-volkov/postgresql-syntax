@@ -103,6 +103,7 @@ afterSelectWithParensClause a = do
     _ -> Right b
 
 instance Qc.Arbitrary SelectNoParens where
+  shrink = Qc.genericShrink
   arbitrary =
     sized $ \size ->
       if size <= 1

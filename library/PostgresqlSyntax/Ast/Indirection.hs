@@ -22,4 +22,5 @@ instance IsAst Indirection where
   parser = Indirection <$> some parser
 
 instance Qc.Arbitrary Indirection where
+  shrink = Qc.genericShrink
   arbitrary = Indirection <$> Qc.nonEmptyUpTo 4 Qc.arbitrary
