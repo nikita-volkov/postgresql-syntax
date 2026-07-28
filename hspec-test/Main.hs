@@ -11,7 +11,7 @@ import Test.QuickCheck (Property, counterexample, (===))
 import Prelude hiding (assert)
 
 main :: IO ()
-main = hspec $ do
+main = hspec $ parallel $ do
   describe "Round-trip parse/render" $ do
     prop "AExpr" (roundTrip @AExpr)
     prop "AExprReversableOp" (roundTrip @AExprReversableOp)

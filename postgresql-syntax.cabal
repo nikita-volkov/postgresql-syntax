@@ -241,7 +241,10 @@ test-suite hspec-test
   type: exitcode-stdio-1.0
   hs-source-dirs: hspec-test
   main-is: Main.hs
-  ghc-options: -threaded
+  ghc-options:
+    -threaded
+    -rtsopts
+    "-with-rtsopts=-N"
   build-depends:
     hspec >=2.10 && <3,
     postgresql-syntax,
