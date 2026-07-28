@@ -90,8 +90,8 @@ instance Qc.Arbitrary FuncApplicationParams where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary,
-        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+      [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.terminatingMaybe Qc.arbitrary,
+        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
         pure StarFuncApplicationParams
       ]
     where

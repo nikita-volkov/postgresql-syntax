@@ -8,6 +8,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -70,8 +71,8 @@ instance Qc.Arbitrary FuncExpr where
     Qc.oneof
       [ ApplicationFuncExpr
           <$> Qc.scale (`div` 4) Qc.arbitrary
-          <*> Qc.scale (`div` 4) Qc.arbitrary
-          <*> Qc.scale (`div` 4) Qc.arbitrary
-          <*> Qc.scale (`div` 4) Qc.arbitrary,
+          <*> Qc.terminatingMaybe Qc.arbitrary
+          <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+          <*> Qc.terminatingMaybe Qc.arbitrary,
         SubexprFuncExpr <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

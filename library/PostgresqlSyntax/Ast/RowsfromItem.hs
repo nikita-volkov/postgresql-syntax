@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElementList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -35,4 +36,4 @@ instance IsAst RowsfromItem where
 
 instance Qc.Arbitrary RowsfromItem where
   shrink = Qc.genericShrink
-  arbitrary = RowsfromItem <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = RowsfromItem <$> Qc.scale (`div` 2) arbitrary <*> Qc.terminatingMaybe arbitrary

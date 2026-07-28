@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Indirection
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -28,4 +29,4 @@ instance IsAst InsertColumnItem where
 
 instance Qc.Arbitrary InsertColumnItem where
   shrink = Qc.genericShrink
-  arbitrary = InsertColumnItem <$> arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = InsertColumnItem <$> arbitrary <*> Qc.terminatingMaybe arbitrary

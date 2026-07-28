@@ -11,6 +11,7 @@ import PostgresqlSyntax.Ast.RelationExpr
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.TablesampleClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, head, many, some, tail, try)
 import qualified Test.QuickCheck as Qc
@@ -224,8 +225,8 @@ instance Qc.Arbitrary TableRef where
         then RelationExprTableRef <$> Qc.arbitrary <*> pure Nothing <*> pure Nothing
         else
           Qc.oneof
-            [ RelationExprTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              FuncTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              SelectTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              JoinTableRef <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+            [ RelationExprTableRef <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+              FuncTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+              SelectTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+              JoinTableRef <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary
             ]

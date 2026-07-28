@@ -32,3 +32,9 @@ nonEmptyUpTo n gen = sized $ \size -> do
   x <- gen
   xs <- vectorOf tailLen gen
   pure (x :| xs)
+
+terminatingMaybe :: Gen a -> Gen (Maybe a)
+terminatingMaybe gen = sized $ \size ->
+  if size <= 1
+    then pure Nothing
+    else Just <$> gen

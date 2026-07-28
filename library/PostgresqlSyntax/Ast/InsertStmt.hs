@@ -8,6 +8,7 @@ import PostgresqlSyntax.Ast.OnConflict
 import PostgresqlSyntax.Ast.TargetList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -55,8 +56,8 @@ instance Qc.Arbitrary InsertStmt where
   shrink = Qc.genericShrink
   arbitrary =
     InsertStmt
-      <$> Qc.scale (`div` 4) Qc.arbitrary
+      <$> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
       <*> Qc.arbitrary
-      <*> Qc.scale (`div` 2) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Qc.terminatingMaybe Qc.arbitrary

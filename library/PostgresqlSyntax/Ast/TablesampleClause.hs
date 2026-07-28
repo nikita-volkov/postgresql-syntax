@@ -6,6 +6,7 @@ import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -43,4 +44,4 @@ instance IsAst TablesampleClause where
 
 instance Qc.Arbitrary TablesampleClause where
   shrink = Qc.genericShrink
-  arbitrary = TablesampleClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = TablesampleClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)

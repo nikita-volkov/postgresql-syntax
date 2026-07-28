@@ -9,6 +9,7 @@ import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -55,15 +56,10 @@ instance IsAst DeleteStmt where
 
 instance Qc.Arbitrary DeleteStmt where
   shrink = Qc.genericShrink
-  arbitrary = Qc.sized $ \size ->
-    if size <= 1
-      then do
-        relationExprOptAlias <- Qc.arbitrary
-        return (DeleteStmt Nothing relationExprOptAlias Nothing Nothing Nothing)
-      else
-        DeleteStmt
-          <$> Qc.resize (div size 2) Qc.arbitrary
-          <*> Qc.arbitrary
-          <*> Qc.arbitrary
-          <*> Qc.arbitrary
-          <*> Qc.arbitrary
+  arbitrary =
+    DeleteStmt
+      <$> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+      <*> Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.arbitrary
+      <*> Qc.arbitrary

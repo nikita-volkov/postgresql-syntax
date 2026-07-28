@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.ForLockingStrength
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualifiedName
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -45,4 +46,4 @@ instance IsAst ForLockingItem where
 
 instance Qc.Arbitrary ForLockingItem where
   shrink = Qc.genericShrink
-  arbitrary = ForLockingItem <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> arbitrary
+  arbitrary = ForLockingItem <$> arbitrary <*> Qc.terminatingMaybe arbitrary <*> arbitrary

@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident (Ident, colId)
 import PostgresqlSyntax.Ast.Indirection
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -28,4 +29,4 @@ instance IsAst Columnref where
 
 instance Qc.Arbitrary Columnref where
   shrink = Qc.genericShrink
-  arbitrary = Columnref <$> arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = Columnref <$> arbitrary <*> Qc.terminatingMaybe arbitrary

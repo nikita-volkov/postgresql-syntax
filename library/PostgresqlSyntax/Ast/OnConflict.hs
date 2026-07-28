@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.ConfExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflictDo
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,4 +37,4 @@ instance IsAst OnConflict where
 
 instance Qc.Arbitrary OnConflict where
   shrink = Qc.genericShrink
-  arbitrary = OnConflict <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = OnConflict <$> Qc.terminatingMaybe arbitrary <*> Qc.scale (`div` 2) arbitrary

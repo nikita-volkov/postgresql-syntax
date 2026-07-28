@@ -22,6 +22,7 @@ import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -401,7 +402,7 @@ instance Qc.Arbitrary AExpr where
                     a <- safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary)
                     b <- Qc.arbitrary
                     c <- Qc.arbitrary
-                    e <- Qc.scale (`div` 2) Qc.arbitrary
+                    e <- Qc.terminatingMaybe Qc.arbitrary
                     -- See @renderVerbalRhs@ in the 'IsAst' instance above:
                     -- whenever there's an escape clause, @d@ must be
                     -- parenthesized up front so the generated value already

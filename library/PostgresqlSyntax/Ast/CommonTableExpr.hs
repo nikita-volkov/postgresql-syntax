@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.PreparableStmt
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -53,6 +54,6 @@ instance Qc.Arbitrary CommonTableExpr where
   arbitrary =
     CommonTableExpr
       <$> Qc.arbitrary
-      <*> Qc.scale (`div` 2) Qc.arbitrary
+      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Qc.terminatingMaybe Qc.arbitrary
       <*> Qc.arbitrary
-      <*> Qc.scale (`div` 2) Qc.arbitrary

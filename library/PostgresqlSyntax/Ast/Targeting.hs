@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TargetList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -60,5 +61,5 @@ instance Qc.Arbitrary Targeting where
     Qc.oneof
       [ NormalTargeting <$> Qc.arbitrary,
         AllTargeting <$> Qc.arbitrary,
-        DistinctTargeting <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
+        DistinctTargeting <$> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
       ]

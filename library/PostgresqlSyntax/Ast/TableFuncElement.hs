@@ -6,6 +6,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,4 +37,4 @@ instance IsAst TableFuncElement where
 
 instance Qc.Arbitrary TableFuncElement where
   shrink = Qc.genericShrink
-  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Qc.terminatingMaybe arbitrary

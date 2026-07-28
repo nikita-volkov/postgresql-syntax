@@ -47,9 +47,9 @@ instance Qc.Arbitrary PreparableStmt where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ SelectPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
-        InsertPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
-        UpdatePreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
-        DeletePreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary,
-        CallPreparableStmt <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ SelectPreparableStmt <$> Qc.arbitrary,
+        InsertPreparableStmt <$> Qc.arbitrary,
+        UpdatePreparableStmt <$> Qc.arbitrary,
+        DeletePreparableStmt <$> Qc.arbitrary,
+        CallPreparableStmt <$> Qc.arbitrary
       ]

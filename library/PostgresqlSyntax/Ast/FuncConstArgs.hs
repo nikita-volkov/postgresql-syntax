@@ -27,4 +27,4 @@ instance IsAst FuncConstArgs where
 
 instance Qc.Arbitrary FuncConstArgs where
   shrink = Qc.genericShrink
-  arbitrary = FuncConstArgs <$> Qc.nonEmptyUpTo 6 Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+  arbitrary = FuncConstArgs <$> Qc.nonEmptyUpTo 6 Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary

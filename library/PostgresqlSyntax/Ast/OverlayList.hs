@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -56,4 +57,4 @@ instance Qc.Arbitrary OverlayList where
       <$> Qc.scale (`div` 4) Qc.arbitrary
       <*> Qc.scale (`div` 4) Qc.arbitrary
       <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)

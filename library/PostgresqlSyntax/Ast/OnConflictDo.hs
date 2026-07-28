@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetClauseList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -50,6 +51,6 @@ instance Qc.Arbitrary OnConflictDo where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UpdateOnConflictDo <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+      [ UpdateOnConflictDo <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
         pure NothingOnConflictDo
       ]

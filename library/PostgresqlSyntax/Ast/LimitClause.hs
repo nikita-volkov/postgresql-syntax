@@ -6,6 +6,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import PostgresqlSyntax.Ast.SelectLimitValue
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -94,6 +95,6 @@ instance Qc.Arbitrary LimitClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ LimitLimitClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        FetchOnlyLimitClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
+      [ LimitLimitClause <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
+        FetchOnlyLimitClause <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
       ]
