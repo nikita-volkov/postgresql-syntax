@@ -3,8 +3,8 @@ module PostgresqlSyntax.Ast.SubqueryOp where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -30,15 +30,15 @@ data SubqueryOp
 instance IsAst SubqueryOp where
   toTextBuilder = \case
     AllSubqueryOp a -> toTextBuilder a
-    AnySubqueryOp a -> "OPERATOR " <> renderInParens (toTextBuilder a)
+    AnySubqueryOp a -> "OPERATOR " <> TextBuilders.renderInParens (toTextBuilder a)
     LikeSubqueryOp a -> bool "" "NOT " a <> "LIKE"
     IlikeSubqueryOp a -> bool "" "NOT " a <> "ILIKE"
   parser =
     asum
-      [ AnySubqueryOp <$> (keyword "operator" *> Parser.space *> Parser.endHead *> inParens parser),
+      [ AnySubqueryOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parser.endHead *> Parsers.inParens parser),
         do
-          a <- trueIfPresent (keyword "not" *> Parser.space1)
-          LikeSubqueryOp a <$ keyword "like" <|> IlikeSubqueryOp a <$ keyword "ilike",
+          a <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
+          LikeSubqueryOp a <$ Parsers.keyword "like" <|> IlikeSubqueryOp a <$ Parsers.keyword "ilike",
         AllSubqueryOp <$> parser
       ]
 

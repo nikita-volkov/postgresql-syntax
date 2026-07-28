@@ -2,9 +2,8 @@ module PostgresqlSyntax.Ast.ExtractList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExtractArg
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -21,7 +20,7 @@ data ExtractList = ExtractList ExtractArg AExpr
 
 instance IsAst ExtractList where
   toTextBuilder (ExtractList a b) = toTextBuilder a <> " FROM " <> toTextBuilder b
-  parser = ExtractList <$> parser <*> (Parser.space1 *> keyword "from" *> Parser.space1 *> parser)
+  parser = ExtractList <$> parser <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> parser)
 
 instance Qc.Arbitrary ExtractList where
   shrink = Qc.genericShrink

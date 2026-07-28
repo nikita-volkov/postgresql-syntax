@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.SubType where
 
-import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -23,9 +23,9 @@ instance IsAst SubType where
     AllSubType -> "ALL"
   parser =
     asum
-      [ AnySubType <$ keyword "any",
-        SomeSubType <$ keyword "some",
-        AllSubType <$ keyword "all"
+      [ AnySubType <$ Parsers.keyword "any",
+        SomeSubType <$ Parsers.keyword "some",
+        AllSubType <$ Parsers.keyword "all"
       ]
 
 instance Qc.Arbitrary SubType where

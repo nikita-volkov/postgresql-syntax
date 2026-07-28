@@ -1,9 +1,8 @@
 module PostgresqlSyntax.Ast.FrameBound where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -35,15 +34,15 @@ instance IsAst FrameBound where
     FollowingFrameBound a -> toTextBuilder a <> " FOLLOWING"
   parser =
     UnboundedPrecedingFrameBound
-      <$ keyphrase "unbounded preceding"
+      <$ Parsers.keyphrase "unbounded preceding"
         <|> UnboundedFollowingFrameBound
-      <$ keyphrase "unbounded following"
+      <$ Parsers.keyphrase "unbounded following"
         <|> CurrentRowFrameBound
-      <$ keyphrase "current row"
+      <$ Parsers.keyphrase "current row"
         <|> do
           a <- parser
-          Parser.space1
-          PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
+          Parsers.space1
+          PrecedingFrameBound a <$ Parsers.keyword "preceding" <|> FollowingFrameBound a <$ Parsers.keyword "following"
 
 instance Qc.Arbitrary FrameBound where
   shrink = Qc.genericShrink

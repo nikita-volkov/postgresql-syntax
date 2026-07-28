@@ -3,11 +3,11 @@ module PostgresqlSyntax.Ast.SortBy where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
 import PostgresqlSyntax.Ast.AscDesc
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
 import qualified Test.QuickCheck as Qc
@@ -26,22 +26,22 @@ data SortBy
 
 instance IsAst SortBy where
   toTextBuilder = \case
-    UsingSortBy a b c -> toTextBuilder a <> " USING " <> toTextBuilder b <> suffixMaybe toTextBuilder c
-    AscDescSortBy a b c -> toTextBuilder a <> suffixMaybe toTextBuilder b <> suffixMaybe toTextBuilder c
+    UsingSortBy a b c -> toTextBuilder a <> " USING " <> toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
+    AscDescSortBy a b c -> toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
   parser = do
     a <- filteredParser ["using", "asc", "desc", "nulls"]
     asum
       [ do
-          Parser.space1
-          keyword "using"
-          Parser.space1
+          Parsers.space1
+          Parsers.keyword "using"
+          Parsers.space1
           Parser.endHead
           b <- parser
-          c <- optional (Parser.space1 *> parser)
+          c <- optional (Parsers.space1 *> parser)
           return (UsingSortBy a b c),
         do
-          b <- optional (Parser.space1 *> parser)
-          c <- optional (Parser.space1 *> parser)
+          b <- optional (Parsers.space1 *> parser)
+          c <- optional (Parsers.space1 *> parser)
           return (AscDescSortBy a b c)
       ]
 

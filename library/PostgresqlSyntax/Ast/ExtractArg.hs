@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.ExtractArg where
 
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Sconst
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -43,12 +43,12 @@ instance IsAst ExtractArg where
     SconstExtractArg a -> toTextBuilder a
   parser =
     asum
-      [ YearExtractArg <$ keyword "year",
-        MonthExtractArg <$ keyword "month",
-        DayExtractArg <$ keyword "day",
-        HourExtractArg <$ keyword "hour",
-        MinuteExtractArg <$ keyword "minute",
-        SecondExtractArg <$ keyword "second",
+      [ YearExtractArg <$ Parsers.keyword "year",
+        MonthExtractArg <$ Parsers.keyword "month",
+        DayExtractArg <$ Parsers.keyword "day",
+        HourExtractArg <$ Parsers.keyword "hour",
+        MinuteExtractArg <$ Parsers.keyword "minute",
+        SecondExtractArg <$ Parsers.keyword "second",
         SconstExtractArg <$> parser,
         IdentExtractArg <$> parser
       ]

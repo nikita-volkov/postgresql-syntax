@@ -2,8 +2,7 @@ module PostgresqlSyntax.Ast.FrameExtent where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FrameBound
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -24,7 +23,7 @@ instance IsAst FrameExtent where
     BetweenFrameExtent a b -> "BETWEEN " <> toTextBuilder a <> " AND " <> toTextBuilder b
   parser =
     BetweenFrameExtent
-      <$> (keyword "between" *> Parser.space1 *> Parser.endHead *> parser <* Parser.space1 <* keyword "and" <* Parser.space1)
+      <$> (Parsers.keyword "between" *> Parsers.space1 *> Parser.endHead *> parser <* Parsers.space1 <* Parsers.keyword "and" <* Parsers.space1)
       <*> parser
         <|> SingularFrameExtent
       <$> parser

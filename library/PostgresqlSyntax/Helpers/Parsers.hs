@@ -1,39 +1,23 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints -Wno-missing-signatures -Wno-dodgy-imports #-}
 
--- |
--- Shared parsing\/rendering helpers used by 2+ AST node modules.
---
--- Everything here was ported verbatim from "PostgresqlSyntax.Parsing" and
--- "PostgresqlSyntax.Rendering" (which still contain their own copies until
--- the whole-package restructuring finishes and deletes them). The handful
--- of helpers that used to reach into a single concrete AST type
--- (@typecastExpr@, @qualOpExpr@, @symbolicBinOpExpr@, @iconstOrFconst@,
--- @keywordNameByPredicate@, @keywordNameFromSet@) have been generalized
--- over 'IsAst' (or, for the keyword helpers, parameterized by the
--- identifier constructor) so that this module has no dependency on any
--- concrete node module and can sit underneath all of them.
-module PostgresqlSyntax.Ast.Internal where
+module PostgresqlSyntax.Helpers.Parsers
+  ( module PostgresqlSyntax.Extras.HeadedMegaparsec,
+    module PostgresqlSyntax.Helpers.Parsers,
+  )
+where
 
 import Control.Applicative.Combinators hiding (some)
 import qualified Data.HashSet as HashSet
 import qualified Data.Text as Text
-import qualified Data.Text.Encoding as Text
 import HeadedMegaparsec hiding (string)
 import PostgresqlSyntax.Extras.HeadedMegaparsec hiding (run)
-import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
-import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified TextBuilder
-
--- * Generic parsing combinators
-
---
--- Ported verbatim from "PostgresqlSyntax.Parsing".
 
 inSpace :: Parser a -> Parser a
 inSpace p = space *> p <* space
@@ -113,43 +97,6 @@ dollarQuotedSconst = do
       terminator
       return $ Text.pack body
   return tail
-
--- * Generic rendering combinators
-
---
--- Ported verbatim from "PostgresqlSyntax.Rendering". "PostgresqlSyntax.Rendering"
--- also has an @inParens@\/@inBrackets@ pair with these exact names but the
--- parsing (@Parser a -> Parser a@) types above, so the rendering
--- (@TextBuilder -> TextBuilder@) versions are re-exported here as
--- @renderInParens@\/@renderInBrackets@ to avoid a name clash within this
--- single module.
-
-commaNonEmpty :: (a -> TextBuilder) -> NonEmpty a -> TextBuilder
-commaNonEmpty = NonEmpty.intersperseFoldMap ", "
-
-spaceNonEmpty :: (a -> TextBuilder) -> NonEmpty a -> TextBuilder
-spaceNonEmpty = NonEmpty.intersperseFoldMap " "
-
-lexemes :: [TextBuilder] -> TextBuilder
-lexemes = mconcat . intersperse " "
-
-optLexemes :: [Maybe TextBuilder] -> TextBuilder
-optLexemes = lexemes . catMaybes
-
-renderInParens :: TextBuilder -> TextBuilder
-renderInParens a = "(" <> a <> ")"
-
-renderInBrackets :: TextBuilder -> TextBuilder
-renderInBrackets a = "[" <> a <> "]"
-
-prefixMaybe :: (a -> TextBuilder) -> Maybe a -> TextBuilder
-prefixMaybe a = foldMap (flip mappend " " . a)
-
-suffixMaybe :: (a -> TextBuilder) -> Maybe a -> TextBuilder
-suffixMaybe a = foldMap (mappend " " . a)
-
-toByteString :: TextBuilder -> ByteString
-toByteString = Text.encodeUtf8 . TextBuilder.toText
 
 -- * Keyword-matching infrastructure
 
@@ -253,11 +200,6 @@ iconstOrFconst = Right <$> parser <|> Left <$> parser
 allOrDistinct :: Parser Bool
 allOrDistinct = keyword "all" $> False <|> keyword "distinct" $> True
 
-renderAllOrDistinct :: Bool -> TextBuilder
-renderAllOrDistinct = \case
-  False -> "ALL"
-  True -> "DISTINCT"
-
 -- |
 -- A ColId-like identifier parser (unreserved keyword ∪ col-name keyword)
 -- restricted to exclude the given reserved words — needed wherever a
@@ -272,21 +214,3 @@ filteredColIdLike wrap identParser excluded =
   label "identifier" $
     identParser
       <|> keywordNameFromSet wrap (foldr HashSet.delete (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword) excluded)
-
--- * Generator infrastructure
-
--- |
--- Shrinks a 'Text' value by shrinking it as a 'String' (dropping\/simplifying
--- characters). Used by the handful of node types with a raw 'Text' field in
--- their own hand-written @shrink@ (e.g. 'PostgresqlSyntax.Ast.Ident',
--- 'PostgresqlSyntax.Ast.Sconst') — deliberately /not/ exposed as an
--- @instance Qc.Arbitrary Text@: QuickCheck ships no such instance (it lives
--- in the @quickcheck-instances@ package, not a dependency here), and adding
--- one here would be an orphan instance shipped inside this library,
--- clashing with @quickcheck-instances@'s own @Arbitrary Text@ for any
--- downstream consumer that depends on both. Some results may violate a
--- given node's own text invariants (non-emptiness, a restricted character
--- set, ...), but an invalid shrink candidate just fails the property under
--- test and is discarded by QuickCheck's shrink loop, so this is harmless.
-shrinkText :: Text -> [Text]
-shrinkText = fmap Text.pack . Qc.shrink . Text.unpack

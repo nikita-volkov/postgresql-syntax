@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.AnyName where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Attrs
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -32,12 +31,12 @@ data AnyName = AnyName Ident (Maybe Attrs)
 
 instance IsAst AnyName where
   toTextBuilder (AnyName a b) = toTextBuilder a <> foldMap toTextBuilder b
-  parser = AnyName <$> (Parser.wrapToHead colIdLikeName <* Parser.endHead) <*> optional (Parser.space *> parser)
+  parser = AnyName <$> (Parser.wrapToHead colIdLikeName <* Parser.endHead) <*> optional (Parsers.space *> parser)
     where
       colIdLikeName =
         Parser.label "identifier" $
           parser
-            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+            <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyName where
   shrink = Qc.genericShrink
@@ -48,4 +47,4 @@ instance Qc.Arbitrary AnyName where
 -- "PostgresqlSyntax.Ast.IndexElem"'s @opt_class@ position, mirroring the
 -- pre-extraction @filteredAnyName@.
 filteredParser :: [Text] -> Parser AnyName
-filteredParser excluded = AnyName <$> (Parser.wrapToHead (filteredColIdLike UnquotedIdent parser excluded) <* Parser.endHead) <*> optional (Parser.space *> parser)
+filteredParser excluded = AnyName <$> (Parser.wrapToHead (Parsers.filteredColIdLike UnquotedIdent parser excluded) <* Parser.endHead) <*> optional (Parsers.space *> parser)

@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.WindowExclusionClause where
 
-import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -30,13 +30,13 @@ instance IsAst WindowExclusionClause where
     NoOthersWindowExclusionClause -> "EXCLUDE NO OTHERS"
   parser =
     CurrentRowWindowExclusionClause
-      <$ keyphrase "exclude current row"
+      <$ Parsers.keyphrase "exclude current row"
         <|> GroupWindowExclusionClause
-      <$ keyphrase "exclude group"
+      <$ Parsers.keyphrase "exclude group"
         <|> TiesWindowExclusionClause
-      <$ keyphrase "exclude ties"
+      <$ Parsers.keyphrase "exclude ties"
         <|> NoOthersWindowExclusionClause
-      <$ keyphrase "exclude no others"
+      <$ Parsers.keyphrase "exclude no others"
 
 instance Qc.Arbitrary WindowExclusionClause where
   shrink = Qc.genericShrink

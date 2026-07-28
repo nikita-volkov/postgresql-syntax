@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Character where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptVarying
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -36,12 +36,12 @@ instance IsAst Character where
     NcharCharacter a -> "NCHAR" <> bool "" " VARYING" (coerce a :: Bool)
   parser =
     asum
-      [ CharacterCharacter <$> (keyword "character" *> parser),
-        CharCharacter <$> (keyword "char" *> parser),
-        VarcharCharacter <$ keyword "varchar",
-        NationalCharacterCharacter <$> (keyphrase "national character" *> parser),
-        NationalCharCharacter <$> (keyphrase "national char" *> parser),
-        NcharCharacter <$> (keyword "nchar" *> parser)
+      [ CharacterCharacter <$> (Parsers.keyword "character" *> parser),
+        CharCharacter <$> (Parsers.keyword "char" *> parser),
+        VarcharCharacter <$ Parsers.keyword "varchar",
+        NationalCharacterCharacter <$> (Parsers.keyphrase "national character" *> parser),
+        NationalCharCharacter <$> (Parsers.keyphrase "national char" *> parser),
+        NcharCharacter <$> (Parsers.keyword "nchar" *> parser)
       ]
 
 instance Qc.Arbitrary Character where

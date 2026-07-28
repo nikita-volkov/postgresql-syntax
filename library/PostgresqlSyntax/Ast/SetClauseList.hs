@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SetClauseList where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -19,8 +19,8 @@ newtype SetClauseList = SetClauseList (NonEmpty SetClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetClauseList where
-  toTextBuilder (SetClauseList a) = commaNonEmpty toTextBuilder a
-  parser = SetClauseList <$> Parser.sep1 commaSeparator parser
+  toTextBuilder (SetClauseList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = SetClauseList <$> Parsers.sep1 Parsers.commaSeparator parser
 
 instance Qc.Arbitrary SetClauseList where
   shrink = Qc.genericShrink

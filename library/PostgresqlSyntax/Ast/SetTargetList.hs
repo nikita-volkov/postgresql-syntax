@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SetTargetList where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -19,8 +19,8 @@ newtype SetTargetList = SetTargetList (NonEmpty SetTarget)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetTargetList where
-  toTextBuilder (SetTargetList a) = commaNonEmpty toTextBuilder a
-  parser = SetTargetList <$> Parser.sep1 commaSeparator parser
+  toTextBuilder (SetTargetList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = SetTargetList <$> Parsers.sep1 Parsers.commaSeparator parser
 
 instance Qc.Arbitrary SetTargetList where
   shrink = Qc.genericShrink

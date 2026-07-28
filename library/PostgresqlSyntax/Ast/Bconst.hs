@@ -2,8 +2,8 @@ module PostgresqlSyntax.Ast.Bconst where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -20,10 +20,10 @@ newtype Bconst = Bconst Text
 instance IsAst Bconst where
   toTextBuilder (Bconst a) = "B'" <> TextBuilder.text a <> "'"
   parser = Parser.label "bit literal" $ do
-    Parser.string' "b'"
+    Parsers.string' "b'"
     Parser.endHead
-    a <- Parser.takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')
-    Parser.char '\''
+    a <- Parsers.takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')
+    Parsers.char '\''
     return (Bconst a)
 
 instance Qc.Arbitrary Bconst where

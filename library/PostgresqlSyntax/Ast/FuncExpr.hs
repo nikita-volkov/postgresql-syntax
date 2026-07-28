@@ -4,11 +4,11 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -32,7 +32,7 @@ data FuncExpr
 instance IsAst FuncExpr where
   toTextBuilder = \case
     ApplicationFuncExpr a b c d ->
-      optLexemes
+      TextBuilders.optLexemes
         [ Just (toTextBuilder a),
           fmap withinGroupClause b,
           fmap filterClause c,
@@ -48,22 +48,22 @@ instance IsAst FuncExpr where
         do
           a <- parser
           Parser.endHead
-          b <- optional (Parser.space1 *> withinGroupClause)
-          c <- optional (Parser.space1 *> filterClause)
-          d <- optional (Parser.space1 *> parser)
+          b <- optional (Parsers.space1 *> withinGroupClause)
+          c <- optional (Parsers.space1 *> filterClause)
+          d <- optional (Parsers.space1 *> parser)
           return (ApplicationFuncExpr a b c d)
       ]
     where
       withinGroupClause = do
-        keyphrase "within group"
+        Parsers.keyphrase "within group"
         Parser.endHead
-        Parser.space
-        inParens parser
+        Parsers.space
+        Parsers.inParens parser
       filterClause = do
-        keyword "filter"
+        Parsers.keyword "filter"
         Parser.endHead
-        Parser.space
-        inParens (keyword "where" *> Parser.space1 *> parser)
+        Parsers.space
+        Parsers.inParens (Parsers.keyword "where" *> Parsers.space1 *> parser)
 
 instance Qc.Arbitrary FuncExpr where
   shrink = Qc.genericShrink

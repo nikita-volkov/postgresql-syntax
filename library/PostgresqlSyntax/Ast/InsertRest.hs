@@ -2,11 +2,11 @@ module PostgresqlSyntax.Ast.InsertRest where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertColumnList
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverrideKind
 import PostgresqlSyntax.Ast.SelectStmt
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -29,8 +29,8 @@ data InsertRest
 instance IsAst InsertRest where
   toTextBuilder = \case
     SelectInsertRest a b c ->
-      optLexemes
-        [ fmap (renderInParens . toTextBuilder) a,
+      TextBuilders.optLexemes
+        [ fmap (TextBuilders.renderInParens . toTextBuilder) a,
           fmap insertRestOverriding b,
           Just (toTextBuilder c)
         ]
@@ -39,17 +39,17 @@ instance IsAst InsertRest where
       insertRestOverriding a = "OVERRIDING " <> toTextBuilder a <> " VALUE"
   parser =
     asum
-      [ DefaultValuesInsertRest <$ (keyword "default" *> Parser.space1 *> Parser.endHead *> keyword "values"),
+      [ DefaultValuesInsertRest <$ (Parsers.keyword "default" *> Parsers.space1 *> Parser.endHead *> Parsers.keyword "values"),
         do
-          a <- optional (inParens parser <* Parser.space1)
+          a <- optional (Parsers.inParens parser <* Parsers.space1)
           b <- optional $ do
-            keyword "overriding"
-            Parser.space1
+            Parsers.keyword "overriding"
+            Parsers.space1
             Parser.endHead
             b <- parser
-            Parser.space1
-            keyword "value"
-            Parser.space1
+            Parsers.space1
+            Parsers.keyword "value"
+            Parsers.space1
             return b
           c <- parser
           return (SelectInsertRest a b c)

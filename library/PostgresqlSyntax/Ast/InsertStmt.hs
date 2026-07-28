@@ -3,12 +3,12 @@ module PostgresqlSyntax.Ast.InsertStmt where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertRest
 import PostgresqlSyntax.Ast.InsertTarget
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflict
 import PostgresqlSyntax.Ast.TargetList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -27,30 +27,30 @@ data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe O
 
 instance IsAst InsertStmt where
   toTextBuilder (InsertStmt a b c d e) =
-    prefixMaybe toTextBuilder a
+    TextBuilders.prefixMaybe toTextBuilder a
       <> "INSERT INTO "
       <> toTextBuilder b
       <> " "
       <> toTextBuilder c
-      <> suffixMaybe toTextBuilder d
-      <> suffixMaybe returningClause e
+      <> TextBuilders.suffixMaybe toTextBuilder d
+      <> TextBuilders.suffixMaybe returningClause e
     where
       returningClause = mappend "RETURNING " . toTextBuilder
   parser = do
-    a <- optional (Parser.wrapToHead parser <* Parser.space1)
-    keyword "insert"
-    Parser.space1
+    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+    Parsers.keyword "insert"
+    Parsers.space1
     Parser.endHead
-    keyword "into"
-    Parser.space1
+    Parsers.keyword "into"
+    Parsers.space1
     b <- parser
-    Parser.space1
+    Parsers.space1
     c <- parser
-    d <- optional (Parser.space1 *> parser)
-    e <- optional (Parser.space1 *> returningClause)
+    d <- optional (Parsers.space1 *> parser)
+    e <- optional (Parsers.space1 *> returningClause)
     return (InsertStmt a b c d e)
     where
-      returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary InsertStmt where
   shrink = Qc.genericShrink

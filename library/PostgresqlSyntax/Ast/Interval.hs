@@ -1,9 +1,8 @@
 module PostgresqlSyntax.Ast.Interval where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.IntervalSecond
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -60,18 +59,18 @@ instance IsAst Interval where
     MinuteToSecondInterval a -> "MINUTE TO " <> toTextBuilder a
   parser =
     asum
-      [ YearToMonthInterval <$ keyphrase "year to month",
-        DayToHourInterval <$ keyphrase "day to hour",
-        DayToMinuteInterval <$ keyphrase "day to minute",
-        DayToSecondInterval <$> (keyphrase "day to" *> Parser.space1 *> Parser.endHead *> parser),
-        HourToMinuteInterval <$ keyphrase "hour to minute",
-        HourToSecondInterval <$> (keyphrase "hour to" *> Parser.space1 *> Parser.endHead *> parser),
-        MinuteToSecondInterval <$> (keyphrase "minute to" *> Parser.space1 *> Parser.endHead *> parser),
-        YearInterval <$ keyword "year",
-        MonthInterval <$ keyword "month",
-        DayInterval <$ keyword "day",
-        HourInterval <$ keyword "hour",
-        MinuteInterval <$ keyword "minute",
+      [ YearToMonthInterval <$ Parsers.keyphrase "year to month",
+        DayToHourInterval <$ Parsers.keyphrase "day to hour",
+        DayToMinuteInterval <$ Parsers.keyphrase "day to minute",
+        DayToSecondInterval <$> (Parsers.keyphrase "day to" *> Parsers.space1 *> Parser.endHead *> parser),
+        HourToMinuteInterval <$ Parsers.keyphrase "hour to minute",
+        HourToSecondInterval <$> (Parsers.keyphrase "hour to" *> Parsers.space1 *> Parser.endHead *> parser),
+        MinuteToSecondInterval <$> (Parsers.keyphrase "minute to" *> Parsers.space1 *> Parser.endHead *> parser),
+        YearInterval <$ Parsers.keyword "year",
+        MonthInterval <$ Parsers.keyword "month",
+        DayInterval <$ Parsers.keyword "day",
+        HourInterval <$ Parsers.keyword "hour",
+        MinuteInterval <$ Parsers.keyword "minute",
         SecondInterval <$> parser
       ]
 

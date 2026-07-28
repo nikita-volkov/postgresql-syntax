@@ -4,10 +4,10 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FrameClause
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -36,38 +36,38 @@ data WindowSpecification = WindowSpecification (Maybe Ident) (Maybe ExprList) (M
 
 instance IsAst WindowSpecification where
   toTextBuilder (WindowSpecification a b c d) =
-    renderInParens $
-      optLexemes
+    TextBuilders.renderInParens $
+      TextBuilders.optLexemes
         [ fmap toTextBuilder a,
           fmap (mappend "PARTITION BY " . toTextBuilder) b,
           fmap toTextBuilder c,
           fmap toTextBuilder d
         ]
   parser =
-    inParens $
+    Parsers.inParens $
       asum
         [ do
             a <- parser
             return (WindowSpecification Nothing Nothing Nothing (Just a)),
           do
             a <- parser
-            b <- optional (Parser.space1 *> parser)
+            b <- optional (Parsers.space1 *> parser)
             return (WindowSpecification Nothing Nothing (Just a) b),
           do
             a <- partitionByClause
-            b <- optional (Parser.space1 *> parser)
-            c <- optional (Parser.space1 *> parser)
+            b <- optional (Parsers.space1 *> parser)
+            c <- optional (Parsers.space1 *> parser)
             return (WindowSpecification Nothing (Just a) b c),
           do
             a <- colId
-            b <- optional (Parser.space1 *> partitionByClause)
-            c <- optional (Parser.space1 *> parser)
-            d <- optional (Parser.space1 *> parser)
+            b <- optional (Parsers.space1 *> partitionByClause)
+            c <- optional (Parsers.space1 *> parser)
+            d <- optional (Parsers.space1 *> parser)
             return (WindowSpecification (Just a) b c d),
           pure (WindowSpecification Nothing Nothing Nothing Nothing)
         ]
     where
-      partitionByClause = keyphrase "partition by" *> Parser.space1 *> Parser.endHead *> (ExprList <$> Parser.sep1 commaSeparator parser)
+      partitionByClause = Parsers.keyphrase "partition by" *> Parsers.space1 *> Parser.endHead *> (ExprList <$> Parsers.sep1 Parsers.commaSeparator parser)
 
 instance Qc.Arbitrary WindowSpecification where
   shrink = Qc.genericShrink

@@ -3,9 +3,8 @@ module PostgresqlSyntax.Ast.TrimList where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -31,8 +30,8 @@ instance IsAst TrimList where
     ExprListTrimList a -> toTextBuilder a
   parser =
     asum
-      [ ExprFromExprListTrimList <$> Parser.wrapToHead parser <*> (Parser.space1 *> keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
-        FromExprListTrimList <$> (keyword "from" *> Parser.space1 *> Parser.endHead *> parser),
+      [ ExprFromExprListTrimList <$> Parser.wrapToHead parser <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
+        FromExprListTrimList <$> (Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
         ExprListTrimList <$> parser
       ]
 

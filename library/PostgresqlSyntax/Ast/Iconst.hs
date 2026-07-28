@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Iconst where
 
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -16,7 +16,7 @@ newtype Iconst = Iconst Int64
 
 instance IsAst Iconst where
   toTextBuilder (Iconst a) = TextBuilder.int64Dec a
-  parser = Iconst <$> Parser.decimal
+  parser = Iconst <$> Parsers.decimal
 
 instance Qc.Arbitrary Iconst where
   shrink = Qc.genericShrink

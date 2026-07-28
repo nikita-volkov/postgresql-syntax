@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.SelectLimitValue where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -25,7 +25,7 @@ instance IsAst SelectLimitValue where
     AllSelectLimitValue -> "ALL"
   parser =
     AllSelectLimitValue
-      <$ keyword "all"
+      <$ Parsers.keyword "all"
         <|> ExprSelectLimitValue
       <$> parser
 

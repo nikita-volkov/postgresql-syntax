@@ -2,9 +2,9 @@ module PostgresqlSyntax.Ast.JoinQual where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -23,12 +23,12 @@ data JoinQual
 
 instance IsAst JoinQual where
   toTextBuilder = \case
-    UsingJoinQual a -> "USING (" <> commaNonEmpty toTextBuilder a <> ")"
+    UsingJoinQual a -> "USING (" <> TextBuilders.commaNonEmpty toTextBuilder a <> ")"
     OnJoinQual a -> "ON " <> toTextBuilder a
   parser =
     asum
-      [ keyword "using" *> Parser.space1 *> inParens (Parser.sep1 commaSeparator colId) <&> UsingJoinQual,
-        keyword "on" *> Parser.space1 *> parser <&> OnJoinQual
+      [ Parsers.keyword "using" *> Parsers.space1 *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator colId) <&> UsingJoinQual,
+        Parsers.keyword "on" *> Parsers.space1 *> parser <&> OnJoinQual
       ]
 
 instance Qc.Arbitrary JoinQual where

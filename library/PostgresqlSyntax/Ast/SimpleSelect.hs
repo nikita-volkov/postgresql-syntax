@@ -10,7 +10,6 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.GroupByItem
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptTempTableName
 import PostgresqlSyntax.Ast.RelationExpr
 import PostgresqlSyntax.Ast.SelectBinOp
@@ -18,8 +17,9 @@ import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -55,7 +55,7 @@ data SimpleSelect
 instance IsAst SimpleSelect where
   toTextBuilder = \case
     NormalSimpleSelect a b c d e f g ->
-      optLexemes
+      TextBuilders.optLexemes
         [ Just "SELECT",
           fmap toTextBuilder a,
           fmap intoClause b,
@@ -67,23 +67,23 @@ instance IsAst SimpleSelect where
         ]
     ValuesSimpleSelect a -> valuesClause a
     TableSimpleSelect a -> "TABLE " <> toTextBuilder a
-    BinSimpleSelect a b c d -> toTextBuilder b <> " " <> toTextBuilder a <> foldMap (mappend " " . renderAllOrDistinct) c <> " " <> toTextBuilder d
+    BinSimpleSelect a b c d -> toTextBuilder b <> " " <> toTextBuilder a <> foldMap (mappend " " . TextBuilders.renderAllOrDistinct) c <> " " <> toTextBuilder d
     where
       intoClause a = "INTO " <> toTextBuilder a
-      fromClause a = "FROM " <> commaNonEmpty toTextBuilder a
+      fromClause a = "FROM " <> TextBuilders.commaNonEmpty toTextBuilder a
       whereClause a = "WHERE " <> toTextBuilder a
-      groupClause a = "GROUP BY " <> commaNonEmpty toTextBuilder a
+      groupClause a = "GROUP BY " <> TextBuilders.commaNonEmpty toTextBuilder a
       havingClause a = "HAVING " <> toTextBuilder a
-      windowClause a = "WINDOW " <> commaNonEmpty toTextBuilder a
-      valuesClause a = "VALUES " <> commaNonEmpty (renderInParens . toTextBuilder) a
+      windowClause a = "WINDOW " <> TextBuilders.commaNonEmpty toTextBuilder a
+      valuesClause a = "VALUES " <> TextBuilders.commaNonEmpty (TextBuilders.renderInParens . toTextBuilder) a
   parser = do
     a <- baseSimpleSelect
     extendMany suffix a
     where
       suffix headSimpleSelect = do
-        op <- Parser.space1 *> parser <* Parser.space1
+        op <- Parsers.space1 *> parser <* Parsers.space1
         Parser.endHead
-        distinct <- optional (allOrDistinct <* Parser.space1)
+        distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
         rhs <- selectClauseBase >>= extendSelectClause
         return (BinSimpleSelect op (SimpleSelectSelectClause headSimpleSelect) distinct rhs)
 
@@ -95,35 +95,35 @@ baseSimpleSelect :: Parser SimpleSelect
 baseSimpleSelect =
   asum
     [ do
-        keyword "select"
-        Parser.notFollowedBy $ Parser.satisfy isAlphaNum
+        Parsers.keyword "select"
+        Parsers.notFollowedBy $ Parsers.satisfy isAlphaNum
         Parser.endHead
-        targeting <- optional (Parser.space1 *> parser)
-        intoClause <- optional (Parser.space1 *> keyword "into" *> Parser.endHead *> Parser.space1 *> parser)
-        fromClause <- optional (Parser.space1 *> keyword "from" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
-        whereClause <- optional (Parser.space1 *> keyword "where" *> Parser.space1 *> Parser.endHead *> parser)
-        groupClause <- optional (Parser.space1 *> keyphrase "group by" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
-        havingClause <- optional (Parser.space1 *> keyword "having" *> Parser.endHead *> Parser.space1 *> parser)
-        windowClause <- optional (Parser.space1 *> keyword "window" *> Parser.endHead *> Parser.space1 *> Parser.sep1 commaSeparator parser)
+        targeting <- optional (Parsers.space1 *> parser)
+        intoClause <- optional (Parsers.space1 *> Parsers.keyword "into" *> Parser.endHead *> Parsers.space1 *> parser)
+        fromClause <- optional (Parsers.space1 *> Parsers.keyword "from" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser)
+        whereClause <- optional (Parsers.space1 *> Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser)
+        groupClause <- optional (Parsers.space1 *> Parsers.keyphrase "group by" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser)
+        havingClause <- optional (Parsers.space1 *> Parsers.keyword "having" *> Parser.endHead *> Parsers.space1 *> parser)
+        windowClause <- optional (Parsers.space1 *> Parsers.keyword "window" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser)
         return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
       do
-        keyword "table"
-        Parser.space1
+        Parsers.keyword "table"
+        Parsers.space1
         Parser.endHead
         TableSimpleSelect <$> parser,
       ValuesSimpleSelect <$> valuesClause
     ]
   where
     valuesClause = do
-      keyword "values"
-      Parser.space
-      Parser.sep1 commaSeparator $ do
-        Parser.char '('
+      Parsers.keyword "values"
+      Parsers.space
+      Parsers.sep1 Parsers.commaSeparator $ do
+        Parsers.char '('
         Parser.endHead
-        Parser.space
-        a <- ExprList <$> Parser.sep1 commaSeparator parser
-        Parser.space
-        Parser.char ')'
+        Parsers.space
+        a <- ExprList <$> Parsers.sep1 Parsers.commaSeparator parser
+        Parsers.space
+        Parsers.char ')'
         return a
 
 selectClauseBase :: Parser SelectClause
@@ -138,9 +138,9 @@ extendSelectClause = extendMany suffix
   where
     suffix headSelectClause = SimpleSelectSelectClause <$> extensionSimpleSelect headSelectClause
     extensionSimpleSelect headSelectClause = do
-      op <- Parser.space1 *> parser <* Parser.space1
+      op <- Parsers.space1 *> parser <* Parsers.space1
       Parser.endHead
-      distinct <- optional (allOrDistinct <* Parser.space1)
+      distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
       rhs <- selectClauseBase >>= extendSelectClause
       return (BinSimpleSelect op headSelectClause distinct rhs)
 

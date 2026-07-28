@@ -4,9 +4,8 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -44,14 +43,14 @@ instance IsAst TargetEl where
             expr <- parser
             asum
               [ do
-                  Parser.space1
+                  Parsers.space1
                   asum
-                    [ AliasedExprTargetEl expr <$> (keyword "as" *> Parser.space1 *> Parser.endHead *> colLabel),
+                    [ AliasedExprTargetEl expr <$> (Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colLabel),
                       ImplicitlyAliasedExprTargetEl expr <$> parser
                     ],
                 pure (ExprTargetEl expr)
               ],
-          AsteriskTargetEl <$ Parser.char '*'
+          AsteriskTargetEl <$ Parsers.char '*'
         ]
     where
       -- Duplicated from "PostgresqlSyntax.Parsing"'s @colLabel@ (a
@@ -60,7 +59,7 @@ instance IsAst TargetEl where
       -- order), mirroring the 'PostgresqlSyntax.Ast.AnyName' precedent.
       colLabel =
         Parser.label "column label" $
-          keywordNameFromSet UnquotedIdent KeywordSet.keyword
+          Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
             <|> parser
 
 instance Qc.Arbitrary TargetEl where
@@ -70,7 +69,7 @@ instance Qc.Arbitrary TargetEl where
       [ pure AsteriskTargetEl,
         AliasedExprTargetEl <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
         -- Unlike 'AliasedExprTargetEl' (separated from its alias by the
-        -- reserved @AS@ keyword) or 'ExprTargetEl' (followed only by a
+        -- reserved @AS@ Parsers.keyword) or 'ExprTargetEl' (followed only by a
         -- comma\/end of list, neither valid @a_expr@ continuations), the
         -- expr here is followed directly by a bare alias identifier with
         -- nothing but a space — exactly the hazard

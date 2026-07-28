@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.QualOp where
 
 import PostgresqlSyntax.Ast.AnyOperator
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Op
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -26,7 +26,7 @@ instance IsAst QualOp where
   parser =
     asum
       [ OpQualOp <$> parser,
-        OperatorQualOp <$> inParensWithClause (keyword "operator") parser
+        OperatorQualOp <$> Parsers.inParensWithClause (Parsers.keyword "operator") parser
       ]
 
 instance Qc.Arbitrary QualOp where

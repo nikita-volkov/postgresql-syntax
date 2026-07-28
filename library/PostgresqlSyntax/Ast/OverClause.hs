@@ -2,9 +2,8 @@ module PostgresqlSyntax.Ast.OverClause where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WindowSpecification
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -27,8 +26,8 @@ instance IsAst OverClause where
     WindowOverClause a -> "OVER " <> toTextBuilder a
     ColIdOverClause a -> "OVER " <> toTextBuilder a
   parser = do
-    keyword "over"
-    Parser.space1
+    Parsers.keyword "over"
+    Parsers.space1
     Parser.endHead
     asum
       [ WindowOverClause <$> parser,

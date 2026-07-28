@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.ArrayExprList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.ArrayExpr (ArrayExpr)
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -19,8 +19,8 @@ newtype ArrayExprList = ArrayExprList (NonEmpty ArrayExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ArrayExprList where
-  toTextBuilder (ArrayExprList a) = commaNonEmpty toTextBuilder a
-  parser = ArrayExprList <$> Parser.sep1 commaSeparator parser
+  toTextBuilder (ArrayExprList a) = TextBuilders.commaNonEmpty toTextBuilder a
+  parser = ArrayExprList <$> Parsers.sep1 Parsers.commaSeparator parser
 
 instance Qc.Arbitrary ArrayExprList where
   shrink = Qc.genericShrink

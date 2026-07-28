@@ -1,15 +1,15 @@
 module PostgresqlSyntax.Ast.DeleteStmt where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
 import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -29,30 +29,30 @@ data DeleteStmt = DeleteStmt (Maybe WithClause) RelationExprOptAlias (Maybe (Non
 
 instance IsAst DeleteStmt where
   toTextBuilder (DeleteStmt a b c d e) =
-    prefixMaybe toTextBuilder a
+    TextBuilders.prefixMaybe toTextBuilder a
       <> "DELETE FROM "
       <> toTextBuilder b
-      <> suffixMaybe usingClause c
-      <> suffixMaybe toTextBuilder d
-      <> suffixMaybe returningClause e
+      <> TextBuilders.suffixMaybe usingClause c
+      <> TextBuilders.suffixMaybe toTextBuilder d
+      <> TextBuilders.suffixMaybe returningClause e
     where
-      usingClause a' = "USING " <> commaNonEmpty toTextBuilder a'
+      usingClause a' = "USING " <> TextBuilders.commaNonEmpty toTextBuilder a'
       returningClause = mappend "RETURNING " . toTextBuilder
   parser = do
-    a <- optional (Parser.wrapToHead parser <* Parser.space1)
-    keyword "delete"
-    Parser.space1
+    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+    Parsers.keyword "delete"
+    Parsers.space1
     Parser.endHead
-    keyword "from"
-    Parser.space1
+    Parsers.keyword "from"
+    Parsers.space1
     b <- RelationExprOptAlias.customizedParser ["using", "where", "returning"]
-    c <- optional (Parser.space1 *> usingClause)
-    d <- optional (Parser.space1 *> parser)
-    e <- optional (Parser.space1 *> returningClause)
+    c <- optional (Parsers.space1 *> usingClause)
+    d <- optional (Parsers.space1 *> parser)
+    e <- optional (Parsers.space1 *> returningClause)
     return (DeleteStmt a b c d e)
     where
-      usingClause = keyword "using" *> Parser.space1 *> Parser.sep1 commaSeparator parser
-      returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
+      usingClause = Parsers.keyword "using" *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary DeleteStmt where
   shrink = Qc.genericShrink

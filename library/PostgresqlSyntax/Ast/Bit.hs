@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.Bit where
 
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptVarying
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -27,15 +27,15 @@ data Bit = Bit OptVarying (Maybe ExprList)
 
 instance IsAst Bit where
   toTextBuilder (Bit a b) =
-    optLexemes
+    TextBuilders.optLexemes
       [ Just "BIT",
         bool Nothing (Just "VARYING") (coerce a :: Bool),
-        fmap (renderInParens . toTextBuilder) b
+        fmap (TextBuilders.renderInParens . toTextBuilder) b
       ]
   parser = do
-    keyword "bit"
+    Parsers.keyword "bit"
     a <- parser
-    b <- optional (Parser.space1 *> inParens parser)
+    b <- optional (Parsers.space1 *> Parsers.inParens parser)
     return (Bit a b)
 
 instance Qc.Arbitrary Bit where

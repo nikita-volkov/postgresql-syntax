@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.JoinedTable where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -32,16 +32,16 @@ data JoinedTable
 
 instance IsAst JoinedTable where
   toTextBuilder = \case
-    InParensJoinedTable a -> renderInParens (toTextBuilder a)
+    InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder a)
     MethJoinedTable a b c -> toTextBuilder b <> " " <> toTextBuilder a <> " " <> toTextBuilder c
   parser =
     InParensJoinedTable
-      <$> inParens parser
+      <$> Parsers.inParens parser
         <|> ( do
                 b <- parser
-                Parser.space1
+                Parsers.space1
                 a <- parser
-                Parser.space1
+                Parsers.space1
                 c <- parser
                 return (MethJoinedTable a b c)
             )

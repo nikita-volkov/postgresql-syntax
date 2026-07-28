@@ -4,16 +4,16 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.ExtractList
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverlayList
 import PostgresqlSyntax.Ast.PositionList
 import PostgresqlSyntax.Ast.SubstrList
 import PostgresqlSyntax.Ast.TrimList
 import PostgresqlSyntax.Ast.TrimModifier
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -97,10 +97,10 @@ instance IsAst FuncExprCommonSubexpr where
   toTextBuilder = \case
     CollationForFuncExprCommonSubexpr a -> "COLLATION FOR (" <> toTextBuilder a <> ")"
     CurrentDateFuncExprCommonSubexpr -> "CURRENT_DATE"
-    CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
-    CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
-    LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
-    LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> suffixMaybe (renderInParens . TextBuilder.int64Dec) a
+    CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
+    CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
+    LocalTimeFuncExprCommonSubexpr a -> "LOCALTIME" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
+    LocalTimestampFuncExprCommonSubexpr a -> "LOCALTIMESTAMP" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
     CurrentRoleFuncExprCommonSubexpr -> "CURRENT_ROLE"
     CurrentUserFuncExprCommonSubexpr -> "CURRENT_USER"
     SessionUserFuncExprCommonSubexpr -> "SESSION_USER"
@@ -113,39 +113,39 @@ instance IsAst FuncExprCommonSubexpr where
     PositionFuncExprCommonSubexpr a -> "POSITION (" <> foldMap toTextBuilder a <> ")"
     SubstringFuncExprCommonSubexpr a -> "SUBSTRING (" <> foldMap toTextBuilder a <> ")"
     TreatFuncExprCommonSubexpr a b -> "TREAT (" <> toTextBuilder a <> " AS " <> toTextBuilder b <> ")"
-    TrimFuncExprCommonSubexpr a b -> "TRIM (" <> prefixMaybe toTextBuilder a <> toTextBuilder b <> ")"
+    TrimFuncExprCommonSubexpr a b -> "TRIM (" <> TextBuilders.prefixMaybe toTextBuilder a <> toTextBuilder b <> ")"
     NullIfFuncExprCommonSubexpr a b -> "NULLIF (" <> toTextBuilder a <> ", " <> toTextBuilder b <> ")"
     CoalesceFuncExprCommonSubexpr a -> "COALESCE (" <> toTextBuilder a <> ")"
     GreatestFuncExprCommonSubexpr a -> "GREATEST (" <> toTextBuilder a <> ")"
     LeastFuncExprCommonSubexpr a -> "LEAST (" <> toTextBuilder a <> ")"
   parser =
     asum
-      [ CollationForFuncExprCommonSubexpr <$> inParensWithClause (keyphrase "collation for") parser,
-        CurrentDateFuncExprCommonSubexpr <$ keyword "current_date",
+      [ CollationForFuncExprCommonSubexpr <$> Parsers.inParensWithClause (Parsers.keyphrase "collation for") parser,
+        CurrentDateFuncExprCommonSubexpr <$ Parsers.keyword "current_date",
         CurrentTimestampFuncExprCommonSubexpr <$> labeledIconst "current_timestamp",
         CurrentTimeFuncExprCommonSubexpr <$> labeledIconst "current_time",
         LocalTimestampFuncExprCommonSubexpr <$> labeledIconst "localtimestamp",
         LocalTimeFuncExprCommonSubexpr <$> labeledIconst "localtime",
-        CurrentRoleFuncExprCommonSubexpr <$ keyword "current_role",
-        CurrentUserFuncExprCommonSubexpr <$ keyword "current_user",
-        SessionUserFuncExprCommonSubexpr <$ keyword "session_user",
-        UserFuncExprCommonSubexpr <$ keyword "user",
-        CurrentCatalogFuncExprCommonSubexpr <$ keyword "current_catalog",
-        CurrentSchemaFuncExprCommonSubexpr <$ keyword "current_schema",
-        inParensWithClause (keyword "cast") (CastFuncExprCommonSubexpr <$> parser <*> (Parser.space1 *> keyword "as" *> Parser.space1 *> parser)),
-        inParensWithClause (keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional parser),
-        inParensWithClause (keyword "overlay") (OverlayFuncExprCommonSubexpr <$> parser),
-        inParensWithClause (keyword "position") (PositionFuncExprCommonSubexpr <$> optional parser),
-        inParensWithClause (keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional parser),
-        inParensWithClause (keyword "treat") (TreatFuncExprCommonSubexpr <$> parser <*> (Parser.space1 *> keyword "as" *> Parser.space1 *> parser)),
-        inParensWithClause (keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* Parser.space1) <*> parser),
-        inParensWithClause (keyword "nullif") (NullIfFuncExprCommonSubexpr <$> parser <*> (commaSeparator *> parser)),
-        inParensWithClause (keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> parser),
-        inParensWithClause (keyword "greatest") (GreatestFuncExprCommonSubexpr <$> parser),
-        inParensWithClause (keyword "least") (LeastFuncExprCommonSubexpr <$> parser)
+        CurrentRoleFuncExprCommonSubexpr <$ Parsers.keyword "current_role",
+        CurrentUserFuncExprCommonSubexpr <$ Parsers.keyword "current_user",
+        SessionUserFuncExprCommonSubexpr <$ Parsers.keyword "session_user",
+        UserFuncExprCommonSubexpr <$ Parsers.keyword "user",
+        CurrentCatalogFuncExprCommonSubexpr <$ Parsers.keyword "current_catalog",
+        CurrentSchemaFuncExprCommonSubexpr <$ Parsers.keyword "current_schema",
+        Parsers.inParensWithClause (Parsers.keyword "cast") (CastFuncExprCommonSubexpr <$> parser <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser)),
+        Parsers.inParensWithClause (Parsers.keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional parser),
+        Parsers.inParensWithClause (Parsers.keyword "overlay") (OverlayFuncExprCommonSubexpr <$> parser),
+        Parsers.inParensWithClause (Parsers.keyword "position") (PositionFuncExprCommonSubexpr <$> optional parser),
+        Parsers.inParensWithClause (Parsers.keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional parser),
+        Parsers.inParensWithClause (Parsers.keyword "treat") (TreatFuncExprCommonSubexpr <$> parser <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser)),
+        Parsers.inParensWithClause (Parsers.keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* Parsers.space1) <*> parser),
+        Parsers.inParensWithClause (Parsers.keyword "nullif") (NullIfFuncExprCommonSubexpr <$> parser <*> (Parsers.commaSeparator *> parser)),
+        Parsers.inParensWithClause (Parsers.keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> parser),
+        Parsers.inParensWithClause (Parsers.keyword "greatest") (GreatestFuncExprCommonSubexpr <$> parser),
+        Parsers.inParensWithClause (Parsers.keyword "least") (LeastFuncExprCommonSubexpr <$> parser)
       ]
     where
-      labeledIconst lbl = keyword lbl *> Parser.endHead *> optional (Parser.space *> inParens Parser.decimal)
+      labeledIconst lbl = Parsers.keyword lbl *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens Parsers.decimal)
 
 instance Qc.Arbitrary FuncExprCommonSubexpr where
   shrink = Qc.genericShrink
@@ -166,7 +166,7 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
           Qc.oneof
             [ CollationForFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary,
               pure CurrentDateFuncExprCommonSubexpr,
-              -- The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so
+              -- The @Iconst@ here is parsed via 'Parsers.decimal' (unsigned), so
               -- it must never be negative — mirroring
               -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
               CurrentTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,

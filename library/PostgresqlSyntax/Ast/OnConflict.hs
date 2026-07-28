@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.OnConflict where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ConfExpr
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflictDo
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -22,16 +22,16 @@ data OnConflict = OnConflict (Maybe ConfExpr) OnConflictDo
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OnConflict where
-  toTextBuilder (OnConflict a b) = "ON CONFLICT" <> suffixMaybe toTextBuilder a <> " DO " <> toTextBuilder b
+  toTextBuilder (OnConflict a b) = "ON CONFLICT" <> TextBuilders.suffixMaybe toTextBuilder a <> " DO " <> toTextBuilder b
   parser = do
-    keyword "on"
-    Parser.space1
-    keyword "conflict"
-    Parser.space1
+    Parsers.keyword "on"
+    Parsers.space1
+    Parsers.keyword "conflict"
+    Parsers.space1
     Parser.endHead
-    a <- optional (parser <* Parser.space1)
-    keyword "do"
-    Parser.space1
+    a <- optional (parser <* Parsers.space1)
+    Parsers.keyword "do"
+    Parsers.space1
     b <- parser
     return (OnConflict a b)
 

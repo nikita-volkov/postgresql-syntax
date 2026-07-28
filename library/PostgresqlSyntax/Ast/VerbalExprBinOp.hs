@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.VerbalExprBinOp where
 
-import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -28,9 +28,9 @@ instance IsAst VerbalExprBinOp where
     SimilarToVerbalExprBinOp -> "SIMILAR TO"
   parser =
     asum
-      [ LikeVerbalExprBinOp <$ keyword "like",
-        IlikeVerbalExprBinOp <$ keyword "ilike",
-        SimilarToVerbalExprBinOp <$ keyphrase "similar to"
+      [ LikeVerbalExprBinOp <$ Parsers.keyword "like",
+        IlikeVerbalExprBinOp <$ Parsers.keyword "ilike",
+        SimilarToVerbalExprBinOp <$ Parsers.keyphrase "similar to"
       ]
 
 instance Qc.Arbitrary VerbalExprBinOp where

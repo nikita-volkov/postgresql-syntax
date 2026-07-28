@@ -5,9 +5,9 @@ module PostgresqlSyntax.Ast.RelationExprOptAlias
 where
 
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExpr
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,7 +24,7 @@ data RelationExprOptAlias = RelationExprOptAlias RelationExpr (Maybe (Bool, Iden
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RelationExprOptAlias where
-  toTextBuilder (RelationExprOptAlias a b) = toTextBuilder a <> suffixMaybe optAlias b
+  toTextBuilder (RelationExprOptAlias a b) = toTextBuilder a <> TextBuilders.suffixMaybe optAlias b
     where
       optAlias (c, d) = bool "" "AS " c <> toTextBuilder d
   parser = customizedParser []
@@ -39,9 +39,9 @@ customizedParser :: [Text] -> Parser RelationExprOptAlias
 customizedParser reservedKeywords = do
   a <- parser
   b <- optional $ do
-    Parser.space1
-    b <- trueIfPresent (keyword "as" *> Parser.space1)
-    c <- filteredColIdLike UnquotedIdent parser reservedKeywords
+    Parsers.space1
+    b <- Parsers.trueIfPresent (Parsers.keyword "as" *> Parsers.space1)
+    c <- Parsers.filteredColIdLike UnquotedIdent parser reservedKeywords
     return (b, c)
   return (RelationExprOptAlias a b)
 

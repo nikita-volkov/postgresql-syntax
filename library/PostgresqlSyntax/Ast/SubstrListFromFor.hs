@@ -2,9 +2,8 @@ module PostgresqlSyntax.Ast.SubstrListFromFor where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -36,7 +35,7 @@ instance IsAst SubstrListFromFor where
           a <- substrFrom
           asum
             [ do
-                b <- Parser.space1 *> substrFor
+                b <- Parsers.space1 *> substrFor
                 return (FromForSubstrListFromFor a b),
               return (FromSubstrListFromFor a)
             ],
@@ -44,14 +43,14 @@ instance IsAst SubstrListFromFor where
           a <- substrFor
           asum
             [ do
-                b <- Parser.space1 *> substrFrom
+                b <- Parsers.space1 *> substrFrom
                 return (ForFromSubstrListFromFor a b),
               return (ForSubstrListFromFor a)
             ]
       ]
     where
-      substrFrom = keyword "from" *> Parser.space1 *> Parser.endHead *> parser
-      substrFor = keyword "for" *> Parser.space1 *> Parser.endHead *> parser
+      substrFrom = Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser
+      substrFor = Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary SubstrListFromFor where
   shrink = Qc.genericShrink

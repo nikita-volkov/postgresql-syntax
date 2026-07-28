@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.MathOp where
 
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -56,19 +56,19 @@ instance IsAst MathOp where
     ExclamationEqualsMathOp -> "!="
   parser =
     asum
-      [ ArrowLeftArrowRightMathOp <$ Parser.string' "<>",
-        GreaterEqualsMathOp <$ Parser.string' ">=",
-        ExclamationEqualsMathOp <$ Parser.string' "!=",
-        LessEqualsMathOp <$ Parser.string' "<=",
-        PlusMathOp <$ Parser.char '+',
-        MinusMathOp <$ Parser.char '-',
-        AsteriskMathOp <$ Parser.char '*',
-        SlashMathOp <$ Parser.char '/',
-        PercentMathOp <$ Parser.char '%',
-        ArrowUpMathOp <$ Parser.char '^',
-        ArrowLeftMathOp <$ Parser.char '<',
-        ArrowRightMathOp <$ Parser.char '>',
-        EqualsMathOp <$ Parser.char '='
+      [ ArrowLeftArrowRightMathOp <$ Parsers.string' "<>",
+        GreaterEqualsMathOp <$ Parsers.string' ">=",
+        ExclamationEqualsMathOp <$ Parsers.string' "!=",
+        LessEqualsMathOp <$ Parsers.string' "<=",
+        PlusMathOp <$ Parsers.char '+',
+        MinusMathOp <$ Parsers.char '-',
+        AsteriskMathOp <$ Parsers.char '*',
+        SlashMathOp <$ Parsers.char '/',
+        PercentMathOp <$ Parsers.char '%',
+        ArrowUpMathOp <$ Parsers.char '^',
+        ArrowLeftMathOp <$ Parsers.char '<',
+        ArrowRightMathOp <$ Parsers.char '>',
+        EqualsMathOp <$ Parsers.char '='
       ]
 
 instance Qc.Arbitrary MathOp where

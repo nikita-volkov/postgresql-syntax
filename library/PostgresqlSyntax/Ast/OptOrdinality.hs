@@ -1,7 +1,6 @@
 module PostgresqlSyntax.Ast.OptOrdinality where
 
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -18,7 +17,7 @@ newtype OptOrdinality = OptOrdinality Bool
 
 instance IsAst OptOrdinality where
   toTextBuilder (OptOrdinality a) = if a then "WITH ORDINALITY" else mempty
-  parser = OptOrdinality <$> trueIfPresent (keyword "with" *> Parser.space1 *> keyword "ordinality")
+  parser = OptOrdinality <$> Parsers.trueIfPresent (Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
 
 instance Qc.Arbitrary OptOrdinality where
   shrink = Qc.genericShrink

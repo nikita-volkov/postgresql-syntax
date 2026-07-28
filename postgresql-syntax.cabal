@@ -157,7 +157,6 @@ library
     PostgresqlSyntax.Ast.InsertRest
     PostgresqlSyntax.Ast.InsertStmt
     PostgresqlSyntax.Ast.InsertTarget
-    PostgresqlSyntax.Ast.Internal
     PostgresqlSyntax.Ast.Interval
     PostgresqlSyntax.Ast.IntervalSecond
     PostgresqlSyntax.Ast.JoinedTable
@@ -238,6 +237,9 @@ library
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.QuickCheck
     PostgresqlSyntax.Extras.TextBuilder
+    PostgresqlSyntax.Helpers.Parsers
+    PostgresqlSyntax.Helpers.Shrinks
+    PostgresqlSyntax.Helpers.TextBuilders
     PostgresqlSyntax.IsAst
 
   build-depends:

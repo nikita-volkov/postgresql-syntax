@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.FuncName where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Indirection
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -36,16 +35,16 @@ instance IsAst FuncName where
   parser =
     IndirectedFuncName
       <$> Parser.wrapToHead colIdLikeName
-      <*> (Parser.space *> parser)
+      <*> (Parsers.space *> parser)
         <|> TypeFuncName
       <$> typeFunctionNameLikeName
     where
       colIdLikeName =
         Parser.label "identifier" $
           parser
-            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+            <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
       typeFunctionNameLikeName =
-        keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
+        Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
           <|> parser
 
 instance Qc.Arbitrary FuncName where

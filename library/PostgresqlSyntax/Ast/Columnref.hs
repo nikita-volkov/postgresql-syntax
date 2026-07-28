@@ -3,8 +3,8 @@ module PostgresqlSyntax.Ast.Columnref where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident (Ident, colId)
 import PostgresqlSyntax.Ast.Indirection
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,7 +24,7 @@ instance IsAst Columnref where
   parser = do
     a <- Parser.wrapToHead colId
     Parser.endHead
-    b <- optional (Parser.space *> parser)
+    b <- optional (Parsers.space *> parser)
     return (Columnref a b)
 
 instance Qc.Arbitrary Columnref where

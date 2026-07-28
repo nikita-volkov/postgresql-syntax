@@ -3,9 +3,8 @@ module PostgresqlSyntax.Ast.FuncArgExpr where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -36,17 +35,17 @@ instance IsAst FuncArgExpr where
     asum
       [ do
           a <- Parser.wrapToHead typeFunctionName
-          Parser.space
+          Parsers.space
           asum
             [ do
-                Parser.string ":="
+                Parsers.string ":="
                 Parser.endHead
-                b <- Parser.space *> parser
+                b <- Parsers.space *> parser
                 return (ColonEqualsFuncArgExpr a b),
               do
-                Parser.string "=>"
+                Parsers.string "=>"
                 Parser.endHead
-                b <- Parser.space *> parser
+                b <- Parsers.space *> parser
                 return (EqualsGreaterFuncArgExpr a b)
             ],
         ExprFuncArgExpr <$> parser
@@ -58,7 +57,7 @@ instance IsAst FuncArgExpr where
       -- 'PostgresqlSyntax.Ast.AnyName'\/'PostgresqlSyntax.Ast.NameList'
       -- precedent.
       typeFunctionName =
-        keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
+        Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
           <|> parser
 
 instance Qc.Arbitrary FuncArgExpr where

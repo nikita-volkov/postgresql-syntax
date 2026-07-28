@@ -3,8 +3,7 @@ module PostgresqlSyntax.Ast.QualAllOp where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -27,7 +26,7 @@ instance IsAst QualAllOp where
     AnyQualAllOp a -> "OPERATOR (" <> toTextBuilder a <> ")"
   parser =
     asum
-      [ AnyQualAllOp <$> (keyword "operator" *> Parser.space *> inParens (Parser.endHead *> parser)),
+      [ AnyQualAllOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser)),
         AllQualAllOp <$> parser
       ]
 

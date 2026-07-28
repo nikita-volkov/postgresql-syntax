@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.SelectBinOp where
 
-import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,9 +22,9 @@ instance IsAst SelectBinOp where
     ExceptSelectBinOp -> "EXCEPT"
   parser =
     asum
-      [ keyword "union" $> UnionSelectBinOp,
-        keyword "intersect" $> IntersectSelectBinOp,
-        keyword "except" $> ExceptSelectBinOp
+      [ Parsers.keyword "union" $> UnionSelectBinOp,
+        Parsers.keyword "intersect" $> IntersectSelectBinOp,
+        Parsers.keyword "except" $> ExceptSelectBinOp
       ]
 
 instance Qc.Arbitrary SelectBinOp where

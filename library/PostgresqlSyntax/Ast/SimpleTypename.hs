@@ -6,10 +6,10 @@ import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.ConstDatetime
 import PostgresqlSyntax.Ast.GenericType
 import PostgresqlSyntax.Ast.Iconst
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Numeric
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -44,15 +44,15 @@ instance IsAst SimpleTypename where
     BitSimpleTypename a -> toTextBuilder a
     CharacterSimpleTypename a -> toTextBuilder a
     ConstDatetimeSimpleTypename a -> toTextBuilder a
-    ConstIntervalSimpleTypename a -> "INTERVAL" <> either (suffixMaybe toTextBuilder) (mappend " " . renderInParens . toTextBuilder) a
+    ConstIntervalSimpleTypename a -> "INTERVAL" <> either (TextBuilders.suffixMaybe toTextBuilder) (mappend " " . TextBuilders.renderInParens . toTextBuilder) a
   parser =
     asum
       [ do
-          keyword "interval"
+          Parsers.keyword "interval"
           Parser.endHead
           asum
-            [ ConstIntervalSimpleTypename <$> Right <$> (Parser.space *> inParens parser),
-              ConstIntervalSimpleTypename <$> Left <$> optional (Parser.space *> parser)
+            [ ConstIntervalSimpleTypename <$> Right <$> (Parsers.space *> Parsers.inParens parser),
+              ConstIntervalSimpleTypename <$> Left <$> optional (Parsers.space *> parser)
             ],
         ConstDatetimeSimpleTypename <$> parser,
         NumericSimpleTypename <$> parser,

@@ -2,10 +2,9 @@ module PostgresqlSyntax.Ast.FuncTable where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptOrdinality
 import PostgresqlSyntax.Ast.RowsfromList
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -29,16 +28,16 @@ instance IsAst FuncTable where
   parser =
     asum
       [ do
-          keyword "rows"
-          Parser.space1
-          keyword "from"
-          Parser.space
-          a <- inParens (Parser.endHead *> parser)
-          b <- OptOrdinality <$> trueIfPresent (Parser.space *> keyword "with" *> Parser.space1 *> keyword "ordinality")
+          Parsers.keyword "rows"
+          Parsers.space1
+          Parsers.keyword "from"
+          Parsers.space
+          a <- Parsers.inParens (Parser.endHead *> parser)
+          b <- OptOrdinality <$> Parsers.trueIfPresent (Parsers.space *> Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
           return (RowsFromFuncTable a b),
         do
           a <- parser
-          b <- OptOrdinality <$> trueIfPresent (Parser.space1 *> keyword "with" *> Parser.space1 *> keyword "ordinality")
+          b <- OptOrdinality <$> Parsers.trueIfPresent (Parsers.space1 *> Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
           return (FuncExprFuncTable a b)
       ]
 

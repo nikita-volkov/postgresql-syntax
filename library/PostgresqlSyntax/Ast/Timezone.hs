@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.Timezone where
 
-import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -21,8 +21,8 @@ instance IsAst Timezone where
   parser =
     Timezone
       <$> asum
-        [ False <$ keyphrase "with time zone",
-          True <$ keyphrase "without time zone"
+        [ False <$ Parsers.keyphrase "with time zone",
+          True <$ Parsers.keyphrase "without time zone"
         ]
 
 instance Qc.Arbitrary Timezone where

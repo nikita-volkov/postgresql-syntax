@@ -1,8 +1,7 @@
 module PostgresqlSyntax.Ast.JoinType where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -31,24 +30,24 @@ instance IsAst JoinType where
   parser =
     asum
       [ do
-          keyword "full"
+          Parsers.keyword "full"
           Parser.endHead
           outer <- outerAfterSpace
           return (FullJoinType outer),
         do
-          keyword "left"
+          Parsers.keyword "left"
           Parser.endHead
           outer <- outerAfterSpace
           return (LeftJoinType outer),
         do
-          keyword "right"
+          Parsers.keyword "right"
           Parser.endHead
           outer <- outerAfterSpace
           return (RightJoinType outer),
-        keyword "inner" $> InnerJoinType
+        Parsers.keyword "inner" $> InnerJoinType
       ]
     where
-      outerAfterSpace = (Parser.space1 *> keyword "outer") $> True <|> pure False
+      outerAfterSpace = (Parsers.space1 *> Parsers.keyword "outer") $> True <|> pure False
 
 instance Qc.Arbitrary JoinType where
   shrink = Qc.genericShrink

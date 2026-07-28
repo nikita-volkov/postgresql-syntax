@@ -7,12 +7,12 @@ import PostgresqlSyntax.Ast.Fconst
 import PostgresqlSyntax.Ast.FuncConstArgs
 import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.Iconst
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.Ast.Xconst
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -58,28 +58,28 @@ instance IsAst AexprConst where
     SAexprConst a -> toTextBuilder a
     BAexprConst a -> toTextBuilder a
     XAexprConst a -> toTextBuilder a
-    FuncAexprConst a b c -> toTextBuilder a <> foldMap (renderInParens . toTextBuilder) b <> " " <> toTextBuilder c
+    FuncAexprConst a b c -> toTextBuilder a <> foldMap (TextBuilders.renderInParens . toTextBuilder) b <> " " <> toTextBuilder c
     ConstTypenameAexprConst a b -> toTextBuilder a <> " " <> toTextBuilder b
-    StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder a <> suffixMaybe toTextBuilder b
-    IntIntervalAexprConst a b -> "INTERVAL " <> renderInParens (toTextBuilder a) <> " " <> toTextBuilder b
+    StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
+    IntIntervalAexprConst a b -> "INTERVAL " <> TextBuilders.renderInParens (toTextBuilder a) <> " " <> toTextBuilder b
     BoolAexprConst a -> if a then "TRUE" else "FALSE"
     NullAexprConst -> "NULL"
   parser =
     asum
       [ do
-          keyword "interval"
-          Parser.space1
+          Parsers.keyword "interval"
+          Parsers.space1
           Parser.endHead
           a <-
             asum
               [ do
                   a <- parser
                   Parser.endHead
-                  b <- optional (Parser.space1 *> parser)
+                  b <- optional (Parsers.space1 *> parser)
                   return (StringIntervalAexprConst a b),
                 do
-                  a <- inParens parser
-                  Parser.space1
+                  a <- Parsers.inParens parser
+                  Parsers.space1
                   Parser.endHead
                   b <- parser
                   return (IntIntervalAexprConst a b)
@@ -87,25 +87,25 @@ instance IsAst AexprConst where
           return a,
         do
           a <- parser
-          Parser.space1
+          Parsers.space1
           Parser.endHead
           b <- parser
           return (ConstTypenameAexprConst a b),
-        BoolAexprConst True <$ keyword "true",
-        BoolAexprConst False <$ keyword "false",
-        NullAexprConst <$ keyword "null" <* Parser.parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
+        BoolAexprConst True <$ Parsers.keyword "true",
+        BoolAexprConst False <$ Parsers.keyword "false",
+        NullAexprConst <$ Parsers.keyword "null" <* Parser.parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
         either IAexprConst FAexprConst <$> (Right <$> parser <|> Left <$> parser),
         SAexprConst <$> parser,
         BAexprConst <$> parser,
         XAexprConst <$> parser,
         Parser.wrapToHead $ do
           a <- parser
-          Parser.space
-          b <- inParens parser
-          Parser.space1
+          Parsers.space
+          b <- Parsers.inParens parser
+          Parsers.space1
           d <- parser
           return (FuncAexprConst a (Just b) d),
-        FuncAexprConst <$> (Parser.wrapToHead parser <* Parser.space1) <*> pure Nothing <*> parser
+        FuncAexprConst <$> (Parser.wrapToHead parser <* Parsers.space1) <*> pure Nothing <*> parser
       ]
 
 instance Qc.Arbitrary AexprConst where

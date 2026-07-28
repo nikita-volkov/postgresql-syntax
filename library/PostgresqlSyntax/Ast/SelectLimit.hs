@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SelectLimit where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.LimitClause
 import PostgresqlSyntax.Ast.OffsetClause
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -26,18 +26,18 @@ data SelectLimit
 
 instance IsAst SelectLimit where
   toTextBuilder = \case
-    LimitOffsetSelectLimit a b -> lexemes [toTextBuilder a, toTextBuilder b]
-    OffsetLimitSelectLimit a b -> lexemes [toTextBuilder a, toTextBuilder b]
+    LimitOffsetSelectLimit a b -> TextBuilders.lexemes [toTextBuilder a, toTextBuilder b]
+    OffsetLimitSelectLimit a b -> TextBuilders.lexemes [toTextBuilder a, toTextBuilder b]
     LimitSelectLimit a -> toTextBuilder a
     OffsetSelectLimit a -> toTextBuilder a
   parser =
     asum
       [ do
           a <- parser
-          LimitOffsetSelectLimit a <$> (Parser.space1 *> parser) <|> pure (LimitSelectLimit a),
+          LimitOffsetSelectLimit a <$> (Parsers.space1 *> parser) <|> pure (LimitSelectLimit a),
         do
           a <- parser
-          OffsetLimitSelectLimit a <$> (Parser.space1 *> parser) <|> pure (OffsetSelectLimit a)
+          OffsetLimitSelectLimit a <$> (Parsers.space1 *> parser) <|> pure (OffsetSelectLimit a)
       ]
 
 instance Qc.Arbitrary SelectLimit where

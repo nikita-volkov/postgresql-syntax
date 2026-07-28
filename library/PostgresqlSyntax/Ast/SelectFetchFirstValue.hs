@@ -3,8 +3,8 @@ module PostgresqlSyntax.Ast.SelectFetchFirstValue where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CExpr
 import PostgresqlSyntax.Ast.Fconst
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -32,11 +32,11 @@ instance IsAst SelectFetchFirstValue where
     ExprSelectFetchFirstValue
       <$> parser
         <|> NumSelectFetchFirstValue
-      <$> (plusOrMinus <* Parser.endHead <* Parser.space)
+      <$> (plusOrMinus <* Parser.endHead <* Parsers.space)
       <*> iconstOrFconst
     where
-      plusOrMinus = False <$ Parser.char '+' <|> True <$ Parser.char '-'
-      iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> Parser.decimal
+      plusOrMinus = False <$ Parsers.char '+' <|> True <$ Parsers.char '-'
+      iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> Parsers.decimal
 
 instance Qc.Arbitrary SelectFetchFirstValue where
   shrink = Qc.genericShrink
