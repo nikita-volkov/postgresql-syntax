@@ -25,7 +25,6 @@ instance IsAst SelectWithParens where
       NoParensSelectWithParens a -> toTextBuilder a
       WithParensSelectWithParens a -> toTextBuilder a
 
-  -- \|
   -- @gram.y@ gives two productions, @'(' select_with_parens ')'@ and
   -- @'(' select_no_parens ')'@, and they overlap: a @select_no_parens@ may
   -- itself be nothing but a @select_clause@, and a @select_clause@ may

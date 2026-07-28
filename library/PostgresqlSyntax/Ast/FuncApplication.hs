@@ -26,7 +26,6 @@ data FuncApplication = FuncApplication FuncName (Maybe FuncApplicationParams)
 instance IsAst FuncApplication where
   toTextBuilder (FuncApplication a b) = toTextBuilder a <> "(" <> foldMap toTextBuilder b <> ")"
 
-  -- \|
   -- \"operator\" immediately followed by \"(\" is always parsed as the start
   -- of a qualified operator (@OPERATOR(...)@), never as a call to a function
   -- literally named \"operator\", mirroring how real PostgreSQL's grammar
