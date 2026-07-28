@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.SelectNoParens
     unparenthesizedSelectNoParens,
     selectNoParensAfterClause,
     afterSelectWithParensClause,
+    trivialSelectWithParensWrapper,
   )
 where
 
@@ -99,9 +100,21 @@ selectNoParensAfterClause with clauseBase = do
 afterSelectWithParensClause :: SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
 afterSelectWithParensClause a = do
   b <- selectNoParensAfterClause Nothing (WithParensSelectClause a)
-  return $ case b of
-    SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing -> Left c
-    _ -> Right b
+  return $ case trivialSelectWithParensWrapper b of
+    Just c -> Left c
+    Nothing -> Right b
+
+-- |
+-- If a 'SelectNoParens' is merely a trivial wrapper around a single
+-- parenthesized select — no with-clause, sort, limit or locking clause of
+-- its own — returns the wrapped 'SelectWithParens'. Used by
+-- "PostgresqlSyntax.Ast.SelectWithParens" to canonicalize such wrappers
+-- into its @WithParensSelectWithParens@ shape — see its \"Canonical
+-- shape\" doc.
+trivialSelectWithParensWrapper :: SelectNoParens -> Maybe SelectWithParens
+trivialSelectWithParensWrapper = \case
+  SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing -> Just c
+  _ -> Nothing
 
 instance Qc.Arbitrary SelectNoParens where
   shrink = Qc.genericShrink

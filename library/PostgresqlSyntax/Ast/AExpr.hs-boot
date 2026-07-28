@@ -1,5 +1,6 @@
 module PostgresqlSyntax.Ast.AExpr where
 
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.IsAst (IsAst)
 import PostgresqlSyntax.Prelude (Bool, Data, Eq, Ord, Parser, Show, Text)
 import Test.QuickCheck (Arbitrary, Gen)
@@ -29,3 +30,6 @@ isBoundedAExprOperand :: AExpr -> Bool
 
 -- | See "PostgresqlSyntax.Ast.AExpr" for the full documentation.
 safeAExprOperand :: Gen AExpr -> Gen AExpr
+
+-- | See "PostgresqlSyntax.Ast.AExpr" for the full documentation.
+selectWithParensAExpr :: SelectWithParens -> AExpr

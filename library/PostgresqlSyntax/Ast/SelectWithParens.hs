@@ -1,7 +1,11 @@
-module PostgresqlSyntax.Ast.SelectWithParens where
+module PostgresqlSyntax.Ast.SelectWithParens
+  ( SelectWithParens (..),
+    withParensSelectWithParensInner,
+  )
+where
 
 import qualified HeadedMegaparsec as Parser
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, unparenthesizedSelectNoParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, trivialSelectWithParensWrapper, unparenthesizedSelectNoParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
@@ -54,9 +58,35 @@ instance IsAst SelectWithParens where
           ]
 
 instance Qc.Arbitrary SelectWithParens where
-  shrink = Qc.genericShrink
+  shrink = fmap canonicalize . Qc.genericShrink
   arbitrary =
-    Qc.frequency
-      [ (3, NoParensSelectWithParens <$> Gens.downscale Qc.arbitrary),
-        (1, WithParensSelectWithParens <$> Gens.downscale Qc.arbitrary)
-      ]
+    canonicalize
+      <$> Qc.frequency
+        [ (3, NoParensSelectWithParens <$> Gens.downscale Qc.arbitrary),
+          (1, WithParensSelectWithParens <$> Gens.downscale Qc.arbitrary)
+        ]
+
+-- |
+-- Collapses the non-canonical @NoParensSelectWithParens@ shape described
+-- above to the @WithParensSelectWithParens@ shape the parser actually
+-- produces for it. Both 'arbitrary' and 'shrink' can otherwise construct
+-- the non-canonical shape (shrinking the inner 'SelectNoParens' toward
+-- @Nothing@s is exactly how it arises), which renders fine but parses back
+-- to a different, canonical value and so breaks the roundtrip property.
+canonicalize :: SelectWithParens -> SelectWithParens
+canonicalize = \case
+  NoParensSelectWithParens a
+    | Just c <- trivialSelectWithParensWrapper a -> WithParensSelectWithParens c
+  other -> other
+
+-- |
+-- If a 'SelectWithParens' is the @WithParensSelectWithParens@ wrapping of
+-- another one, returns the wrapped value. Exposed for modules that can
+-- only see 'SelectWithParens' via its @hs-boot@ (which keeps it abstract
+-- to break an import cycle) — see "PostgresqlSyntax.Ast.InExpr", which
+-- needs it to canonicalize a @select_with_parens@\/@expr_list@ ambiguity
+-- analogous to the one described above.
+withParensSelectWithParensInner :: SelectWithParens -> Maybe SelectWithParens
+withParensSelectWithParensInner = \case
+  WithParensSelectWithParens a -> Just a
+  _ -> Nothing

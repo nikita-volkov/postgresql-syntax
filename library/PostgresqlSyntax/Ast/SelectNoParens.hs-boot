@@ -38,3 +38,6 @@ selectNoParensAfterClause :: Maybe WithClause -> SelectClause -> Parser SelectNo
 
 -- | See the real module's doc for what this decides.
 afterSelectWithParensClause :: SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
+
+-- | See the real module's doc for what this decides.
+trivialSelectWithParensWrapper :: SelectNoParens -> Maybe SelectWithParens

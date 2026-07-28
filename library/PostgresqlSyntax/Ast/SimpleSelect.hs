@@ -145,22 +145,53 @@ extendSelectClause = extendMany suffix
       return (BinSimpleSelect op headSelectClause distinct rhs)
 
 instance Qc.Arbitrary SimpleSelect where
-  shrink = Qc.genericShrink
+  shrink = fmap canonicalize . Qc.genericShrink
   arbitrary =
-    Qc.sized $ \n ->
-      if n <= 1
-        then TableSimpleSelect <$> Qc.arbitrary
-        else
-          Qc.oneof
-            [ NormalSimpleSelect
-                <$> Qc.arbitrary
-                <*> Qc.arbitrary
-                <*> Qc.arbitrary
-                <*> Gens.downscale Qc.arbitrary
-                <*> Qc.arbitrary
-                <*> Gens.downscale Qc.arbitrary
-                <*> Qc.arbitrary,
-              ValuesSimpleSelect <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
-              TableSimpleSelect <$> Qc.arbitrary,
-              BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
-            ]
+    canonicalize
+      <$> Qc.sized
+        ( \n ->
+            if n <= 1
+              then TableSimpleSelect <$> Qc.arbitrary
+              else
+                Qc.oneof
+                  [ NormalSimpleSelect
+                      <$> Qc.arbitrary
+                      <*> Qc.arbitrary
+                      <*> Qc.arbitrary
+                      <*> Gens.downscale Qc.arbitrary
+                      <*> Qc.arbitrary
+                      <*> Gens.downscale Qc.arbitrary
+                      <*> Qc.arbitrary,
+                    ValuesSimpleSelect <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
+                    TableSimpleSelect <$> Qc.arbitrary,
+                    BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+                  ]
+        )
+
+-- |
+-- Collapses a left-associated @BinSimpleSelect@ chain (@(a OP1 b) OP2
+-- c@) to the right-associated shape (@a OP1 (b OP2 c)@) that the parser
+-- actually produces: 'parser' above parses each operator's right-hand
+-- side via 'extendSelectClause', which itself greedily consumes the rest
+-- of the chain before returning — so a chain of @N@ operators nests
+-- entirely to the right, and only that shape is reachable by parsing the
+-- rendered text (both shapes render identically, since rendering doesn't
+-- parenthesize chain elements). Both 'arbitrary' and 'shrink' can
+-- otherwise construct the non-canonical shape, which renders fine but
+-- parses back to a different, canonical value and so breaks the
+-- roundtrip property.
+canonicalize :: SimpleSelect -> SimpleSelect
+canonicalize s@(BinSimpleSelect {}) =
+  case rest of
+    (op, distinct, next) : more -> BinSimpleSelect op headClause distinct (buildRight next more)
+    [] -> s
+  where
+    (headClause, rest) = flattenChain (SimpleSelectSelectClause s)
+    buildRight lastClause [] = lastClause
+    buildRight clause ((op, distinct, next) : more) = SimpleSelectSelectClause (BinSimpleSelect op clause distinct (buildRight next more))
+    flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
+      let (lhsHead, lhsRest) = flattenChain lhs
+          (rhsHead, rhsRest) = flattenChain rhs
+       in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
+    flattenChain c = (c, [])
+canonicalize other = other

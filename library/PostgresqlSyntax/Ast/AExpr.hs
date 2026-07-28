@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.AExpr
     filteredParser,
     isBoundedAExprOperand,
     safeAExprOperand,
+    selectWithParensAExpr,
   )
 where
 
@@ -375,6 +376,15 @@ safeAExprOperand gen = do
     if isBoundedAExprOperand a
       then a
       else CExprAExpr (CExpr.InParensCExpr a Nothing)
+
+-- |
+-- Smart constructor wrapping a bare 'SelectWithParens' as an 'AExpr', for
+-- modules that can only see 'AExpr' via its @hs-boot@ (which keeps it
+-- abstract to break an import cycle) — see "PostgresqlSyntax.Ast.InExpr",
+-- which needs it to canonicalize a @select_with_parens@\/@expr_list@
+-- ambiguity.
+selectWithParensAExpr :: SelectWithParens -> AExpr
+selectWithParensAExpr a = CExprAExpr (CExpr.SelectWithParensCExpr a Nothing)
 
 instance Qc.Arbitrary AExpr where
   shrink = Qc.genericShrink
