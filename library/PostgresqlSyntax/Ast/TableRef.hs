@@ -102,8 +102,8 @@ instance IsAst TableRef where
   -- >>> testParser tableRef "a left join b on (a.i = b.i)"
   -- JoinTableRef (MethJoinedTable (QualJoinMeth...
   parser =
-    Parser.label "table reference"
-      $ do
+    Parser.label "table reference" $
+      do
         tr <- nonTrailingTableRef
         recur tr
     where
@@ -213,7 +213,7 @@ instance IsAst TableRef where
           joinTypedJoin =
             Just
               <$> (parser <* Parser.endHead <* Parser.space1 <* keyword "join")
-              <|> Nothing
+                <|> Nothing
               <$ keyword "join"
 
 instance Qc.Arbitrary TableRef where

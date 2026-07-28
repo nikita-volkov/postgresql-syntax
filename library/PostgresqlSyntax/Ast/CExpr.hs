@@ -5,6 +5,7 @@ module PostgresqlSyntax.Ast.CExpr
 where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.AexprConst
 import PostgresqlSyntax.Ast.ArrayExpr
 import PostgresqlSyntax.Ast.CaseExpr
@@ -16,10 +17,9 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
 import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -115,7 +115,7 @@ customizedParser colIdParser =
       Parser.endHead
       b <- optional (Parser.space *> parser)
       return (Columnref a b)
-    -- |
+    -- \|
     -- See 'PostgresqlSyntax.Ast.AExpr'\'s doc on the sibling parser this
     -- replaces (@parenthesizedExprCExpr@\/implicit-row sharing trick) for
     -- why the single @a_expr@ parse is shared between the two endings.
@@ -148,17 +148,18 @@ instance Qc.Arbitrary CExpr where
       if n <= 1
         then ColumnrefCExpr <$> Qc.arbitrary
         else
-          Qc.oneof
-            [ ColumnrefCExpr <$> Qc.arbitrary,
-              AexprConstCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ParamCExpr <$> Qc.choose (1, 19) <*> Qc.scale (`div` 2) Qc.arbitrary,
-              InParensCExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              CaseCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              FuncCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              SelectWithParensCExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              ExistsCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ArrayCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ExplicitRowCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ImplicitRowCExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              GroupingCExpr <$> Qc.scale (`div` 2) Qc.arbitrary
-            ]
+          Qc.scale (`div` 2) $
+            Qc.oneof
+              [ ColumnrefCExpr <$> Qc.arbitrary,
+                AexprConstCExpr <$> Qc.arbitrary,
+                ParamCExpr <$> Qc.choose (1, 19) <*> Qc.arbitrary,
+                InParensCExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+                CaseCExpr <$> Qc.arbitrary,
+                FuncCExpr <$> Qc.arbitrary,
+                SelectWithParensCExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+                ExistsCExpr <$> Qc.arbitrary,
+                ArrayCExpr <$> Qc.arbitrary,
+                ExplicitRowCExpr <$> Qc.arbitrary,
+                ImplicitRowCExpr <$> Qc.arbitrary,
+                GroupingCExpr <$> Qc.arbitrary
+              ]

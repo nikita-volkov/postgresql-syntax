@@ -1,16 +1,16 @@
 module PostgresqlSyntax.Ast.FuncExprCommonSubexpr where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.ExtractList
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverlayList
 import PostgresqlSyntax.Ast.PositionList
 import PostgresqlSyntax.Ast.SubstrList
-import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.TrimList
 import PostgresqlSyntax.Ast.TrimModifier
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
@@ -148,34 +148,47 @@ instance IsAst FuncExprCommonSubexpr where
 
 instance Qc.Arbitrary FuncExprCommonSubexpr where
   arbitrary =
-    Qc.oneof
-      [ CollationForFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        pure CurrentDateFuncExprCommonSubexpr,
-        -- | The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so
-        -- it must never be negative — mirroring
-        -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
-        CurrentTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
-        CurrentTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
-        LocalTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
-        LocalTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
-        pure CurrentRoleFuncExprCommonSubexpr,
-        pure CurrentUserFuncExprCommonSubexpr,
-        pure SessionUserFuncExprCommonSubexpr,
-        pure UserFuncExprCommonSubexpr,
-        pure CurrentCatalogFuncExprCommonSubexpr,
-        pure CurrentSchemaFuncExprCommonSubexpr,
-        CastFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-        ExtractFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        OverlayFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        PositionFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        SubstringFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        TreatFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-        TrimFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        NullIfFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        CoalesceFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        GreatestFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        LeastFuncExprCommonSubexpr <$> Qc.scale (`div` 2) Qc.arbitrary
-      ]
+    Qc.sized $ \n ->
+      if n <= 1
+        then
+          Qc.oneof
+            [ pure CurrentDateFuncExprCommonSubexpr,
+              pure CurrentRoleFuncExprCommonSubexpr,
+              pure CurrentUserFuncExprCommonSubexpr,
+              pure SessionUserFuncExprCommonSubexpr,
+              pure UserFuncExprCommonSubexpr,
+              pure CurrentCatalogFuncExprCommonSubexpr,
+              pure CurrentSchemaFuncExprCommonSubexpr
+            ]
+        else
+          Qc.oneof
+            [ CollationForFuncExprCommonSubexpr <$> Qc.arbitrary,
+              pure CurrentDateFuncExprCommonSubexpr,
+              -- The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so
+              -- it must never be negative — mirroring
+              -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
+              CurrentTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+              CurrentTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+              LocalTimeFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+              LocalTimestampFuncExprCommonSubexpr <$> nonNegativeMaybeInt64,
+              pure CurrentRoleFuncExprCommonSubexpr,
+              pure CurrentUserFuncExprCommonSubexpr,
+              pure SessionUserFuncExprCommonSubexpr,
+              pure UserFuncExprCommonSubexpr,
+              pure CurrentCatalogFuncExprCommonSubexpr,
+              pure CurrentSchemaFuncExprCommonSubexpr,
+              CastFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              ExtractFuncExprCommonSubexpr <$> Qc.arbitrary,
+              OverlayFuncExprCommonSubexpr <$> Qc.arbitrary,
+              PositionFuncExprCommonSubexpr <$> Qc.arbitrary,
+              SubstringFuncExprCommonSubexpr <$> Qc.arbitrary,
+              TreatFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              TrimFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              NullIfFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              CoalesceFuncExprCommonSubexpr <$> Qc.arbitrary,
+              GreatestFuncExprCommonSubexpr <$> Qc.arbitrary,
+              LeastFuncExprCommonSubexpr <$> Qc.arbitrary
+            ]
     where
       nonNegativeMaybeInt64 = Qc.oneof [pure Nothing, Just <$> nonNegativeInt64]
       nonNegativeInt64 = Qc.sized (\n -> Qc.choose (0, cap n))

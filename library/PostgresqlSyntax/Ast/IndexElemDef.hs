@@ -29,9 +29,9 @@ instance IsAst IndexElemDef where
   parser =
     ExprIndexElemDef
       <$> inParens parser
-      <|> FuncIndexElemDef
+        <|> FuncIndexElemDef
       <$> parser
-      <|> IdIndexElemDef
+        <|> IdIndexElemDef
       <$> colId
 
 instance Qc.Arbitrary IndexElemDef where

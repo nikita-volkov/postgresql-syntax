@@ -25,7 +25,7 @@ instance IsAst SelectLimitValue where
   parser =
     AllSelectLimitValue
       <$ keyword "all"
-      <|> ExprSelectLimitValue
+        <|> ExprSelectLimitValue
       <$> parser
 
 instance Qc.Arbitrary SelectLimitValue where

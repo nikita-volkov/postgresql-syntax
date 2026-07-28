@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.TrimList where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.ExprList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

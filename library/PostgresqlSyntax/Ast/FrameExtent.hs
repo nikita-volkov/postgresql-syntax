@@ -26,7 +26,7 @@ instance IsAst FrameExtent where
     BetweenFrameExtent
       <$> (keyword "between" *> Parser.space1 *> Parser.endHead *> parser <* Parser.space1 <* keyword "and" <* Parser.space1)
       <*> parser
-      <|> SingularFrameExtent
+        <|> SingularFrameExtent
       <$> parser
 
 instance Qc.Arbitrary FrameExtent where

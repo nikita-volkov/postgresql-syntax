@@ -2,6 +2,7 @@ module PostgresqlSyntax.Ast.SelectClause where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect (SimpleSelect)
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -39,6 +40,6 @@ instance IsAst SelectClause where
 instance Qc.Arbitrary SelectClause where
   arbitrary =
     Qc.oneof
-      [ SimpleSelectSelectClause <$> Qc.scale (`div` 2) Qc.arbitrary,
-        WithParensSelectClause <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ SimpleSelectSelectClause <$> Qc.downscale Qc.arbitrary,
+        WithParensSelectClause <$> Qc.downscale Qc.arbitrary
       ]

@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortBy
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
 import qualified Test.QuickCheck as Qc
@@ -30,8 +31,4 @@ instance IsAst SortClause where
     SortClause <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary SortClause where
-  arbitrary = do
-    len <- Qc.choose (0, 7)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (SortClause (x :| xs))
+  arbitrary = SortClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

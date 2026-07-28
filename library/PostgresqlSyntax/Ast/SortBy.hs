@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.SortBy where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)

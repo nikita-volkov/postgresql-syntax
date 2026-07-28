@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.SetTargetList where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst SetTargetList where
   parser = SetTargetList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary SetTargetList where
-  arbitrary = do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (SetTargetList (x :| xs))
+  arbitrary = SetTargetList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

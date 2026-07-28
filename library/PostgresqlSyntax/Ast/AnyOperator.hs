@@ -40,9 +40,9 @@ instance IsAst AnyOperator where
       ]
     where
       colIdLikeName =
-        Parser.label "identifier"
-          $ parser
-          <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+        Parser.label "identifier" $
+          parser
+            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyOperator where
   arbitrary = Qc.sized $ \n ->

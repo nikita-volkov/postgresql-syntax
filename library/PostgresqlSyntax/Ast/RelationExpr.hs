@@ -28,8 +28,8 @@ instance IsAst RelationExpr where
     SimpleRelationExpr a b -> toTextBuilder a <> bool "" " *" b
     OnlyRelationExpr a b -> "ONLY " <> bool toTextBuilder (renderInParens . toTextBuilder) b a
   parser =
-    Parser.label "relation expression"
-      $ asum
+    Parser.label "relation expression" $
+      asum
         [ do
             keyword "only"
             Parser.space1

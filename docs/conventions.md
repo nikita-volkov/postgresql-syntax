@@ -21,7 +21,7 @@ import qualified Test.QuickCheck as Qc
 
 instance Qc.Arbitrary Bconst where
   arbitrary = do
-    len <- Qc.choose (1, 100)
+    len <- Qc.sized $ \size -> Qc.choose (1, min 1 (succ size))
     Bconst . Text.pack <$> Qc.vectorOf len (Qc.elements "01")
 ```
 

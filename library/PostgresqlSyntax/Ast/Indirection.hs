@@ -2,6 +2,7 @@ module PostgresqlSyntax.Ast.Indirection where
 
 import Control.Applicative.Combinators.NonEmpty (some)
 import PostgresqlSyntax.Ast.IndirectionEl
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (some)
 import qualified Test.QuickCheck as Qc
@@ -21,8 +22,4 @@ instance IsAst Indirection where
   parser = Indirection <$> some parser
 
 instance Qc.Arbitrary Indirection where
-  arbitrary = do
-    len <- Qc.choose (0, 2)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (Indirection (x :| xs))
+  arbitrary = Indirection <$> Qc.nonEmptyUpTo 4 Qc.arbitrary

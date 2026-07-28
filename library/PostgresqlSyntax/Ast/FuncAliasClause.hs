@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.FuncAliasClause where
 
-import PostgresqlSyntax.Ast.AliasClause
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElementList

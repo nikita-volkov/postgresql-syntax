@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.ImplicitRow where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
-import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -21,7 +21,8 @@ data ImplicitRow = ImplicitRow ExprList AExpr
 
 instance IsAst ImplicitRow where
   toTextBuilder (ImplicitRow a b) = renderInParens (toTextBuilder a <> ", " <> toTextBuilder b)
-  -- |
+
+  -- \|
   -- Parses the shared @a_expr@ once and then decides, from what follows,
   -- whether it's the sole element of the leading 'ExprList' or the trailing
   -- @a_expr@ — see 'PostgresqlSyntax.Extras.NonEmpty.consAndUnsnoc'.

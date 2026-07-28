@@ -29,10 +29,14 @@ instance IsAst WindowExclusionClause where
     TiesWindowExclusionClause -> "EXCLUDE TIES"
     NoOthersWindowExclusionClause -> "EXCLUDE NO OTHERS"
   parser =
-    CurrentRowWindowExclusionClause <$ keyphrase "exclude current row"
-      <|> GroupWindowExclusionClause <$ keyphrase "exclude group"
-      <|> TiesWindowExclusionClause <$ keyphrase "exclude ties"
-      <|> NoOthersWindowExclusionClause <$ keyphrase "exclude no others"
+    CurrentRowWindowExclusionClause
+      <$ keyphrase "exclude current row"
+        <|> GroupWindowExclusionClause
+      <$ keyphrase "exclude group"
+        <|> TiesWindowExclusionClause
+      <$ keyphrase "exclude ties"
+        <|> NoOthersWindowExclusionClause
+      <$ keyphrase "exclude no others"
 
 instance Qc.Arbitrary WindowExclusionClause where
   arbitrary =

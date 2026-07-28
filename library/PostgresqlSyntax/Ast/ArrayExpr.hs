@@ -28,8 +28,8 @@ instance IsAst ArrayExpr where
       ArrayExprListArrayExpr a -> toTextBuilder a
       EmptyArrayExpr -> mempty
   parser =
-    inBrackets
-      $ asum
+    inBrackets $
+      asum
         [ ArrayExprListArrayExpr <$> parser,
           ExprListArrayExpr <$> parser,
           pure EmptyArrayExpr
@@ -42,7 +42,7 @@ instance Qc.Arbitrary ArrayExpr where
         then pure EmptyArrayExpr
         else
           Qc.oneof
-            [ ExprListArrayExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ArrayExprListArrayExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+            [ ExprListArrayExpr <$> Qc.arbitrary,
+              ArrayExprListArrayExpr <$> Qc.arbitrary,
               pure EmptyArrayExpr
             ]

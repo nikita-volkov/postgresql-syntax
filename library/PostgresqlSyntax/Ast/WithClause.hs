@@ -5,6 +5,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CommonTableExpr
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -32,8 +33,4 @@ instance IsAst WithClause where
     return (WithClause recursive cteList)
 
 instance Qc.Arbitrary WithClause where
-  arbitrary = WithClause <$> arbitrary <*> do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (x :| xs)
+  arbitrary = WithClause <$> arbitrary <*> Qc.nonEmptyUpTo 6 Qc.arbitrary

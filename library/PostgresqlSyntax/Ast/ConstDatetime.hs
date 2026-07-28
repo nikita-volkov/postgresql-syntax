@@ -51,7 +51,7 @@ instance IsAst ConstDatetime where
       ]
 
 instance Qc.Arbitrary ConstDatetime where
-  -- | The precision here is parsed via 'Parser.decimal' (unsigned), so it
+  -- \| The precision here is parsed via 'Parser.decimal' (unsigned), so it
   -- must never be negative — mirroring
   -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s own @nonNegative@.
   arbitrary =

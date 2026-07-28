@@ -43,8 +43,10 @@ instance IsAst CommonTableExpr where
     return (CommonTableExpr name nameList materialized stmt)
     where
       materialized =
-        True <$ keyword "materialized"
-          <|> False <$ keyphrase "not materialized"
+        True
+          <$ keyword "materialized"
+            <|> False
+          <$ keyphrase "not materialized"
 
 instance Qc.Arbitrary CommonTableExpr where
   arbitrary =

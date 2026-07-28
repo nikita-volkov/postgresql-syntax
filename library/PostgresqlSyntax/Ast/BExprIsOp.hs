@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.BExprIsOp where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TypeList
-import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -45,8 +46,9 @@ instance IsAst BExprIsOp where
 
 instance Qc.Arbitrary BExprIsOp where
   arbitrary =
-    Qc.oneof
-      [ DistinctFromBExprIsOp <$> Qc.scale (`div` 2) Qc.arbitrary,
-        OfBExprIsOp <$> Qc.scale (`div` 2) Qc.arbitrary,
-        pure DocumentBExprIsOp
+    Qc.oneofRec
+      [ pure DocumentBExprIsOp
+      ]
+      [ DistinctFromBExprIsOp <$> Qc.arbitrary,
+        OfBExprIsOp <$> Qc.arbitrary
       ]

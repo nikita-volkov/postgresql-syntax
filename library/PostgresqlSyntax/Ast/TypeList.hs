@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.TypeList where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst TypeList where
   parser = TypeList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary TypeList where
-  arbitrary = do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (TypeList (x :| xs))
+  arbitrary = TypeList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

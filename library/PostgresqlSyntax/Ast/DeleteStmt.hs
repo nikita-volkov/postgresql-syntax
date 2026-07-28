@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.DeleteStmt where
 
-import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
+import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
@@ -54,10 +54,15 @@ instance IsAst DeleteStmt where
       returningClause = keyword "returning" *> Parser.space1 *> Parser.endHead *> parser
 
 instance Qc.Arbitrary DeleteStmt where
-  arbitrary =
-    DeleteStmt
-      <$> Qc.scale (`div` 6) Qc.arbitrary
-      <*> Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
+  arbitrary = Qc.sized $ \size ->
+    if size <= 1
+      then do
+        relationExprOptAlias <- Qc.arbitrary
+        return (DeleteStmt Nothing relationExprOptAlias Nothing Nothing Nothing)
+      else
+        DeleteStmt
+          <$> Qc.resize (div size 2) Qc.arbitrary
+          <*> Qc.arbitrary
+          <*> Qc.arbitrary
+          <*> Qc.arbitrary
+          <*> Qc.arbitrary

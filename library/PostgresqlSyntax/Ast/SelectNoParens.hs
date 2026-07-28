@@ -11,9 +11,9 @@ import PostgresqlSyntax.Ast.ForLockingClause
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.SelectLimit
-import PostgresqlSyntax.Ast.SortClause
-import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
+import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
+import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
@@ -104,9 +104,16 @@ afterSelectWithParensClause a = do
 
 instance Qc.Arbitrary SelectNoParens where
   arbitrary =
-    SelectNoParens
-      <$> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 2) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
+    sized $ \size ->
+      if size <= 1
+        then do
+          selectClause <- Qc.arbitrary
+          return (SelectNoParens Nothing selectClause Nothing Nothing Nothing)
+        else
+          Qc.resize (div size 2) $
+            SelectNoParens
+              <$> Qc.arbitrary
+              <*> Qc.arbitrary
+              <*> Qc.arbitrary
+              <*> Qc.arbitrary
+              <*> Qc.arbitrary

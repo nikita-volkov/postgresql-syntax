@@ -35,9 +35,9 @@ instance IsAst AnyName where
   parser = AnyName <$> (Parser.wrapToHead colIdLikeName <* Parser.endHead) <*> optional (Parser.space *> parser)
     where
       colIdLikeName =
-        Parser.label "identifier"
-          $ parser
-          <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+        Parser.label "identifier" $
+          parser
+            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyName where
   arbitrary = AnyName <$> arbitrary <*> arbitrary

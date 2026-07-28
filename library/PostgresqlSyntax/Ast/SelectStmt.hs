@@ -25,7 +25,7 @@ instance IsAst SelectStmt where
   parser = NoParensSelectStmt <$> parser <|> WithParensSelectStmt <$> parser
 
 instance Qc.Arbitrary SelectStmt where
-  -- | @WithParensSelectStmt@ is unreachable via this type's own @parser@:
+  -- \| @WithParensSelectStmt@ is unreachable via this type's own @parser@:
   -- @NoParensSelectStmt@'s alternative is tried first, and
   -- 'PostgresqlSyntax.Ast.SelectClause' (reachable from any
   -- @select_no_parens@ with every other clause absent) always accepts a

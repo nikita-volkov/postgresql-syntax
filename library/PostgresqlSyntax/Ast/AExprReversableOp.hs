@@ -7,6 +7,7 @@ import PostgresqlSyntax.Ast.InExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TypeList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -102,10 +103,10 @@ instance Qc.Arbitrary AExprReversableOp where
               pure TrueAExprReversableOp,
               pure FalseAExprReversableOp,
               pure UnknownAExprReversableOp,
-              DistinctFromAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
-              OfAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
-              BetweenAExprReversableOp <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              BetweenSymmetricAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              InAExprReversableOp <$> Qc.scale (`div` 2) Qc.arbitrary,
+              DistinctFromAExprReversableOp <$> Qc.downscale Qc.arbitrary,
+              OfAExprReversableOp <$> Qc.downscale Qc.arbitrary,
+              BetweenAExprReversableOp <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              BetweenSymmetricAExprReversableOp <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              InAExprReversableOp <$> Qc.downscale Qc.arbitrary,
               pure DocumentAExprReversableOp
             ]

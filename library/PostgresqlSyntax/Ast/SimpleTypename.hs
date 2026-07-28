@@ -6,8 +6,8 @@ import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.ConstDatetime
 import PostgresqlSyntax.Ast.GenericType
 import PostgresqlSyntax.Ast.Iconst
-import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Numeric
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst

@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.LimitClause where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import PostgresqlSyntax.Ast.SelectLimitValue
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -80,11 +80,15 @@ instance IsAst LimitClause where
           )
     where
       firstOrNext =
-        False <$ keyword "first"
-          <|> True <$ keyword "next"
+        False
+          <$ keyword "first"
+            <|> True
+          <$ keyword "next"
       rowOrRows =
-        True <$ keyword "rows"
-          <|> False <$ keyword "row"
+        True
+          <$ keyword "rows"
+            <|> False
+          <$ keyword "row"
 
 instance Qc.Arbitrary LimitClause where
   arbitrary =

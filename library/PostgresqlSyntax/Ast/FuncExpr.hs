@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.FuncExpr where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.ForLockingClause where
 import PostgresqlSyntax.Ast.ForLockingItem
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -34,10 +35,6 @@ instance IsAst ForLockingClause where
 instance Qc.Arbitrary ForLockingClause where
   arbitrary =
     Qc.oneof
-      [ ItemsForLockingClause <$> do
-          len <- Qc.choose (0, 7)
-          x <- Qc.scale (`div` 2) Qc.arbitrary
-          xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-          pure (x :| xs),
+      [ ItemsForLockingClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
         pure ReadOnlyForLockingClause
       ]

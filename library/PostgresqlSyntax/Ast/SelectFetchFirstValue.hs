@@ -31,7 +31,7 @@ instance IsAst SelectFetchFirstValue where
   parser =
     ExprSelectFetchFirstValue
       <$> parser
-      <|> NumSelectFetchFirstValue
+        <|> NumSelectFetchFirstValue
       <$> (plusOrMinus <* Parser.endHead <* Parser.space)
       <*> iconstOrFconst
     where
@@ -39,7 +39,7 @@ instance IsAst SelectFetchFirstValue where
       iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> Parser.decimal
 
 instance Qc.Arbitrary SelectFetchFirstValue where
-  -- | The magnitude is parsed via unsigned 'Parser.decimal'\/'Fconst' (the
+  -- \| The magnitude is parsed via unsigned 'Parser.decimal'\/'Fconst' (the
   -- sign is this type's own separate @Bool@ field), so, like
   -- 'PostgresqlSyntax.Ast.IntervalSecond'\'s @nonNegative@, it must never be
   -- negative itself — otherwise e.g. @NumSelectFetchFirstValue True (Left

@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -33,13 +34,9 @@ instance IsAst NameList where
   parser = NameList <$> Parser.sep1 commaSeparator colIdLikeName
     where
       colIdLikeName =
-        Parser.label "identifier"
-          $ parser
-          <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+        Parser.label "identifier" $
+          parser
+            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary NameList where
-  arbitrary = do
-    len <- Qc.choose (0, 7)
-    x <- Qc.arbitrary
-    xs <- Qc.vectorOf len Qc.arbitrary
-    pure (NameList (x :| xs))
+  arbitrary = NameList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary

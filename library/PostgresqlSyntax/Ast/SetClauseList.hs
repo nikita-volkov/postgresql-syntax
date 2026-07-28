@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.SetClauseList where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst SetClauseList where
   parser = SetClauseList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary SetClauseList where
-  arbitrary = do
-    len <- Qc.choose (0, 9)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (SetClauseList (x :| xs))
+  arbitrary = SetClauseList <$> Qc.nonEmptyUpTo 9 Qc.arbitrary

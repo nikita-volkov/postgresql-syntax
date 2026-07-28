@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.UpdateStmt where
 
-import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
+import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.SetClauseList
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.TargetList

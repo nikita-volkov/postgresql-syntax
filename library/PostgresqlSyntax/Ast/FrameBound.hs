@@ -35,14 +35,14 @@ instance IsAst FrameBound where
   parser =
     UnboundedPrecedingFrameBound
       <$ keyphrase "unbounded preceding"
-      <|> UnboundedFollowingFrameBound
+        <|> UnboundedFollowingFrameBound
       <$ keyphrase "unbounded following"
-      <|> CurrentRowFrameBound
+        <|> CurrentRowFrameBound
       <$ keyphrase "current row"
-      <|> do
-        a <- parser
-        Parser.space1
-        PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
+        <|> do
+          a <- parser
+          Parser.space1
+          PrecedingFrameBound a <$ keyword "preceding" <|> FollowingFrameBound a <$ keyword "following"
 
 instance Qc.Arbitrary FrameBound where
   arbitrary =

@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.ExprList where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst ExprList where
   parser = ExprList <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary ExprList where
-  arbitrary = do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (ExprList (x :| xs))
+  arbitrary = ExprList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

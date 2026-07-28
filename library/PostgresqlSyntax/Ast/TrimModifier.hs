@@ -21,9 +21,12 @@ instance IsAst TrimModifier where
     LeadingTrimModifier -> "LEADING"
     TrailingTrimModifier -> "TRAILING"
   parser =
-    BothTrimModifier <$ keyword "both"
-      <|> LeadingTrimModifier <$ keyword "leading"
-      <|> TrailingTrimModifier <$ keyword "trailing"
+    BothTrimModifier
+      <$ keyword "both"
+        <|> LeadingTrimModifier
+      <$ keyword "leading"
+        <|> TrailingTrimModifier
+      <$ keyword "trailing"
 
 instance Qc.Arbitrary TrimModifier where
   arbitrary = Qc.elements [minBound .. maxBound]

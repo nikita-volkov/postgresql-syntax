@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -64,7 +65,7 @@ instance IsAst FuncApplicationParams where
         arg <- parser
         optSortClause <- optional (Parser.space1 *> parser)
         return (VariadicFuncApplicationParams Nothing arg optSortClause)
-      -- |
+      -- \|
       -- @func_arg_list ',' VARIADIC func_arg_expr@: one or more
       -- comma-separated 'FuncArgExpr's, where the final comma is
       -- immediately followed by (and the @VARIADIC@ keyword itself consumed
@@ -93,9 +94,5 @@ instance Qc.Arbitrary FuncApplicationParams where
         pure StarFuncApplicationParams
       ]
     where
-      nonEmptyOf hi = do
-        len <- Qc.choose (0, hi - 1)
-        x <- Qc.scale (`div` 2) Qc.arbitrary
-        xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-        pure (x :| xs)
+      nonEmptyOf hi = Qc.nonEmptyUpTo (hi - 1) Qc.arbitrary
       maybeNonEmptyOf hi = Qc.oneof [pure Nothing, Just <$> nonEmptyOf hi]

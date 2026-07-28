@@ -42,9 +42,9 @@ instance IsAst AliasClause where
     return (AliasClause as alias columnAliases)
     where
       colIdLikeName =
-        Parser.label "identifier"
-          $ parser
-          <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+        Parser.label "identifier" $
+          parser
+            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AliasClause where
   arbitrary = AliasClause <$> arbitrary <*> arbitrary <*> arbitrary

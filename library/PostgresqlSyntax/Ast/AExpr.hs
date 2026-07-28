@@ -8,19 +8,19 @@ where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AExprReversableOp
-import qualified PostgresqlSyntax.Ast.CExpr as CExpr
+import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
 import PostgresqlSyntax.Ast.CExpr (CExpr)
+import qualified PostgresqlSyntax.Ast.CExpr as CExpr
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.Row
-import PostgresqlSyntax.Ast.SubqueryOp
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.SubType
+import PostgresqlSyntax.Ast.SubqueryOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
-import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -141,7 +141,6 @@ instance IsAst AExpr where
     UniqueAExpr a -> "UNIQUE " <> toTextBuilder a
     DefaultAExpr -> "DEFAULT"
     where
-      -- |
       -- Renders an operand sitting in the left\/accumulator position of a
       -- suffix production (the @a@ that 'customizedParser'\'s @suffixRec@
       -- threads through). Every alternative in @suffix@ parses its
@@ -164,7 +163,6 @@ instance IsAst AExpr where
       renderOperand a
         | isBoundedAExprOperand a = toTextBuilder a
         | otherwise = renderInParens (toTextBuilder a)
-      -- |
       -- The @d@ operand of a @LIKE@\/@ILIKE@\/@SIMILAR TO@ production, when
       -- it has a trailing @ESCAPE@ clause of its own (@e@). Since @d@ is
       -- parsed via an unrestricted recursive @a_expr@, rendered bare it
@@ -176,14 +174,13 @@ instance IsAst AExpr where
       -- out, the same way @renderOperand@ does for the left position.
       renderVerbalRhs e d = case e of
         Nothing -> toTextBuilder d
-        -- | Already explicitly parenthesized (as the 'Qc.Arbitrary'
+        -- Already explicitly parenthesized (as the 'Qc.Arbitrary'
         -- instance below always arranges whenever it generates an escape
         -- clause) — render as-is instead of adding a second, redundant
         -- layer of parens.
         Just _
           | CExprAExpr (CExpr.InParensCExpr _ _) <- d -> toTextBuilder d
           | otherwise -> renderInParens (toTextBuilder d)
-      -- |
       -- Distinct from 'PostgresqlSyntax.Ast.AExprReversableOp'\'s own
       -- @toTextBuilder@ (which bakes in the "positive" @IS@\/@BETWEEN@\/@IN@
       -- keyword but not the negation) — this one threads the external
@@ -373,8 +370,8 @@ isBoundedAExprOperand = \case
 safeAExprOperand :: Qc.Gen AExpr -> Qc.Gen AExpr
 safeAExprOperand gen = do
   a <- gen
-  pure
-    $ if isBoundedAExprOperand a
+  pure $
+    if isBoundedAExprOperand a
       then a
       else CExprAExpr (CExpr.InParensCExpr a Nothing)
 
@@ -382,41 +379,42 @@ instance Qc.Arbitrary AExpr where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then Qc.oneof [CExprAExpr <$> Qc.scale (`div` 2) Qc.arbitrary, pure DefaultAExpr]
+        then pure DefaultAExpr
         else
-          Qc.oneof
-            [ CExprAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              pure DefaultAExpr,
-              TypecastAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
-              CollateAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
-              AtTimeZoneAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
-              PlusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              MinusAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              SymbolicBinOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              SuffixQualOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
-              AndAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
-              OrAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.scale (`div` 2) Qc.arbitrary,
-              NotAExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              ( do
-                  a <- safeAExprOperand (Qc.scale (`div` 4) Qc.arbitrary)
-                  b <- Qc.arbitrary
-                  c <- Qc.arbitrary
-                  e <- Qc.scale (`div` 4) Qc.arbitrary
-                  -- | See @renderVerbalRhs@ in the 'IsAst' instance above:
-                  -- whenever there's an escape clause, @d@ must be
-                  -- parenthesized up front so the generated value already
-                  -- matches what parsing the (necessarily parenthesized)
-                  -- rendering reconstructs.
-                  d <- case e of
-                    Nothing -> Qc.scale (`div` 4) Qc.arbitrary
-                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.scale (`div` 4) Qc.arbitrary
-                  pure (VerbalExprBinOpAExpr a b c d e)
-              ),
-              ReversableOpAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              IsnullAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary),
-              NotnullAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary),
-              OverlapsAExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              SubqueryAExpr <$> safeAExprOperand (Qc.scale (`div` 4) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 4) Qc.arbitrary,
-              UniqueAExpr <$> Qc.scale (`div` 2) Qc.arbitrary
-            ]
+          Qc.scale (`div` 2) $
+            Qc.oneof
+              [ CExprAExpr <$> Qc.arbitrary,
+                pure DefaultAExpr,
+                TypecastAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                CollateAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                AtTimeZoneAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                PlusAExpr <$> Qc.arbitrary,
+                MinusAExpr <$> Qc.arbitrary,
+                SymbolicBinOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+                PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+                SuffixQualOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                AndAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                OrAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
+                NotAExpr <$> Qc.arbitrary,
+                ( do
+                    a <- safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary)
+                    b <- Qc.arbitrary
+                    c <- Qc.arbitrary
+                    e <- Qc.scale (`div` 2) Qc.arbitrary
+                    -- See @renderVerbalRhs@ in the 'IsAst' instance above:
+                    -- whenever there's an escape clause, @d@ must be
+                    -- parenthesized up front so the generated value already
+                    -- matches what parsing the (necessarily parenthesized)
+                    -- rendering reconstructs.
+                    d <- case e of
+                      Nothing -> Qc.scale (`div` 2) Qc.arbitrary
+                      Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.scale (`div` 2) Qc.arbitrary
+                    pure (VerbalExprBinOpAExpr a b c d e)
+                ),
+                ReversableOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+                IsnullAExpr <$> safeAExprOperand Qc.arbitrary,
+                NotnullAExpr <$> safeAExprOperand Qc.arbitrary,
+                OverlapsAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+                SubqueryAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+                UniqueAExpr <$> Qc.arbitrary
+              ]

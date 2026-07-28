@@ -66,7 +66,7 @@ instance IsAst BExpr where
     QualOpBExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
     IsOpBExpr a b c -> renderOperand a <> " " <> renderBExprIsOp b c
     where
-      -- | See 'PostgresqlSyntax.Ast.AExpr'\'s @renderOperand@ for the
+      -- \| See 'PostgresqlSyntax.Ast.AExpr'\'s @renderOperand@ for the
       -- rationale — same left\/accumulator-position hazard, mirrored here
       -- for 'BExpr'\'s own (smaller) suffix grammar. Unlike 'AExpr', there's
       -- no @'(' b_expr ')'@ production to fall back on, so parenthesizing

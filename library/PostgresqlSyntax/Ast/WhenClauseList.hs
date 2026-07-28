@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.WhenClauseList where
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WhenClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst WhenClauseList where
   parser = WhenClauseList <$> Parser.sep1 Parser.space1 parser
 
 instance Qc.Arbitrary WhenClauseList where
-  arbitrary = do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (WhenClauseList (x :| xs))
+  arbitrary = WhenClauseList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary

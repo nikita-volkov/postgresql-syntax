@@ -28,8 +28,11 @@ instance IsAst QualifiedName where
     SimpleQualifiedName a -> toTextBuilder a
     IndirectedQualifiedName a b -> toTextBuilder a <> toTextBuilder b
   parser =
-    IndirectedQualifiedName <$> Parser.wrapToHead colId <*> (Parser.space *> parser)
-      <|> SimpleQualifiedName <$> colId
+    IndirectedQualifiedName
+      <$> Parser.wrapToHead colId
+      <*> (Parser.space *> parser)
+        <|> SimpleQualifiedName
+      <$> colId
 
 instance Qc.Arbitrary QualifiedName where
   arbitrary =

@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.ArrayBounds where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import PostgresqlSyntax.Ast.Iconst
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -24,6 +24,4 @@ instance IsAst ArrayBounds where
   parser = ArrayBounds <$> Parser.sep1 Parser.space (inBrackets (optional parser))
 
 instance Qc.Arbitrary ArrayBounds where
-  arbitrary = do
-    len <- Qc.choose (1, 4)
-    ArrayBounds . NonEmpty.fromList <$> Qc.vectorOf len (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])
+  arbitrary = ArrayBounds <$> Qc.nonEmptyUpTo 3 (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])

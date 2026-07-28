@@ -35,16 +35,16 @@ data WindowSpecification = WindowSpecification (Maybe Ident) (Maybe ExprList) (M
 
 instance IsAst WindowSpecification where
   toTextBuilder (WindowSpecification a b c d) =
-    renderInParens
-      $ optLexemes
+    renderInParens $
+      optLexemes
         [ fmap toTextBuilder a,
           fmap (mappend "PARTITION BY " . toTextBuilder) b,
           fmap toTextBuilder c,
           fmap toTextBuilder d
         ]
   parser =
-    inParens
-      $ asum
+    inParens $
+      asum
         [ do
             a <- parser
             return (WindowSpecification Nothing Nothing Nothing (Just a)),

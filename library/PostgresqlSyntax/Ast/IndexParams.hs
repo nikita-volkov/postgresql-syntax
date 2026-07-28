@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.IndexParams where
 import PostgresqlSyntax.Ast.IndexElem
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -22,8 +23,4 @@ instance IsAst IndexParams where
   parser = IndexParams <$> Parser.sep1 commaSeparator parser
 
 instance Qc.Arbitrary IndexParams where
-  arbitrary = do
-    len <- Qc.choose (0, 4)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    pure (IndexParams (x :| xs))
+  arbitrary = IndexParams <$> Qc.nonEmptyUpTo 4 Qc.arbitrary

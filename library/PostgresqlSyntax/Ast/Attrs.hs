@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.Attrs where
 
 import Control.Applicative.Combinators.NonEmpty (some)
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -37,11 +37,9 @@ instance IsAst Attrs where
   parser = Attrs <$> some (Parser.char '.' *> Parser.endHead *> Parser.space *> colLabelLikeName)
     where
       colLabelLikeName =
-        Parser.label "column label"
-          $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
-          <|> parser
+        Parser.label "column label" $
+          keywordNameFromSet UnquotedIdent KeywordSet.keyword
+            <|> parser
 
 instance Qc.Arbitrary Attrs where
-  arbitrary = do
-    len <- Qc.choose (1, 10)
-    Attrs . NonEmpty.fromList <$> Qc.vectorOf len Qc.arbitrary
+  arbitrary = Attrs <$> Qc.nonEmptyUpTo 9 Qc.arbitrary

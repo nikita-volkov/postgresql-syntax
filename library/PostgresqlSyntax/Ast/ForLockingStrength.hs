@@ -28,10 +28,14 @@ instance IsAst ForLockingStrength where
     ShareForLockingStrength -> "FOR SHARE"
     KeyForLockingStrength -> "FOR KEY SHARE"
   parser =
-    UpdateForLockingStrength <$ keyphrase "for update"
-      <|> NoKeyUpdateForLockingStrength <$ keyphrase "for no key update"
-      <|> ShareForLockingStrength <$ keyphrase "for share"
-      <|> KeyForLockingStrength <$ keyphrase "for key share"
+    UpdateForLockingStrength
+      <$ keyphrase "for update"
+        <|> NoKeyUpdateForLockingStrength
+      <$ keyphrase "for no key update"
+        <|> ShareForLockingStrength
+      <$ keyphrase "for share"
+        <|> KeyForLockingStrength
+      <$ keyphrase "for key share"
 
 instance Qc.Arbitrary ForLockingStrength where
   arbitrary =

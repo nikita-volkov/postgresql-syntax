@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.OffsetClause where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -42,8 +42,10 @@ instance IsAst OffsetClause where
       ]
     where
       rowOrRows =
-        True <$ keyword "rows"
-          <|> False <$ keyword "row"
+        True
+          <$ keyword "rows"
+            <|> False
+          <$ keyword "row"
 
 instance Qc.Arbitrary OffsetClause where
   arbitrary =

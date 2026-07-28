@@ -79,15 +79,20 @@ instance IsAst IndirectionEl where
       ]
     where
       colLabelLikeName =
-        Parser.label "column label"
-          $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
-          <|> parser
+        Parser.label "column label" $
+          keywordNameFromSet UnquotedIdent KeywordSet.keyword
+            <|> parser
 
 instance Qc.Arbitrary IndirectionEl where
   arbitrary =
-    Qc.oneof
-      [ AttrNameIndirectionEl <$> Qc.arbitrary,
-        pure AllIndirectionEl,
-        ExprIndirectionEl <$> Qc.scale (`div` 2) Qc.arbitrary,
-        SliceIndirectionEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
-      ]
+    Qc.sized $ \size ->
+      if size <= 1
+        then AttrNameIndirectionEl <$> Qc.arbitrary
+        else
+          Qc.scale (`div` 2) $
+            Qc.oneof
+              [ AttrNameIndirectionEl <$> Qc.arbitrary,
+                pure AllIndirectionEl,
+                ExprIndirectionEl <$> Qc.arbitrary,
+                SliceIndirectionEl <$> Qc.arbitrary <*> Qc.arbitrary
+              ]

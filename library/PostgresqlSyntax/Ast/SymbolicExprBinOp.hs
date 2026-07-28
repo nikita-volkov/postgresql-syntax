@@ -16,8 +16,10 @@ instance IsAst SymbolicExprBinOp where
     MathSymbolicExprBinOp a -> toTextBuilder a
     QualSymbolicExprBinOp a -> toTextBuilder a
   parser =
-    QualSymbolicExprBinOp <$> parser
-      <|> MathSymbolicExprBinOp <$> parser
+    QualSymbolicExprBinOp
+      <$> parser
+        <|> MathSymbolicExprBinOp
+      <$> parser
 
 instance Qc.Arbitrary SymbolicExprBinOp where
   arbitrary =

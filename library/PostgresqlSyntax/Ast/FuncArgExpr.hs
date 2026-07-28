@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.FuncArgExpr where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -51,7 +51,7 @@ instance IsAst FuncArgExpr where
         ExprFuncArgExpr <$> parser
       ]
     where
-      -- |
+      -- \|
       -- Duplicated from "PostgresqlSyntax.Parsing"'s @typeFunctionName@
       -- (a bare-aliased 'PostgresqlSyntax.Ast.Ident' whose own parser lives
       -- above this module in the dependency order), mirroring the

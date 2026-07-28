@@ -34,13 +34,16 @@ instance IsAst FuncName where
     TypeFuncName a -> toTextBuilder a
     IndirectedFuncName a b -> toTextBuilder a <> toTextBuilder b
   parser =
-    IndirectedFuncName <$> Parser.wrapToHead colIdLikeName <*> (Parser.space *> parser)
-      <|> TypeFuncName <$> typeFunctionNameLikeName
+    IndirectedFuncName
+      <$> Parser.wrapToHead colIdLikeName
+      <*> (Parser.space *> parser)
+        <|> TypeFuncName
+      <$> typeFunctionNameLikeName
     where
       colIdLikeName =
-        Parser.label "identifier"
-          $ parser
-          <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+        Parser.label "identifier" $
+          parser
+            <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
       typeFunctionNameLikeName =
         keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
           <|> parser

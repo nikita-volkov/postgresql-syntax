@@ -4,6 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -33,10 +34,6 @@ instance IsAst JoinQual where
 instance Qc.Arbitrary JoinQual where
   arbitrary =
     Qc.oneof
-      [ do
-          len <- Qc.choose (0, 7)
-          x <- Qc.arbitrary
-          xs <- Qc.vectorOf len Qc.arbitrary
-          pure (UsingJoinQual (x :| xs)),
+      [ UsingJoinQual <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
         OnJoinQual <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.GroupByItem where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -62,9 +63,5 @@ instance Qc.Arbitrary GroupByItem where
               pure EmptyGroupingSetGroupByItem,
               RollupGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
               CubeGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
-              GroupingSetsGroupByItem <$> do
-                len <- Qc.choose (0, 2)
-                x <- Qc.scale (`div` 4) Qc.arbitrary
-                xs <- Qc.vectorOf len (Qc.scale (`div` 4) Qc.arbitrary)
-                pure (x :| xs)
+              GroupingSetsGroupByItem <$> Qc.nonEmptyUpTo 2 (Qc.scale (`div` 4) Qc.arbitrary)
             ]

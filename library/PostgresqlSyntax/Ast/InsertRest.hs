@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.InsertRest where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.InsertColumnList
+import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverrideKind
 import PostgresqlSyntax.Ast.SelectStmt
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser

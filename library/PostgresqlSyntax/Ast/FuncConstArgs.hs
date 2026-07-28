@@ -4,6 +4,7 @@ import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -25,9 +26,4 @@ instance IsAst FuncConstArgs where
   parser = FuncConstArgs <$> Parser.sep1 commaSeparator parser <*> optional (Parser.space1 *> parser)
 
 instance Qc.Arbitrary FuncConstArgs where
-  arbitrary = do
-    len <- Qc.choose (0, 6)
-    x <- Qc.scale (`div` 2) Qc.arbitrary
-    xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-    b <- Qc.scale (`div` 2) Qc.arbitrary
-    pure (FuncConstArgs (x :| xs) b)
+  arbitrary = FuncConstArgs <$> Qc.nonEmptyUpTo 6 Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary

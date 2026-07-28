@@ -81,19 +81,19 @@ quotedString q = do
   char q
   endHead
   tail <-
-    parse
-      $ let collectChunks !bdr = do
-              chunk <- Megaparsec.takeWhileP Nothing (/= q)
-              let bdr' = bdr <> TextBuilder.text chunk
-              Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
-            consumeEscapedQuote bdr = do
-              MegaparsecChar.char q
-              MegaparsecChar.char q
-              collectChunks (bdr <> TextBuilder.char q)
-            finish bdr = do
-              MegaparsecChar.char q
-              return (TextBuilder.toText bdr)
-         in collectChunks mempty
+    parse $
+      let collectChunks !bdr = do
+            chunk <- Megaparsec.takeWhileP Nothing (/= q)
+            let bdr' = bdr <> TextBuilder.text chunk
+            Megaparsec.try (consumeEscapedQuote bdr') <|> finish bdr'
+          consumeEscapedQuote bdr = do
+            MegaparsecChar.char q
+            MegaparsecChar.char q
+            collectChunks (bdr <> TextBuilder.char q)
+          finish bdr = do
+            MegaparsecChar.char q
+            return (TextBuilder.toText bdr)
+       in collectChunks mempty
   return tail
 
 -- |
@@ -162,18 +162,18 @@ toByteString = Text.encodeUtf8 . TextBuilder.toText
 keywordNameFromSet wrap set = keywordNameByPredicate wrap (Predicate.inSet set)
 
 keywordNameByPredicate wrap predicate =
-  fmap wrap
-    $ filter
+  fmap wrap $
+    filter
       (\a -> "Reserved keyword " <> show a <> " used as an identifier. If that's what you intend, you have to wrap it in double quotes.")
       predicate
       anyKeyword
 
-anyKeyword = parse
-  $ Megaparsec.label "keyword"
-  $ do
-    firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
-    remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
-    return (Text.toLower (Text.cons firstChar remainder))
+anyKeyword = parse $
+  Megaparsec.label "keyword" $
+    do
+      firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
+      remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
+      return (Text.toLower (Text.cons firstChar remainder))
 
 -- | Expected keyword
 --
@@ -268,6 +268,6 @@ renderAllOrDistinct = \case
 -- parser, tried first, same as plain @ColId@ does.
 filteredColIdLike :: (Text -> a) -> Parser a -> [Text] -> Parser a
 filteredColIdLike wrap identParser excluded =
-  label "identifier"
-    $ identParser
-    <|> keywordNameFromSet wrap (foldr HashSet.delete (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword) excluded)
+  label "identifier" $
+    identParser
+      <|> keywordNameFromSet wrap (foldr HashSet.delete (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword) excluded)

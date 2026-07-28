@@ -43,9 +43,9 @@ instance IsAst Ident where
 -- 'parser' only accepts the strict @IDENT@ token (no keyword fallback).
 colId :: Parser Ident
 colId =
-  Parser.label "identifier"
-    $ parser
-    <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+  Parser.label "identifier" $
+    parser
+      <|> keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 -- |
 -- ==== References
@@ -59,9 +59,9 @@ colId =
 -- @
 colLabel :: Parser Ident
 colLabel =
-  Parser.label "column label"
-    $ keywordNameFromSet UnquotedIdent KeywordSet.keyword
-    <|> parser
+  Parser.label "column label" $
+    keywordNameFromSet UnquotedIdent KeywordSet.keyword
+      <|> parser
 
 -- |
 -- ==== References

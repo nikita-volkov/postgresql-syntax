@@ -7,6 +7,7 @@ module PostgresqlSyntax.Ast.SimpleSelect
 where
 
 import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.GroupByItem
 import PostgresqlSyntax.Ast.Internal
@@ -17,8 +18,8 @@ import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -149,20 +150,17 @@ instance Qc.Arbitrary SimpleSelect where
       if n <= 1
         then TableSimpleSelect <$> Qc.arbitrary
         else
-          Qc.oneof
-            [ NormalSimpleSelect
-                <$> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary
-                <*> Qc.scale (`div` 7) Qc.arbitrary,
-              ValuesSimpleSelect <$> do
-                len <- Qc.choose (0, 7)
-                x <- Qc.scale (`div` 2) Qc.arbitrary
-                xs <- Qc.vectorOf len (Qc.scale (`div` 2) Qc.arbitrary)
-                pure (x :| xs),
-              TableSimpleSelect <$> Qc.arbitrary,
-              BinSimpleSelect <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
-            ]
+          Qc.resize (div n 2) $
+            Qc.oneof
+              [ NormalSimpleSelect
+                  <$> Qc.arbitrary
+                  <*> Qc.arbitrary
+                  <*> Qc.arbitrary
+                  <*> Qc.arbitrary
+                  <*> Qc.arbitrary
+                  <*> Qc.arbitrary
+                  <*> Qc.arbitrary,
+                ValuesSimpleSelect <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
+                TableSimpleSelect <$> Qc.arbitrary,
+                BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+              ]

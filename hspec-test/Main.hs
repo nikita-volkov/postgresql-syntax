@@ -6,9 +6,9 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import PostgresqlSyntax
 import Test.Hspec
-import Test.Hspec.QuickCheck (prop)
+import Test.Hspec.QuickCheck
 import Test.QuickCheck (Property, counterexample, (===))
-import Prelude hiding (assert)
+import Prelude
 
 main :: IO ()
 main = hspec $ parallel $ do
