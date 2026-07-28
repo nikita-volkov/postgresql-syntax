@@ -225,9 +225,10 @@ arbitrarySpec =
   where
     terminatesAtZero =
       Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
-        let len = Text.length (toText x)
+        let sql = toText x
+            len = Text.length sql
          in Qc.counterexample
-              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
+              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")" <> "\n" <> toList sql)
               (len <= zeroSizeMaxLen)
       where
         -- Rendered-length ceiling for size-0 generation. A well-behaved
@@ -237,7 +238,8 @@ arbitrarySpec =
 
     growsBounded =
       Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
-        let len = Text.length (toText x)
+        let sql = toText x
+            len = Text.length sql
          in Qc.counterexample
               ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
               (len <= maxGenSizeMaxLen)
