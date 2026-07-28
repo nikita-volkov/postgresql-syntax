@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.FrameBound where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -51,6 +52,6 @@ instance Qc.Arbitrary FrameBound where
       [ pure UnboundedPrecedingFrameBound,
         pure UnboundedFollowingFrameBound,
         pure CurrentRowFrameBound,
-        PrecedingFrameBound <$> Qc.scale (`div` 2) Qc.arbitrary,
-        FollowingFrameBound <$> Qc.scale (`div` 2) Qc.arbitrary
+        PrecedingFrameBound <$> Qc.downscale Qc.arbitrary,
+        FollowingFrameBound <$> Qc.downscale Qc.arbitrary
       ]

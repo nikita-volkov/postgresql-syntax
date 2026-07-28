@@ -24,4 +24,4 @@ instance IsAst ExprList where
 
 instance Qc.Arbitrary ExprList where
   shrink = Qc.genericShrink
-  arbitrary = ExprList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = ExprList <$> Qc.nonEmptyUpTo 6 (Qc.downscale Qc.arbitrary)

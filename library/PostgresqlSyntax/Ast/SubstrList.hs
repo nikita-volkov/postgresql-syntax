@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.SubstrListFromFor
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -39,6 +40,6 @@ instance Qc.Arbitrary SubstrList where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+      [ ExprSubstrList <$> Qc.downscale Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
         ExprListSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary
       ]

@@ -54,7 +54,7 @@ instance Qc.Arbitrary OverlayList where
   shrink = Qc.genericShrink
   arbitrary =
     OverlayList
-      <$> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
-      <*> Qc.scale (`div` 4) Qc.arbitrary
+      <$> Qc.downscale Qc.arbitrary
+      <*> Qc.downscale Qc.arbitrary
+      <*> Qc.downscale Qc.arbitrary
       <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)

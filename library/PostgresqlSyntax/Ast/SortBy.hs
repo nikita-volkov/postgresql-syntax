@@ -7,6 +7,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
 import qualified Test.QuickCheck as Qc
@@ -48,6 +49,6 @@ instance Qc.Arbitrary SortBy where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UsingSortBy <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-        AscDescSortBy <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+      [ UsingSortBy <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+        AscDescSortBy <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
       ]

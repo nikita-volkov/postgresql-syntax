@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -32,4 +33,4 @@ instance IsAst WhenClause where
 
 instance Qc.Arbitrary WhenClause where
   shrink = Qc.genericShrink
-  arbitrary = WhenClause <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = WhenClause <$> Qc.downscale arbitrary <*> Qc.downscale arbitrary

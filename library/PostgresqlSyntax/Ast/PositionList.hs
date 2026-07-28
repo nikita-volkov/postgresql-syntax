@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.PositionList where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -23,4 +24,4 @@ instance IsAst PositionList where
 
 instance Qc.Arbitrary PositionList where
   shrink = Qc.genericShrink
-  arbitrary = PositionList <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = PositionList <$> Qc.downscale arbitrary <*> Qc.downscale arbitrary

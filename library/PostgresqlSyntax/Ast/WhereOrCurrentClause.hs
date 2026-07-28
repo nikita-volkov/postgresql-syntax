@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -47,6 +48,6 @@ instance Qc.Arbitrary WhereOrCurrentClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprWhereOrCurrentClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+      [ ExprWhereOrCurrentClause <$> Qc.downscale Qc.arbitrary,
         CursorWhereOrCurrentClause <$> Qc.arbitrary
       ]

@@ -399,7 +399,7 @@ instance Qc.Arbitrary AExpr where
                 OrAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
                 NotAExpr <$> Qc.arbitrary,
                 ( do
-                    a <- safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary)
+                    a <- safeAExprOperand Qc.arbitrary
                     b <- Qc.arbitrary
                     c <- Qc.arbitrary
                     e <- Qc.terminatingMaybe Qc.arbitrary
@@ -409,14 +409,14 @@ instance Qc.Arbitrary AExpr where
                     -- matches what parsing the (necessarily parenthesized)
                     -- rendering reconstructs.
                     d <- case e of
-                      Nothing -> Qc.scale (`div` 2) Qc.arbitrary
-                      Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.scale (`div` 2) Qc.arbitrary
+                      Nothing -> Qc.arbitrary
+                      Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.arbitrary
                     pure (VerbalExprBinOpAExpr a b c d e)
                 ),
                 ReversableOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
                 IsnullAExpr <$> safeAExprOperand Qc.arbitrary,
                 NotnullAExpr <$> safeAExprOperand Qc.arbitrary,
                 OverlapsAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-                SubqueryAExpr <$> safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+                SubqueryAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
                 UniqueAExpr <$> Qc.arbitrary
               ]

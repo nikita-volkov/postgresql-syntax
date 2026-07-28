@@ -36,5 +36,5 @@ instance Qc.Arbitrary JoinQual where
   arbitrary =
     Qc.oneof
       [ UsingJoinQual <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
-        OnJoinQual <$> Qc.scale (`div` 2) Qc.arbitrary
+        OnJoinQual <$> Qc.downscale Qc.arbitrary
       ]

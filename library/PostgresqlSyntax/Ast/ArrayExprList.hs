@@ -24,4 +24,4 @@ instance IsAst ArrayExprList where
 
 instance Qc.Arbitrary ArrayExprList where
   shrink = Qc.genericShrink
-  arbitrary = ArrayExprList <$> Qc.nonEmptyUpTo 100 (Qc.scale (`div` 2) Qc.arbitrary)
+  arbitrary = ArrayExprList <$> Qc.nonEmptyUpTo 100 (Qc.downscale Qc.arbitrary)

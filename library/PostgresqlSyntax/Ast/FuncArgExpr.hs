@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -64,7 +65,7 @@ instance Qc.Arbitrary FuncArgExpr where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprFuncArgExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-        ColonEqualsFuncArgExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        EqualsGreaterFuncArgExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+      [ ExprFuncArgExpr <$> Qc.downscale Qc.arbitrary,
+        ColonEqualsFuncArgExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+        EqualsGreaterFuncArgExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
       ]

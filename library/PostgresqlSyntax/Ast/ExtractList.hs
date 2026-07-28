@@ -4,6 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExtractArg
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -24,4 +25,4 @@ instance IsAst ExtractList where
 
 instance Qc.Arbitrary ExtractList where
   shrink = Qc.genericShrink
-  arbitrary = ExtractList <$> arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = ExtractList <$> arbitrary <*> Qc.downscale arbitrary

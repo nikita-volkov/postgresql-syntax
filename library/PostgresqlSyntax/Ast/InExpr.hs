@@ -4,6 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -37,6 +38,6 @@ instance Qc.Arbitrary InExpr where
         then ExprListInExpr <$> Qc.arbitrary
         else
           Qc.oneof
-            [ SelectInExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
+            [ SelectInExpr <$> Qc.downscale Qc.arbitrary,
               ExprListInExpr <$> Qc.scale (`div` 2) Qc.arbitrary
             ]

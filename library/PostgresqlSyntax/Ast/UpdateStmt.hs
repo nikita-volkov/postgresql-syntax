@@ -67,7 +67,7 @@ instance Qc.Arbitrary UpdateStmt where
   shrink = Qc.genericShrink
   arbitrary =
     UpdateStmt
-      <$> Qc.terminatingMaybe Qc.arbitrary
+      <$> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
       <*> Qc.arbitrary
       <*> Qc.arbitrary
       <*> Qc.terminatingMaybe Qc.arbitrary

@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
 import PostgresqlSyntax.Ast.SetTargetList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -47,6 +48,6 @@ instance Qc.Arbitrary SetClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ TargetSetClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        TargetListSetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+      [ TargetSetClause <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+        TargetListSetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary
       ]

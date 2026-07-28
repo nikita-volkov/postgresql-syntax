@@ -4,6 +4,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -40,5 +41,5 @@ instance Qc.Arbitrary IndexElemDef where
     Qc.oneof
       [ IdIndexElemDef <$> Qc.arbitrary,
         FuncIndexElemDef <$> Qc.scale (`div` 2) Qc.arbitrary,
-        ExprIndexElemDef <$> Qc.scale (`div` 2) Qc.arbitrary
+        ExprIndexElemDef <$> Qc.downscale Qc.arbitrary
       ]

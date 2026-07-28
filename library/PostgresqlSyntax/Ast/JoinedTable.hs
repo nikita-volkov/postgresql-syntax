@@ -4,6 +4,7 @@ import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -50,9 +51,9 @@ instance Qc.Arbitrary JoinedTable where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+        then MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
         else
           Qc.oneof
             [ InParensJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary,
-              MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+              MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
             ]

@@ -57,10 +57,10 @@ instance Qc.Arbitrary GroupByItem where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then Qc.oneof [ExprGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary, pure EmptyGroupingSetGroupByItem]
+        then Qc.oneof [ExprGroupByItem <$> Qc.downscale Qc.arbitrary, pure EmptyGroupingSetGroupByItem]
         else
           Qc.oneof
-            [ ExprGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
+            [ ExprGroupByItem <$> Qc.downscale Qc.arbitrary,
               pure EmptyGroupingSetGroupByItem,
               RollupGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
               CubeGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,

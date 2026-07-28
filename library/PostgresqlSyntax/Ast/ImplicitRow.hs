@@ -6,6 +6,7 @@ import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -34,4 +35,4 @@ instance IsAst ImplicitRow where
 
 instance Qc.Arbitrary ImplicitRow where
   shrink = Qc.genericShrink
-  arbitrary = ImplicitRow <$> Qc.scale (`div` 2) arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = ImplicitRow <$> Qc.scale (`div` 2) arbitrary <*> Qc.downscale arbitrary

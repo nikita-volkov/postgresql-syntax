@@ -6,6 +6,7 @@ import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -67,7 +68,7 @@ instance Qc.Arbitrary TargetEl where
   arbitrary =
     Qc.oneof
       [ pure AsteriskTargetEl,
-        AliasedExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
+        AliasedExprTargetEl <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
         -- Unlike 'AliasedExprTargetEl' (separated from its alias by the
         -- reserved @AS@ keyword) or 'ExprTargetEl' (followed only by a
         -- comma\/end of list, neither valid @a_expr@ continuations), the
@@ -76,6 +77,6 @@ instance Qc.Arbitrary TargetEl where
         -- 'PostgresqlSyntax.Ast.AExpr.isBoundedAExprOperand' guards
         -- against (e.g. a trailing 'PostgresqlSyntax.Ast.AExpr.SuffixQualOpAExpr'
         -- would otherwise swallow the alias as its own operand instead).
-        ImplicitlyAliasedExprTargetEl <$> AExpr.safeAExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
-        ExprTargetEl <$> Qc.scale (`div` 2) Qc.arbitrary
+        ImplicitlyAliasedExprTargetEl <$> AExpr.safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
+        ExprTargetEl <$> Qc.downscale Qc.arbitrary
       ]

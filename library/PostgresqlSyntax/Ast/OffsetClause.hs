@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -51,6 +52,6 @@ instance Qc.Arbitrary OffsetClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+      [ ExprOffsetClause <$> Qc.downscale Qc.arbitrary,
         FetchFirstOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
       ]

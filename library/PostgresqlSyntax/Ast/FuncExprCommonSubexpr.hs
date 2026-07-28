@@ -12,6 +12,7 @@ import PostgresqlSyntax.Ast.TrimList
 import PostgresqlSyntax.Ast.TrimModifier
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -163,7 +164,7 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
             ]
         else
           Qc.oneof
-            [ CollationForFuncExprCommonSubexpr <$> Qc.arbitrary,
+            [ CollationForFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary,
               pure CurrentDateFuncExprCommonSubexpr,
               -- The @Iconst@ here is parsed via 'Parser.decimal' (unsigned), so
               -- it must never be negative — mirroring
@@ -178,14 +179,14 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
               pure UserFuncExprCommonSubexpr,
               pure CurrentCatalogFuncExprCommonSubexpr,
               pure CurrentSchemaFuncExprCommonSubexpr,
-              CastFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              CastFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
               ExtractFuncExprCommonSubexpr <$> Qc.arbitrary,
               OverlayFuncExprCommonSubexpr <$> Qc.arbitrary,
               PositionFuncExprCommonSubexpr <$> Qc.arbitrary,
               SubstringFuncExprCommonSubexpr <$> Qc.arbitrary,
-              TreatFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              TreatFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
               TrimFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
-              NullIfFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              NullIfFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
               CoalesceFuncExprCommonSubexpr <$> Qc.arbitrary,
               GreatestFuncExprCommonSubexpr <$> Qc.arbitrary,
               LeastFuncExprCommonSubexpr <$> Qc.arbitrary
