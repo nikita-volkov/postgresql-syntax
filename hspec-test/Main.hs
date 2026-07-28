@@ -3,317 +3,178 @@
 module Main (main) where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Proxy as Proxy
 import qualified Data.Text as Text
+import qualified Data.Typeable as Typeable
 import PostgresqlSyntax
+import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import Test.QuickCheck (Property, counterexample, (===))
+import Test.QuickCheck (counterexample, (===))
 import qualified Test.QuickCheck as Qc
-import Prelude
 
 main :: IO ()
 main = hspec $ parallel $ do
-  describe "Round-trip parse/render" $ do
-    prop "AExpr" (roundTrip @AExpr)
-    prop "AExprReversableOp" (roundTrip @AExprReversableOp)
-    prop "AexprConst" (roundTrip @AexprConst)
-    prop "AliasClause" (roundTrip @AliasClause)
-    prop "AllOp" (roundTrip @AllOp)
-    prop "AnyName" (roundTrip @AnyName)
-    prop "AnyOperator" (roundTrip @AnyOperator)
-    prop "ArrayBounds" (roundTrip @ArrayBounds)
-    prop "ArrayExpr" (roundTrip @ArrayExpr)
-    prop "ArrayExprList" (roundTrip @ArrayExprList)
-    prop "AscDesc" (roundTrip @AscDesc)
-    prop "Attrs" (roundTrip @Attrs)
-    prop "BExpr" (roundTrip @BExpr)
-    prop "BExprIsOp" (roundTrip @BExprIsOp)
-    prop "Bconst" (roundTrip @Bconst)
-    prop "Bit" (roundTrip @Bit)
-    prop "CExpr" (roundTrip @CExpr)
-    prop "CallStmt" (roundTrip @CallStmt)
-    prop "CaseExpr" (roundTrip @CaseExpr)
-    prop "Character" (roundTrip @Character)
-    prop "Columnref" (roundTrip @Columnref)
-    prop "CommonTableExpr" (roundTrip @CommonTableExpr)
-    prop "ConfExpr" (roundTrip @ConfExpr)
-    prop "ConstCharacter" (roundTrip @ConstCharacter)
-    prop "ConstDatetime" (roundTrip @ConstDatetime)
-    prop "ConstTypename" (roundTrip @ConstTypename)
-    prop "DeleteStmt" (roundTrip @DeleteStmt)
-    prop "ExplicitRow" (roundTrip @ExplicitRow)
-    prop "ExprList" (roundTrip @ExprList)
-    prop "ExtractArg" (roundTrip @ExtractArg)
-    prop "ExtractList" (roundTrip @ExtractList)
-    prop "Fconst" (roundTrip @Fconst)
-    prop "ForLockingClause" (roundTrip @ForLockingClause)
-    prop "ForLockingItem" (roundTrip @ForLockingItem)
-    prop "ForLockingStrength" (roundTrip @ForLockingStrength)
-    prop "FrameBound" (roundTrip @FrameBound)
-    prop "FrameClause" (roundTrip @FrameClause)
-    prop "FrameClauseMode" (roundTrip @FrameClauseMode)
-    prop "FrameExtent" (roundTrip @FrameExtent)
-    prop "FuncAliasClause" (roundTrip @FuncAliasClause)
-    prop "FuncApplication" (roundTrip @FuncApplication)
-    prop "FuncApplicationParams" (roundTrip @FuncApplicationParams)
-    prop "FuncArgExpr" (roundTrip @FuncArgExpr)
-    prop "FuncConstArgs" (roundTrip @FuncConstArgs)
-    prop "FuncExpr" (roundTrip @FuncExpr)
-    prop "FuncExprCommonSubexpr" (roundTrip @FuncExprCommonSubexpr)
-    prop "FuncExprWindowless" (roundTrip @FuncExprWindowless)
-    prop "FuncName" (roundTrip @FuncName)
-    prop "FuncTable" (roundTrip @FuncTable)
-    prop "GenericType" (roundTrip @GenericType)
-    prop "GroupByItem" (roundTrip @GroupByItem)
-    prop "Iconst" (roundTrip @Iconst)
-    prop "Ident" (roundTrip @Ident)
-    prop "ImplicitRow" (roundTrip @ImplicitRow)
-    prop "InExpr" (roundTrip @InExpr)
-    prop "IndexElem" (roundTrip @IndexElem)
-    prop "IndexElemDef" (roundTrip @IndexElemDef)
-    prop "IndexParams" (roundTrip @IndexParams)
-    prop "Indirection" (roundTrip @Indirection)
-    prop "IndirectionEl" (roundTrip @IndirectionEl)
-    prop "InsertColumnItem" (roundTrip @InsertColumnItem)
-    prop "InsertColumnList" (roundTrip @InsertColumnList)
-    prop "InsertRest" (roundTrip @InsertRest)
-    prop "InsertStmt" (roundTrip @InsertStmt)
-    prop "InsertTarget" (roundTrip @InsertTarget)
-    prop "Interval" (roundTrip @Interval)
-    prop "IntervalSecond" (roundTrip @IntervalSecond)
-    prop "JoinMeth" (roundTrip @JoinMeth)
-    prop "JoinQual" (roundTrip @JoinQual)
-    prop "JoinType" (roundTrip @JoinType)
-    prop "JoinedTable" (roundTrip @JoinedTable)
-    prop "LimitClause" (roundTrip @LimitClause)
-    prop "MathOp" (roundTrip @MathOp)
-    prop "NameList" (roundTrip @NameList)
-    prop "NullsOrder" (roundTrip @NullsOrder)
-    prop "Numeric" (roundTrip @Numeric)
-    prop "OffsetClause" (roundTrip @OffsetClause)
-    prop "OnConflict" (roundTrip @OnConflict)
-    prop "OnConflictDo" (roundTrip @OnConflictDo)
-    prop "Op" (roundTrip @PostgresqlSyntax.Op)
-    prop "OptOrdinality" (roundTrip @OptOrdinality)
-    prop "OptTempTableName" (roundTrip @OptTempTableName)
-    -- OptVarying is intentionally omitted: its grammar makes the leading
-    -- space before "VARYING" mandatory only because every caller embeds it
-    -- straight after other text (see "PostgresqlSyntax.Ast.Character" and
-    -- "PostgresqlSyntax.Ast.Bit", neither of which even uses its toTextBuilder
-    -- directly). Parsed standalone, `parse`'s `totally` wrapper strips that
-    -- leading space before OptVarying's own parser gets a chance to require
-    -- it, so it can never round-trip as a top-level parse target.
-    prop "OverClause" (roundTrip @OverClause)
-    prop "OverlayList" (roundTrip @OverlayList)
-    prop "OverrideKind" (roundTrip @OverrideKind)
-    prop "PositionList" (roundTrip @PositionList)
-    prop "PreparableStmt" (roundTrip @PreparableStmt)
-    prop "QualAllOp" (roundTrip @QualAllOp)
-    prop "QualOp" (roundTrip @QualOp)
-    prop "QualifiedName" (roundTrip @QualifiedName)
-    prop "RelationExpr" (roundTrip @RelationExpr)
-    prop "RelationExprOptAlias" (roundTrip @RelationExprOptAlias)
-    prop "Row" (roundTrip @Row)
-    prop "RowsfromItem" (roundTrip @RowsfromItem)
-    prop "RowsfromList" (roundTrip @RowsfromList)
-    prop "Sconst" (roundTrip @Sconst)
-    prop "SelectBinOp" (roundTrip @SelectBinOp)
-    prop "SelectClause" (roundTrip @SelectClause)
-    prop "SelectFetchFirstValue" (roundTrip @SelectFetchFirstValue)
-    prop "SelectLimit" (roundTrip @SelectLimit)
-    prop "SelectLimitValue" (roundTrip @SelectLimitValue)
-    prop "SelectNoParens" (roundTrip @SelectNoParens)
-    prop "SelectStmt" (roundTrip @SelectStmt)
-    prop "SelectWithParens" (roundTrip @SelectWithParens)
-    prop "SetClause" (roundTrip @SetClause)
-    prop "SetClauseList" (roundTrip @SetClauseList)
-    prop "SetTarget" (roundTrip @SetTarget)
-    prop "SetTargetList" (roundTrip @SetTargetList)
-    prop "SimpleSelect" (roundTrip @SimpleSelect)
-    prop "SimpleTypename" (roundTrip @SimpleTypename)
-    prop "SortBy" (roundTrip @SortBy)
-    prop "SortClause" (roundTrip @SortClause)
-    prop "SubType" (roundTrip @SubType)
-    prop "SubqueryOp" (roundTrip @SubqueryOp)
-    prop "SubstrList" (roundTrip @SubstrList)
-    prop "SubstrListFromFor" (roundTrip @SubstrListFromFor)
-    prop "SymbolicExprBinOp" (roundTrip @SymbolicExprBinOp)
-    prop "TableFuncElement" (roundTrip @TableFuncElement)
-    prop "TableFuncElementList" (roundTrip @TableFuncElementList)
-    prop "TableRef" (roundTrip @TableRef)
-    prop "TablesampleClause" (roundTrip @TablesampleClause)
-    prop "TargetEl" (roundTrip @TargetEl)
-    prop "TargetList" (roundTrip @TargetList)
-    prop "Targeting" (roundTrip @Targeting)
-    prop "Timezone" (roundTrip @Timezone)
-    prop "TrimList" (roundTrip @TrimList)
-    prop "TrimModifier" (roundTrip @TrimModifier)
-    prop "TypeList" (roundTrip @TypeList)
-    prop "Typename" (roundTrip @Typename)
-    -- TypenameArrayDimensions is intentionally omitted: same reason as
-    -- OptVarying above — its ExplicitTypenameArrayDimensions alternative
-    -- requires a leading space before "ARRAY" that only makes sense when
-    -- embedded right after a Typename's own text, and `parse`'s `totally`
-    -- wrapper strips that leading space before this type's own parser runs.
-    prop "UpdateStmt" (roundTrip @UpdateStmt)
-    prop "VerbalExprBinOp" (roundTrip @VerbalExprBinOp)
-    prop "WhenClause" (roundTrip @WhenClause)
-    prop "WhenClauseList" (roundTrip @WhenClauseList)
-    prop "WhereOrCurrentClause" (roundTrip @WhereOrCurrentClause)
-    prop "WindowDefinition" (roundTrip @WindowDefinition)
-    prop "WindowExclusionClause" (roundTrip @WindowExclusionClause)
-    prop "WindowSpecification" (roundTrip @WindowSpecification)
-    prop "WithClause" (roundTrip @WithClause)
-    prop "Xconst" (roundTrip @Xconst)
+  -- Each AST node type gets its own describe group, named after the type,
+  -- holding its parse/render round-trip ('IsAst') and generator-bound
+  -- ('Arbitrary') properties.
+  astNode @AExpr
+  astNode @AExprReversableOp
+  astNode @AexprConst
+  astNode @AliasClause
+  astNode @AllOp
+  astNode @AnyName
+  astNode @AnyOperator
+  astNode @ArrayBounds
+  astNode @ArrayExpr
+  astNode @ArrayExprList
+  astNode @AscDesc
+  astNode @Attrs
+  astNode @BExpr
+  astNode @BExprIsOp
+  astNode @Bconst
+  astNode @Bit
+  astNode @CExpr
+  astNode @CallStmt
+  astNode @CaseExpr
+  astNode @Character
+  astNode @Columnref
+  astNode @CommonTableExpr
+  astNode @ConfExpr
+  astNode @ConstCharacter
+  astNode @ConstDatetime
+  astNode @ConstTypename
+  astNode @DeleteStmt
+  astNode @ExplicitRow
+  astNode @ExprList
+  astNode @ExtractArg
+  astNode @ExtractList
+  astNode @Fconst
+  astNode @ForLockingClause
+  astNode @ForLockingItem
+  astNode @ForLockingStrength
+  astNode @FrameBound
+  astNode @FrameClause
+  astNode @FrameClauseMode
+  astNode @FrameExtent
+  astNode @FuncAliasClause
+  astNode @FuncApplication
+  astNode @FuncApplicationParams
+  astNode @FuncArgExpr
+  astNode @FuncConstArgs
+  astNode @FuncExpr
+  astNode @FuncExprCommonSubexpr
+  astNode @FuncExprWindowless
+  astNode @FuncName
+  astNode @FuncTable
+  astNode @GenericType
+  astNode @GroupByItem
+  astNode @Iconst
+  astNode @Ident
+  astNode @ImplicitRow
+  astNode @InExpr
+  astNode @IndexElem
+  astNode @IndexElemDef
+  astNode @IndexParams
+  astNode @Indirection
+  astNode @IndirectionEl
+  astNode @InsertColumnItem
+  astNode @InsertColumnList
+  astNode @InsertRest
+  astNode @InsertStmt
+  astNode @InsertTarget
+  astNode @Interval
+  astNode @IntervalSecond
+  astNode @JoinMeth
+  astNode @JoinQual
+  astNode @JoinType
+  astNode @JoinedTable
+  astNode @LimitClause
+  astNode @MathOp
+  astNode @NameList
+  astNode @NullsOrder
+  astNode @Numeric
+  astNode @OffsetClause
+  astNode @OnConflict
+  astNode @OnConflictDo
+  astNode @PostgresqlSyntax.Op
+  astNode @OptOrdinality
+  astNode @OptTempTableName
+  astNode @OverClause
+  astNode @OverlayList
+  astNode @OverrideKind
+  astNode @PositionList
+  astNode @PreparableStmt
+  astNode @QualAllOp
+  astNode @QualOp
+  astNode @QualifiedName
+  astNode @RelationExpr
+  astNode @RelationExprOptAlias
+  astNode @Row
+  astNode @RowsfromItem
+  astNode @RowsfromList
+  astNode @Sconst
+  astNode @SelectBinOp
+  astNode @SelectClause
+  astNode @SelectFetchFirstValue
+  astNode @SelectLimit
+  astNode @SelectLimitValue
+  astNode @SelectNoParens
+  astNode @SelectStmt
+  astNode @SelectWithParens
+  astNode @SetClause
+  astNode @SetClauseList
+  astNode @SetTarget
+  astNode @SetTargetList
+  astNode @SimpleSelect
+  astNode @SimpleTypename
+  astNode @SortBy
+  astNode @SortClause
+  astNode @SubType
+  astNode @SubqueryOp
+  astNode @SubstrList
+  astNode @SubstrListFromFor
+  astNode @SymbolicExprBinOp
+  astNode @TableFuncElement
+  astNode @TableFuncElementList
+  astNode @TableRef
+  astNode @TablesampleClause
+  astNode @TargetEl
+  astNode @TargetList
+  astNode @Targeting
+  astNode @Timezone
+  astNode @TrimList
+  astNode @TrimModifier
+  astNode @TypeList
+  astNode @Typename
+  astNode @UpdateStmt
+  astNode @VerbalExprBinOp
+  astNode @WhenClause
+  astNode @WhenClauseList
+  astNode @WhereOrCurrentClause
+  astNode @WindowDefinition
+  astNode @WindowExclusionClause
+  astNode @WindowSpecification
+  astNode @WithClause
+  astNode @Xconst
 
-  describe "Generator bounds" $ do
-    -- These properties are independent of parsing — they only generate a
-    -- value and measure its rendered length — so they also cover types the
-    -- round-trip suite omits for *parse* reasons ('OptVarying',
-    -- 'TypenameArrayDimensions'). See 'generatorBounds' for the two
-    -- invariants: the generator must terminate with a small value at size 0,
-    -- and must stay within a rendered-length budget at the suite's max size.
-    prop "AExpr" (generatorBounds @AExpr)
-    prop "AExprReversableOp" (generatorBounds @AExprReversableOp)
-    prop "AexprConst" (generatorBounds @AexprConst)
-    prop "AliasClause" (generatorBounds @AliasClause)
-    prop "AllOp" (generatorBounds @AllOp)
-    prop "AnyName" (generatorBounds @AnyName)
-    prop "AnyOperator" (generatorBounds @AnyOperator)
-    prop "ArrayBounds" (generatorBounds @ArrayBounds)
-    prop "ArrayExpr" (generatorBounds @ArrayExpr)
-    prop "ArrayExprList" (generatorBounds @ArrayExprList)
-    prop "AscDesc" (generatorBounds @AscDesc)
-    prop "Attrs" (generatorBounds @Attrs)
-    prop "BExpr" (generatorBounds @BExpr)
-    prop "BExprIsOp" (generatorBounds @BExprIsOp)
-    prop "Bconst" (generatorBounds @Bconst)
-    prop "Bit" (generatorBounds @Bit)
-    prop "CExpr" (generatorBounds @CExpr)
-    prop "CallStmt" (generatorBounds @CallStmt)
-    prop "CaseExpr" (generatorBounds @CaseExpr)
-    prop "Character" (generatorBounds @Character)
-    prop "Columnref" (generatorBounds @Columnref)
-    prop "CommonTableExpr" (generatorBounds @CommonTableExpr)
-    prop "ConfExpr" (generatorBounds @ConfExpr)
-    prop "ConstCharacter" (generatorBounds @ConstCharacter)
-    prop "ConstDatetime" (generatorBounds @ConstDatetime)
-    prop "ConstTypename" (generatorBounds @ConstTypename)
-    prop "DeleteStmt" (generatorBounds @DeleteStmt)
-    prop "ExplicitRow" (generatorBounds @ExplicitRow)
-    prop "ExprList" (generatorBounds @ExprList)
-    prop "ExtractArg" (generatorBounds @ExtractArg)
-    prop "ExtractList" (generatorBounds @ExtractList)
-    prop "Fconst" (generatorBounds @Fconst)
-    prop "ForLockingClause" (generatorBounds @ForLockingClause)
-    prop "ForLockingItem" (generatorBounds @ForLockingItem)
-    prop "ForLockingStrength" (generatorBounds @ForLockingStrength)
-    prop "FrameBound" (generatorBounds @FrameBound)
-    prop "FrameClause" (generatorBounds @FrameClause)
-    prop "FrameClauseMode" (generatorBounds @FrameClauseMode)
-    prop "FrameExtent" (generatorBounds @FrameExtent)
-    prop "FuncAliasClause" (generatorBounds @FuncAliasClause)
-    prop "FuncApplication" (generatorBounds @FuncApplication)
-    prop "FuncApplicationParams" (generatorBounds @FuncApplicationParams)
-    prop "FuncArgExpr" (generatorBounds @FuncArgExpr)
-    prop "FuncConstArgs" (generatorBounds @FuncConstArgs)
-    prop "FuncExpr" (generatorBounds @FuncExpr)
-    prop "FuncExprCommonSubexpr" (generatorBounds @FuncExprCommonSubexpr)
-    prop "FuncExprWindowless" (generatorBounds @FuncExprWindowless)
-    prop "FuncName" (generatorBounds @FuncName)
-    prop "FuncTable" (generatorBounds @FuncTable)
-    prop "GenericType" (generatorBounds @GenericType)
-    prop "GroupByItem" (generatorBounds @GroupByItem)
-    prop "Iconst" (generatorBounds @Iconst)
-    prop "Ident" (generatorBounds @Ident)
-    prop "ImplicitRow" (generatorBounds @ImplicitRow)
-    prop "InExpr" (generatorBounds @InExpr)
-    prop "IndexElem" (generatorBounds @IndexElem)
-    prop "IndexElemDef" (generatorBounds @IndexElemDef)
-    prop "IndexParams" (generatorBounds @IndexParams)
-    prop "Indirection" (generatorBounds @Indirection)
-    prop "IndirectionEl" (generatorBounds @IndirectionEl)
-    prop "InsertColumnItem" (generatorBounds @InsertColumnItem)
-    prop "InsertColumnList" (generatorBounds @InsertColumnList)
-    prop "InsertRest" (generatorBounds @InsertRest)
-    prop "InsertStmt" (generatorBounds @InsertStmt)
-    prop "InsertTarget" (generatorBounds @InsertTarget)
-    prop "Interval" (generatorBounds @Interval)
-    prop "IntervalSecond" (generatorBounds @IntervalSecond)
-    prop "JoinMeth" (generatorBounds @JoinMeth)
-    prop "JoinQual" (generatorBounds @JoinQual)
-    prop "JoinType" (generatorBounds @JoinType)
-    prop "JoinedTable" (generatorBounds @JoinedTable)
-    prop "LimitClause" (generatorBounds @LimitClause)
-    prop "MathOp" (generatorBounds @MathOp)
-    prop "NameList" (generatorBounds @NameList)
-    prop "NullsOrder" (generatorBounds @NullsOrder)
-    prop "Numeric" (generatorBounds @Numeric)
-    prop "OffsetClause" (generatorBounds @OffsetClause)
-    prop "OnConflict" (generatorBounds @OnConflict)
-    prop "OnConflictDo" (generatorBounds @OnConflictDo)
-    prop "Op" (generatorBounds @PostgresqlSyntax.Op)
-    prop "OptOrdinality" (generatorBounds @OptOrdinality)
-    prop "OptTempTableName" (generatorBounds @OptTempTableName)
-    prop "OptVarying" (generatorBounds @OptVarying)
-    prop "OverClause" (generatorBounds @OverClause)
-    prop "OverlayList" (generatorBounds @OverlayList)
-    prop "OverrideKind" (generatorBounds @OverrideKind)
-    prop "PositionList" (generatorBounds @PositionList)
-    prop "PreparableStmt" (generatorBounds @PreparableStmt)
-    prop "QualAllOp" (generatorBounds @QualAllOp)
-    prop "QualOp" (generatorBounds @QualOp)
-    prop "QualifiedName" (generatorBounds @QualifiedName)
-    prop "RelationExpr" (generatorBounds @RelationExpr)
-    prop "RelationExprOptAlias" (generatorBounds @RelationExprOptAlias)
-    prop "Row" (generatorBounds @Row)
-    prop "RowsfromItem" (generatorBounds @RowsfromItem)
-    prop "RowsfromList" (generatorBounds @RowsfromList)
-    prop "Sconst" (generatorBounds @Sconst)
-    prop "SelectBinOp" (generatorBounds @SelectBinOp)
-    prop "SelectClause" (generatorBounds @SelectClause)
-    prop "SelectFetchFirstValue" (generatorBounds @SelectFetchFirstValue)
-    prop "SelectLimit" (generatorBounds @SelectLimit)
-    prop "SelectLimitValue" (generatorBounds @SelectLimitValue)
-    prop "SelectNoParens" (generatorBounds @SelectNoParens)
-    prop "SelectStmt" (generatorBounds @SelectStmt)
-    prop "SelectWithParens" (generatorBounds @SelectWithParens)
-    prop "SetClause" (generatorBounds @SetClause)
-    prop "SetClauseList" (generatorBounds @SetClauseList)
-    prop "SetTarget" (generatorBounds @SetTarget)
-    prop "SetTargetList" (generatorBounds @SetTargetList)
-    prop "SimpleSelect" (generatorBounds @SimpleSelect)
-    prop "SimpleTypename" (generatorBounds @SimpleTypename)
-    prop "SortBy" (generatorBounds @SortBy)
-    prop "SortClause" (generatorBounds @SortClause)
-    prop "SubType" (generatorBounds @SubType)
-    prop "SubqueryOp" (generatorBounds @SubqueryOp)
-    prop "SubstrList" (generatorBounds @SubstrList)
-    prop "SubstrListFromFor" (generatorBounds @SubstrListFromFor)
-    prop "SymbolicExprBinOp" (generatorBounds @SymbolicExprBinOp)
-    prop "TableFuncElement" (generatorBounds @TableFuncElement)
-    prop "TableFuncElementList" (generatorBounds @TableFuncElementList)
-    prop "TableRef" (generatorBounds @TableRef)
-    prop "TablesampleClause" (generatorBounds @TablesampleClause)
-    prop "TargetEl" (generatorBounds @TargetEl)
-    prop "TargetList" (generatorBounds @TargetList)
-    prop "Targeting" (generatorBounds @Targeting)
-    prop "Timezone" (generatorBounds @Timezone)
-    prop "TrimList" (generatorBounds @TrimList)
-    prop "TrimModifier" (generatorBounds @TrimModifier)
-    prop "TypeList" (generatorBounds @TypeList)
-    prop "Typename" (generatorBounds @Typename)
-    prop "TypenameArrayDimensions" (generatorBounds @TypenameArrayDimensions)
-    prop "UpdateStmt" (generatorBounds @UpdateStmt)
-    prop "VerbalExprBinOp" (generatorBounds @VerbalExprBinOp)
-    prop "WhenClause" (generatorBounds @WhenClause)
-    prop "WhenClauseList" (generatorBounds @WhenClauseList)
-    prop "WhereOrCurrentClause" (generatorBounds @WhereOrCurrentClause)
-    prop "WindowDefinition" (generatorBounds @WindowDefinition)
-    prop "WindowExclusionClause" (generatorBounds @WindowExclusionClause)
-    prop "WindowSpecification" (generatorBounds @WindowSpecification)
-    prop "WithClause" (generatorBounds @WithClause)
-    prop "Xconst" (generatorBounds @Xconst)
+  -- The two node types below can't round-trip as a top-level parse target
+  -- (their renderings only make sense embedded after other text), so they
+  -- get only the generator-bound property. Their 'Arbitrary' generators are
+  -- still exercised — and bounded — like every other node's.
+  --
+  -- OptVarying's grammar makes the leading space before "VARYING"
+  -- mandatory only because every caller embeds it straight after other text
+  -- (see "PostgresqlSyntax.Ast.Character" and "PostgresqlSyntax.Ast.Bit",
+  -- neither of which even uses its toTextBuilder directly). Parsed
+  -- standalone, 'parse''s 'totally' wrapper strips that leading space
+  -- before OptVarying's own parser gets a chance to require it.
+  astNodeSkippingRoundtrip @OptVarying
+  -- TypenameArrayDimensions' ExplicitTypenameArrayDimensions alternative
+  -- requires a leading space before "ARRAY" that only makes sense when
+  -- embedded right after a Typename's own text, and 'parse''s 'totally'
+  -- wrapper strips that leading space before this type's own parser runs.
+  astNodeSkippingRoundtrip @TypenameArrayDimensions
 
   describe "Parsers" $ do
     it "preparableStmt"
@@ -407,18 +268,49 @@ main = hspec $ parallel $ do
         \WHERE u.id IS NO NULL && TRUE"
         "(51,\"offset=51:\\nexpecting white space\\n\")"
 
--- * Round-trip property
+-- * Per-node-type property groups
 
-roundTrip :: (IsAst a, Eq a, Show a) => a -> Property
-roundTrip a = counterexample (Text.unpack sql) (parse sql === Right a)
+-- | The property suite every AST node type that round-trips through
+-- 'parse' \/ 'toText' must satisfy: a parse/render round-trip ('IsAst') and
+-- a bounded 'Arbitrary' generator. The group is labelled with the type's
+-- name, derived from its 'Typeable' representation.
+astNode :: forall a. (IsAst a, Eq a, Show a, Typeable.Typeable a, Qc.Arbitrary a) => Spec
+astNode = byTypeName @a $ do
+  describe "IsAst"
+    $ prop "Roundtrips"
+    $ \(a :: a) ->
+      let sql = toText a
+       in counterexample (Text.unpack sql) (parse sql === Right a)
+  arbitraryBounds @a
+
+-- | Like 'astNode' minus the round-trip property, for the two node types
+-- whose renderings only round-trip when embedded after other text (see the
+-- call sites in 'main' for why).
+astNodeSkippingRoundtrip :: forall a. (IsAst a, Show a, Typeable.Typeable a, Qc.Arbitrary a) => Spec
+astNodeSkippingRoundtrip = byTypeName @a (arbitraryBounds @a)
+
+-- | The 'Arbitrary' generator-bounds sub-group, shared by 'astNode' and
+-- 'astNodeSkippingRoundtrip'.
+arbitraryBounds :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
+arbitraryBounds =
+  describe "Arbitrary"
+    $ prop "Has proper generator bounds" (generatorBounds @a)
+
+byTypeName :: forall a. (Typeable.Typeable a) => Spec -> Spec
+byTypeName = describe typeName
   where
-    sql = toText a
+    typeName = Text.unpack (last (Text.splitOn "." (Text.pack qualifiedName)))
+      where
+        qualifiedName =
+          Typeable.tyConName (Typeable.typeRepTyCon (Typeable.typeRep (Proxy.Proxy @a)))
 
--- * Generator-bound properties
+-- * Generator-bound property
+
 --
 -- Two invariants every 'Arbitrary' instance in this library must satisfy,
--- independent of parsing (hence covering types that don't round-trip as a
--- top-level parse target either):
+-- independent of parsing (hence the only property run for the node types
+-- that can't round-trip as a top-level parse target — see
+-- 'astNodeSkippingRoundtrip'):
 --
 -- 1. 'terminatesAtZero': at size 0 the generator must escape every recursive
 --    strongly-connected component and yield a small value. A non-escaping
@@ -430,43 +322,38 @@ roundTrip a = counterexample (Text.unpack sql) (parse sql === Right a)
 --    the size budget — is caught by its output length rather than by a stack
 --    overflow deep inside a round-trip prop.
 
--- | Rendered-length ceiling for size-0 generation. A well-behaved generator
--- produces a leaf at size 0, so this only ever trips on a non-terminating
--- base case (which renders unbounded nesting).
-zeroSizeMaxLen :: Int
-zeroSizeMaxLen = 500
-
--- | The size at which the growth bound is measured. Matches hspec's default
--- 'maxSize', i.e. the largest size any prop in this suite is run at.
-maxGenSize :: Int
-maxGenSize = 100
-
--- | Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
--- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't bound.
-maxGenSizeMaxLen :: Int
-maxGenSizeMaxLen = 10000
-
-terminatesAtZero :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
-terminatesAtZero =
-  Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
-    let len = Text.length (toText x)
-     in Qc.counterexample
-          ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
-          (len <= zeroSizeMaxLen)
-
-growsBounded :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
-growsBounded =
-  Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
-    let len = Text.length (toText x)
-     in Qc.counterexample
-          ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
-          (len <= maxGenSizeMaxLen)
-
 -- | Both generator invariants conjoined so each type appears once.
 -- QuickCheck reports which conjunct fails.
 generatorBounds :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
 generatorBounds =
-  terminatesAtZero @a Qc..&&. growsBounded @a
+  terminatesAtZero Qc..&&. growsBounded
+  where
+    -- \| Rendered-length ceiling for size-0 generation. A well-behaved
+    -- generator produces a leaf at size 0, so this only ever trips on a
+    -- non-terminating base case (which renders unbounded nesting).
+    zeroSizeMaxLen = 500
+    -- \| The size at which the growth bound is measured. Matches hspec's
+    -- default 'maxSize', i.e. the largest size any prop in this suite is
+    -- run at.
+    maxGenSize = 100
+    -- \| Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
+    -- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't
+    -- bound.
+    maxGenSizeMaxLen = 10000
+
+    terminatesAtZero =
+      Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
+        let len = Text.length (toText x)
+         in Qc.counterexample
+              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
+              (len <= zeroSizeMaxLen)
+
+    growsBounded =
+      Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
+        let len = Text.length (toText x)
+         in Qc.counterexample
+              ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
+              (len <= maxGenSizeMaxLen)
 
 -- * Example-based parse helpers
 
