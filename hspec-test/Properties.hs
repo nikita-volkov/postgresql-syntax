@@ -192,7 +192,13 @@ fullSpec = byTypeName @a $ do
     $ prop "Roundtrips"
     $ \(a :: a) ->
       let sql = toText a
-       in counterexample (Text.unpack sql) (parse sql === Right a)
+       in case parse sql of
+            Left err ->
+              counterexample ("rendered: " <> toList sql <> "\nparse failed: " <> err) False
+            Right a' ->
+              counterexample
+                ("rendered: " <> toList sql <> "\nrestored: " <> toList (toText a'))
+                (a' === a)
   arbitrarySpec @a
 
 -- | Like 'fullSpec' minus the round-trip property, for the two node types
