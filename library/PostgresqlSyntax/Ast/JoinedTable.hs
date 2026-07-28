@@ -51,9 +51,9 @@ instance Qc.Arbitrary JoinedTable where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+        then MethJoinedTable <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
         else
           Qc.oneof
-            [ InParensJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary,
-              MethJoinedTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+            [ InParensJoinedTable <$> Qc.downscale Qc.arbitrary,
+              MethJoinedTable <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
             ]

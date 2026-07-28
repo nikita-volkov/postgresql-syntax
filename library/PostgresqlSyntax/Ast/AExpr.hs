@@ -383,40 +383,39 @@ instance Qc.Arbitrary AExpr where
       if n <= 1
         then pure DefaultAExpr
         else
-          Qc.scale (`div` 2) $
-            Qc.oneof
-              [ CExprAExpr <$> Qc.arbitrary,
-                pure DefaultAExpr,
-                TypecastAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                CollateAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                AtTimeZoneAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                PlusAExpr <$> Qc.arbitrary,
-                MinusAExpr <$> Qc.arbitrary,
-                SymbolicBinOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-                PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-                SuffixQualOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                AndAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                OrAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary,
-                NotAExpr <$> Qc.arbitrary,
-                ( do
-                    a <- safeAExprOperand Qc.arbitrary
-                    b <- Qc.arbitrary
-                    c <- Qc.arbitrary
-                    e <- Qc.terminatingMaybe Qc.arbitrary
-                    -- See @renderVerbalRhs@ in the 'IsAst' instance above:
-                    -- whenever there's an escape clause, @d@ must be
-                    -- parenthesized up front so the generated value already
-                    -- matches what parsing the (necessarily parenthesized)
-                    -- rendering reconstructs.
-                    d <- case e of
-                      Nothing -> Qc.arbitrary
-                      Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.arbitrary
-                    pure (VerbalExprBinOpAExpr a b c d e)
-                ),
-                ReversableOpAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-                IsnullAExpr <$> safeAExprOperand Qc.arbitrary,
-                NotnullAExpr <$> safeAExprOperand Qc.arbitrary,
-                OverlapsAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-                SubqueryAExpr <$> safeAExprOperand Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-                UniqueAExpr <$> Qc.arbitrary
-              ]
+          Qc.oneof
+            [ CExprAExpr <$> Qc.arbitrary,
+              pure DefaultAExpr,
+              TypecastAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              CollateAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              AtTimeZoneAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
+              PlusAExpr <$> Qc.downscale Qc.arbitrary,
+              MinusAExpr <$> Qc.downscale Qc.arbitrary,
+              SymbolicBinOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              SuffixQualOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              AndAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
+              OrAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
+              NotAExpr <$> Qc.downscale Qc.arbitrary,
+              ( do
+                  a <- safeAExprOperand (Qc.downscale Qc.arbitrary)
+                  b <- Qc.arbitrary
+                  c <- Qc.arbitrary
+                  e <- Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+                  -- See @renderVerbalRhs@ in the 'IsAst' instance above:
+                  -- whenever there's an escape clause, @d@ must be
+                  -- parenthesized up front so the generated value already
+                  -- matches what parsing the (necessarily parenthesized)
+                  -- rendering reconstructs.
+                  d <- case e of
+                    Nothing -> Qc.downscale Qc.arbitrary
+                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.downscale Qc.arbitrary
+                  pure (VerbalExprBinOpAExpr a b c d e)
+              ),
+              ReversableOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,
+              IsnullAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary),
+              NotnullAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary),
+              OverlapsAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
+              SubqueryAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              UniqueAExpr <$> Qc.downscale Qc.arbitrary
+            ]

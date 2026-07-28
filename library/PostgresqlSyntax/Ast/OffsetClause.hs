@@ -53,5 +53,5 @@ instance Qc.Arbitrary OffsetClause where
   arbitrary =
     Qc.oneof
       [ ExprOffsetClause <$> Qc.downscale Qc.arbitrary,
-        FetchFirstOffsetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
+        FetchFirstOffsetClause <$> Qc.arbitrary <*> Qc.arbitrary
       ]

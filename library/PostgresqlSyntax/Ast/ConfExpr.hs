@@ -45,6 +45,6 @@ instance Qc.Arbitrary ConfExpr where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ WhereConfExpr <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
+      [ WhereConfExpr <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
         ConstraintConfExpr <$> Qc.arbitrary
       ]

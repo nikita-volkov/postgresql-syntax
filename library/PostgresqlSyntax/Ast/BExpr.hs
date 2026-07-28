@@ -8,6 +8,7 @@ import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -148,14 +149,14 @@ instance Qc.Arbitrary BExpr where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then CExprBExpr <$> Qc.scale (`div` 2) Qc.arbitrary
+        then CExprBExpr <$> Qc.arbitrary
         else
           Qc.oneof
-            [ CExprBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              TypecastBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary,
-              PlusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              MinusBExpr <$> Qc.scale (`div` 2) Qc.arbitrary,
-              SymbolicBinOpBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              QualOpBExpr <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-              IsOpBExpr <$> safeBExprOperand (Qc.scale (`div` 2) Qc.arbitrary) <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+            [ CExprBExpr <$> Qc.arbitrary,
+              TypecastBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              PlusBExpr <$> Qc.downscale Qc.arbitrary,
+              MinusBExpr <$> Qc.downscale Qc.arbitrary,
+              SymbolicBinOpBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              QualOpBExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              IsOpBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
             ]

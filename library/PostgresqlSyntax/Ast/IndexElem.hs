@@ -55,7 +55,7 @@ instance Qc.Arbitrary IndexElem where
   shrink = Qc.genericShrink
   arbitrary =
     IndexElem
-      <$> Qc.scale (`div` 2) Qc.arbitrary
+      <$> Qc.arbitrary
       <*> Qc.terminatingMaybe Qc.arbitrary
       <*> Qc.terminatingMaybe Qc.arbitrary
       <*> Qc.arbitrary

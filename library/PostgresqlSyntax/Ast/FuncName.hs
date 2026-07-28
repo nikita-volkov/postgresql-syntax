@@ -57,5 +57,5 @@ instance Qc.Arbitrary FuncName where
         else
           Qc.oneof
             [ TypeFuncName <$> Qc.arbitrary,
-              IndirectedFuncName <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+              IndirectedFuncName <$> Qc.arbitrary <*> Qc.arbitrary
             ]

@@ -59,6 +59,6 @@ instance Qc.Arbitrary JoinMeth where
   arbitrary =
     Qc.oneof
       [ pure CrossJoinMeth,
-        QualJoinMeth <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+        QualJoinMeth <$> Qc.arbitrary <*> Qc.arbitrary,
         NaturalJoinMeth <$> Qc.arbitrary
       ]

@@ -91,7 +91,7 @@ instance Qc.Arbitrary FuncApplicationParams where
   arbitrary =
     Qc.oneof
       [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.terminatingMaybe Qc.arbitrary,
-        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
         pure StarFuncApplicationParams
       ]
     where

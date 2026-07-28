@@ -51,4 +51,4 @@ instance IsAst CaseExpr where
 
 instance Qc.Arbitrary CaseExpr where
   shrink = Qc.genericShrink
-  arbitrary = CaseExpr <$> Qc.terminatingMaybe (Qc.downscale arbitrary) <*> Qc.scale (`div` 2) arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)
+  arbitrary = CaseExpr <$> Qc.terminatingMaybe (Qc.downscale arbitrary) <*> arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)

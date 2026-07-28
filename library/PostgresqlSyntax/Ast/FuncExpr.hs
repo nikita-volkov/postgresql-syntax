@@ -70,9 +70,9 @@ instance Qc.Arbitrary FuncExpr where
   arbitrary =
     Qc.oneof
       [ ApplicationFuncExpr
-          <$> Qc.scale (`div` 4) Qc.arbitrary
+          <$> Qc.arbitrary
           <*> Qc.terminatingMaybe Qc.arbitrary
           <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
           <*> Qc.terminatingMaybe Qc.arbitrary,
-        SubexprFuncExpr <$> Qc.scale (`div` 2) Qc.arbitrary
+        SubexprFuncExpr <$> Qc.arbitrary
       ]

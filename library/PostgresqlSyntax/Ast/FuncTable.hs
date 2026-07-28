@@ -46,6 +46,6 @@ instance Qc.Arbitrary FuncTable where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ FuncExprFuncTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary,
-        RowsFromFuncTable <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.arbitrary
+      [ FuncExprFuncTable <$> Qc.arbitrary <*> Qc.arbitrary,
+        RowsFromFuncTable <$> Qc.arbitrary <*> Qc.arbitrary
       ]

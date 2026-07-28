@@ -39,6 +39,6 @@ instance Qc.Arbitrary OverClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ WindowOverClause <$> Qc.scale (`div` 2) Qc.arbitrary,
+      [ WindowOverClause <$> Qc.arbitrary,
         ColIdOverClause <$> Qc.arbitrary
       ]

@@ -39,5 +39,5 @@ instance Qc.Arbitrary QualifiedName where
   arbitrary =
     Qc.oneof
       [ SimpleQualifiedName <$> Qc.arbitrary,
-        IndirectedQualifiedName <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+        IndirectedQualifiedName <$> Qc.arbitrary <*> Qc.arbitrary
       ]

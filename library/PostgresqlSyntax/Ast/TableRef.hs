@@ -226,7 +226,7 @@ instance Qc.Arbitrary TableRef where
         else
           Qc.oneof
             [ RelationExprTableRef <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
-              FuncTableRef <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+              FuncTableRef <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
               SelectTableRef <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
-              JoinTableRef <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary
+              JoinTableRef <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary
             ]

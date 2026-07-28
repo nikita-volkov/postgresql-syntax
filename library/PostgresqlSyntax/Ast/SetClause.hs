@@ -49,5 +49,5 @@ instance Qc.Arbitrary SetClause where
   arbitrary =
     Qc.oneof
       [ TargetSetClause <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-        TargetListSetClause <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+        TargetListSetClause <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
       ]

@@ -35,4 +35,4 @@ instance IsAst ImplicitRow where
 
 instance Qc.Arbitrary ImplicitRow where
   shrink = Qc.genericShrink
-  arbitrary = ImplicitRow <$> Qc.scale (`div` 2) arbitrary <*> Qc.downscale arbitrary
+  arbitrary = ImplicitRow <$> arbitrary <*> Qc.downscale arbitrary

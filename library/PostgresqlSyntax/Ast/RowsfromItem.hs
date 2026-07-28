@@ -36,4 +36,4 @@ instance IsAst RowsfromItem where
 
 instance Qc.Arbitrary RowsfromItem where
   shrink = Qc.genericShrink
-  arbitrary = RowsfromItem <$> Qc.scale (`div` 2) arbitrary <*> Qc.terminatingMaybe arbitrary
+  arbitrary = RowsfromItem <$> arbitrary <*> Qc.terminatingMaybe arbitrary

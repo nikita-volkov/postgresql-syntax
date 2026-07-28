@@ -40,6 +40,6 @@ instance Qc.Arbitrary SubstrList where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprSubstrList <$> Qc.downscale Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        ExprListSubstrList <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ ExprSubstrList <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+        ExprListSubstrList <$> Qc.arbitrary
       ]

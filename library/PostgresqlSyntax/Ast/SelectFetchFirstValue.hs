@@ -50,7 +50,7 @@ instance Qc.Arbitrary SelectFetchFirstValue where
   -- into @--1@, which reparses as a line comment.
   arbitrary =
     Qc.oneof
-      [ ExprSelectFetchFirstValue <$> Qc.scale (`div` 2) Qc.arbitrary,
+      [ ExprSelectFetchFirstValue <$> Qc.arbitrary,
         NumSelectFetchFirstValue <$> Qc.arbitrary <*> Qc.oneof [Left <$> nonNegativeInt64, Right <$> nonNegativeDouble]
       ]
     where

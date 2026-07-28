@@ -29,6 +29,6 @@ instance Qc.Arbitrary Row where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExplicitRowRow <$> Qc.scale (`div` 2) Qc.arbitrary,
-        ImplicitRowRow <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ ExplicitRowRow <$> Qc.arbitrary,
+        ImplicitRowRow <$> Qc.arbitrary
       ]

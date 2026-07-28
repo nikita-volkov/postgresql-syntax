@@ -59,6 +59,6 @@ instance Qc.Arbitrary InsertRest where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ SelectInsertRest <$> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
+      [ SelectInsertRest <$> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
         pure DefaultValuesInsertRest
       ]

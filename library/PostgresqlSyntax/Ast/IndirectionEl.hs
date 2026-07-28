@@ -5,6 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -90,10 +91,9 @@ instance Qc.Arbitrary IndirectionEl where
       if size <= 1
         then AttrNameIndirectionEl <$> Qc.arbitrary
         else
-          Qc.scale (`div` 2) $
-            Qc.oneof
-              [ AttrNameIndirectionEl <$> Qc.arbitrary,
-                pure AllIndirectionEl,
-                ExprIndirectionEl <$> Qc.arbitrary,
-                SliceIndirectionEl <$> Qc.arbitrary <*> Qc.arbitrary
-              ]
+          Qc.oneof
+            [ AttrNameIndirectionEl <$> Qc.arbitrary,
+              pure AllIndirectionEl,
+              ExprIndirectionEl <$> Qc.downscale Qc.arbitrary,
+              SliceIndirectionEl <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+            ]

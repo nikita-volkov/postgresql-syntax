@@ -78,7 +78,7 @@ instance Qc.Arbitrary FuncAliasClause where
   arbitrary =
     Qc.oneof
       [ AliasFuncAliasClause <$> Qc.arbitrary,
-        AsFuncAliasClause <$> Qc.scale (`div` 2) Qc.arbitrary,
-        AsColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        ColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+        AsFuncAliasClause <$> Qc.arbitrary,
+        AsColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.arbitrary,
+        ColIdFuncAliasClause <$> Qc.arbitrary <*> Qc.arbitrary
       ]

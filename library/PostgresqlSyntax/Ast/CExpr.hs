@@ -20,6 +20,7 @@ import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -149,18 +150,17 @@ instance Qc.Arbitrary CExpr where
       if n <= 1
         then ColumnrefCExpr <$> Qc.arbitrary
         else
-          Qc.scale (`div` 2) $
-            Qc.oneof
-              [ ColumnrefCExpr <$> Qc.arbitrary,
-                AexprConstCExpr <$> Qc.arbitrary,
-                ParamCExpr <$> Qc.choose (1, 19) <*> Qc.arbitrary,
-                InParensCExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-                CaseCExpr <$> Qc.arbitrary,
-                FuncCExpr <$> Qc.arbitrary,
-                SelectWithParensCExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-                ExistsCExpr <$> Qc.arbitrary,
-                ArrayCExpr <$> Qc.arbitrary,
-                ExplicitRowCExpr <$> Qc.arbitrary,
-                ImplicitRowCExpr <$> Qc.arbitrary,
-                GroupingCExpr <$> Qc.arbitrary
-              ]
+          Qc.oneof
+            [ ColumnrefCExpr <$> Qc.arbitrary,
+              AexprConstCExpr <$> Qc.arbitrary,
+              ParamCExpr <$> Qc.choose (1, 19) <*> Qc.arbitrary,
+              InParensCExpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+              CaseCExpr <$> Qc.arbitrary,
+              FuncCExpr <$> Qc.arbitrary,
+              SelectWithParensCExpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+              ExistsCExpr <$> Qc.downscale Qc.arbitrary,
+              ArrayCExpr <$> Qc.downscale Qc.arbitrary,
+              ExplicitRowCExpr <$> Qc.arbitrary,
+              ImplicitRowCExpr <$> Qc.arbitrary,
+              GroupingCExpr <$> Qc.arbitrary
+            ]

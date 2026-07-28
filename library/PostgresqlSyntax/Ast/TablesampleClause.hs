@@ -44,4 +44,4 @@ instance IsAst TablesampleClause where
 
 instance Qc.Arbitrary TablesampleClause where
   shrink = Qc.genericShrink
-  arbitrary = TablesampleClause <$> arbitrary <*> Qc.scale (`div` 2) arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)
+  arbitrary = TablesampleClause <$> arbitrary <*> arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)

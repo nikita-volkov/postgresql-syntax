@@ -5,6 +5,7 @@ import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -52,5 +53,5 @@ instance Qc.Arbitrary AnyOperator where
       else
         Qc.oneof
           [ AllOpAnyOperator <$> Qc.arbitrary,
-            QualifiedAnyOperator <$> Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary
+            QualifiedAnyOperator <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
           ]

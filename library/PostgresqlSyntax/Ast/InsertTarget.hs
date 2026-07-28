@@ -29,4 +29,4 @@ instance IsAst InsertTarget where
 
 instance Qc.Arbitrary InsertTarget where
   shrink = Qc.genericShrink
-  arbitrary = InsertTarget <$> arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = InsertTarget <$> arbitrary <*> arbitrary

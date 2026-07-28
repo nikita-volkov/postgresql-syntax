@@ -151,17 +151,16 @@ instance Qc.Arbitrary SimpleSelect where
       if n <= 1
         then TableSimpleSelect <$> Qc.arbitrary
         else
-          Qc.resize (div n 2) $
-            Qc.oneof
-              [ NormalSimpleSelect
-                  <$> Qc.arbitrary
-                  <*> Qc.arbitrary
-                  <*> Qc.arbitrary
-                  <*> Qc.arbitrary
-                  <*> Qc.arbitrary
-                  <*> Qc.arbitrary
-                  <*> Qc.arbitrary,
-                ValuesSimpleSelect <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
-                TableSimpleSelect <$> Qc.arbitrary,
-                BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
-              ]
+          Qc.oneof
+            [ NormalSimpleSelect
+                <$> Qc.arbitrary
+                <*> Qc.arbitrary
+                <*> Qc.arbitrary
+                <*> Qc.downscale Qc.arbitrary
+                <*> Qc.arbitrary
+                <*> Qc.downscale Qc.arbitrary
+                <*> Qc.arbitrary,
+              ValuesSimpleSelect <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
+              TableSimpleSelect <$> Qc.arbitrary,
+              BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+            ]

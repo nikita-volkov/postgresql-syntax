@@ -51,6 +51,6 @@ instance Qc.Arbitrary OnConflictDo where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UpdateOnConflictDo <$> Qc.scale (`div` 2) Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
+      [ UpdateOnConflictDo <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
         pure NothingOnConflictDo
       ]

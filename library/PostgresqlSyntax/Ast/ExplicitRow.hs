@@ -37,5 +37,5 @@ instance Qc.Arbitrary ExplicitRow where
   arbitrary =
     Qc.oneof
       [ pure EmptyExplicitRow,
-        ExprListExplicitRow <$> Qc.scale (`div` 2) Qc.arbitrary
+        ExprListExplicitRow <$> Qc.arbitrary
       ]

@@ -37,4 +37,4 @@ instance IsAst OnConflict where
 
 instance Qc.Arbitrary OnConflict where
   shrink = Qc.genericShrink
-  arbitrary = OnConflict <$> Qc.terminatingMaybe arbitrary <*> Qc.scale (`div` 2) arbitrary
+  arbitrary = OnConflict <$> Qc.terminatingMaybe arbitrary <*> arbitrary

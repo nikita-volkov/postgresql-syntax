@@ -62,7 +62,7 @@ instance Qc.Arbitrary GroupByItem where
           Qc.oneof
             [ ExprGroupByItem <$> Qc.downscale Qc.arbitrary,
               pure EmptyGroupingSetGroupByItem,
-              RollupGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
-              CubeGroupByItem <$> Qc.scale (`div` 2) Qc.arbitrary,
-              GroupingSetsGroupByItem <$> Qc.nonEmptyUpTo 2 (Qc.scale (`div` 4) Qc.arbitrary)
+              RollupGroupByItem <$> Qc.arbitrary,
+              CubeGroupByItem <$> Qc.arbitrary,
+              GroupingSetsGroupByItem <$> Qc.downscale (Qc.nonEmptyUpTo 2 Qc.arbitrary)
             ]

@@ -39,5 +39,5 @@ instance Qc.Arbitrary InExpr where
         else
           Qc.oneof
             [ SelectInExpr <$> Qc.downscale Qc.arbitrary,
-              ExprListInExpr <$> Qc.scale (`div` 2) Qc.arbitrary
+              ExprListInExpr <$> Qc.arbitrary
             ]

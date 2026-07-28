@@ -16,6 +16,7 @@ import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelec
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
@@ -111,10 +112,9 @@ instance Qc.Arbitrary SelectNoParens where
           selectClause <- Qc.arbitrary
           return (SelectNoParens Nothing selectClause Nothing Nothing Nothing)
         else
-          Qc.resize (div size 2) $
-            SelectNoParens
-              <$> Qc.arbitrary
-              <*> Qc.arbitrary
-              <*> Qc.arbitrary
-              <*> Qc.arbitrary
-              <*> Qc.arbitrary
+          SelectNoParens
+            <$> Qc.downscale Qc.arbitrary
+            <*> Qc.arbitrary
+            <*> Qc.arbitrary
+            <*> Qc.arbitrary
+            <*> Qc.arbitrary

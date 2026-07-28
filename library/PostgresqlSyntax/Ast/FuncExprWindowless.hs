@@ -32,6 +32,6 @@ instance Qc.Arbitrary FuncExprWindowless where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ApplicationFuncExprWindowless <$> Qc.scale (`div` 2) Qc.arbitrary,
-        CommonSubexprFuncExprWindowless <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ ApplicationFuncExprWindowless <$> Qc.arbitrary,
+        CommonSubexprFuncExprWindowless <$> Qc.arbitrary
       ]

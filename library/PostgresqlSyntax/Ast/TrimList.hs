@@ -40,7 +40,7 @@ instance Qc.Arbitrary TrimList where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprFromExprListTrimList <$> Qc.downscale Qc.arbitrary <*> Qc.scale (`div` 2) Qc.arbitrary,
-        FromExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary,
-        ExprListTrimList <$> Qc.scale (`div` 2) Qc.arbitrary
+      [ ExprFromExprListTrimList <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+        FromExprListTrimList <$> Qc.arbitrary,
+        ExprListTrimList <$> Qc.arbitrary
       ]

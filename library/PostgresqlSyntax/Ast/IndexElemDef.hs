@@ -40,6 +40,6 @@ instance Qc.Arbitrary IndexElemDef where
   arbitrary =
     Qc.oneof
       [ IdIndexElemDef <$> Qc.arbitrary,
-        FuncIndexElemDef <$> Qc.scale (`div` 2) Qc.arbitrary,
+        FuncIndexElemDef <$> Qc.arbitrary,
         ExprIndexElemDef <$> Qc.downscale Qc.arbitrary
       ]
