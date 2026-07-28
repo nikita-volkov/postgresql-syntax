@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.FuncApplicationParams where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -90,10 +90,10 @@ instance Qc.Arbitrary FuncApplicationParams where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Qc.terminatingMaybe Qc.arbitrary,
-        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
+      [ NormalFuncApplicationParams <$> Qc.arbitrary <*> nonEmptyOf 8 <*> Gens.terminatingMaybe Qc.arbitrary,
+        VariadicFuncApplicationParams <$> maybeNonEmptyOf 8 <*> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary,
         pure StarFuncApplicationParams
       ]
     where
-      nonEmptyOf hi = Qc.nonEmptyUpTo (hi - 1) Qc.arbitrary
+      nonEmptyOf hi = Gens.nonEmptyUpTo (hi - 1) Qc.arbitrary
       maybeNonEmptyOf hi = Qc.oneof [pure Nothing, Just <$> nonEmptyOf hi]

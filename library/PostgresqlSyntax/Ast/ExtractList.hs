@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.ExtractList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExtractArg
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
@@ -24,4 +24,4 @@ instance IsAst ExtractList where
 
 instance Qc.Arbitrary ExtractList where
   shrink = Qc.genericShrink
-  arbitrary = ExtractList <$> arbitrary <*> Qc.downscale arbitrary
+  arbitrary = ExtractList <$> arbitrary <*> Gens.downscale arbitrary

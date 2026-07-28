@@ -1,4 +1,4 @@
-module PostgresqlSyntax.Extras.QuickCheck where
+module PostgresqlSyntax.Helpers.Gens where
 
 import PostgresqlSyntax.Prelude
 import Test.QuickCheck

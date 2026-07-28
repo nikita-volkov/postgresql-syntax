@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SelectLimitValue where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -33,6 +33,6 @@ instance Qc.Arbitrary SelectLimitValue where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprSelectLimitValue <$> Qc.downscale Qc.arbitrary,
+      [ ExprSelectLimitValue <$> Gens.downscale Qc.arbitrary,
         pure AllSelectLimitValue
       ]

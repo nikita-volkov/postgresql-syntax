@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.OffsetClause where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -51,6 +51,6 @@ instance Qc.Arbitrary OffsetClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprOffsetClause <$> Qc.downscale Qc.arbitrary,
+      [ ExprOffsetClause <$> Gens.downscale Qc.arbitrary,
         FetchFirstOffsetClause <$> Qc.arbitrary <*> Qc.arbitrary
       ]

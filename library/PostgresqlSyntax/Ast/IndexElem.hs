@@ -5,7 +5,7 @@ import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.IndexElemDef
 import PostgresqlSyntax.Ast.NullsOrder
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -56,7 +56,7 @@ instance Qc.Arbitrary IndexElem where
   arbitrary =
     IndexElem
       <$> Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
       <*> Qc.arbitrary
       <*> Qc.arbitrary

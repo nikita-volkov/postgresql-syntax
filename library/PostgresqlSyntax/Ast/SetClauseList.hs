@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SetClauseList where
 
 import PostgresqlSyntax.Ast.SetClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst SetClauseList where
 
 instance Qc.Arbitrary SetClauseList where
   shrink = Qc.genericShrink
-  arbitrary = SetClauseList <$> Qc.nonEmptyUpTo 9 Qc.arbitrary
+  arbitrary = SetClauseList <$> Gens.nonEmptyUpTo 9 Qc.arbitrary

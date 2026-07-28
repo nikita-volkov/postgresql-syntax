@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertColumnList
 import PostgresqlSyntax.Ast.OverrideKind
 import PostgresqlSyntax.Ast.SelectStmt
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -59,6 +59,6 @@ instance Qc.Arbitrary InsertRest where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ SelectInsertRest <$> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+      [ SelectInsertRest <$> Gens.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
         pure DefaultValuesInsertRest
       ]

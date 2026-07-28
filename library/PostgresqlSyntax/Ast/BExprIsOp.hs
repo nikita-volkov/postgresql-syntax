@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.BExprIsOp where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.TypeList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -47,7 +47,7 @@ instance IsAst BExprIsOp where
 instance Qc.Arbitrary BExprIsOp where
   shrink = Qc.genericShrink
   arbitrary =
-    Qc.oneofRec
+    Gens.oneofRec
       [ pure DocumentBExprIsOp
       ]
       [ DistinctFromBExprIsOp <$> Qc.arbitrary,

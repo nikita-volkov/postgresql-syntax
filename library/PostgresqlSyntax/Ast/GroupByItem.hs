@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.GroupByItem where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -57,12 +57,12 @@ instance Qc.Arbitrary GroupByItem where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then Qc.oneof [ExprGroupByItem <$> Qc.downscale Qc.arbitrary, pure EmptyGroupingSetGroupByItem]
+        then Qc.oneof [ExprGroupByItem <$> Gens.downscale Qc.arbitrary, pure EmptyGroupingSetGroupByItem]
         else
           Qc.oneof
-            [ ExprGroupByItem <$> Qc.downscale Qc.arbitrary,
+            [ ExprGroupByItem <$> Gens.downscale Qc.arbitrary,
               pure EmptyGroupingSetGroupByItem,
               RollupGroupByItem <$> Qc.arbitrary,
               CubeGroupByItem <$> Qc.arbitrary,
-              GroupingSetsGroupByItem <$> Qc.downscale (Qc.nonEmptyUpTo 2 Qc.arbitrary)
+              GroupingSetsGroupByItem <$> Gens.downscale (Gens.nonEmptyUpTo 2 Qc.arbitrary)
             ]

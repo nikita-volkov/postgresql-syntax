@@ -9,7 +9,7 @@ import PostgresqlSyntax.Ast.JoinedTable
 import PostgresqlSyntax.Ast.RelationExpr
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.TablesampleClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -225,8 +225,8 @@ instance Qc.Arbitrary TableRef where
         then RelationExprTableRef <$> Qc.arbitrary <*> pure Nothing <*> pure Nothing
         else
           Qc.oneof
-            [ RelationExprTableRef <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
-              FuncTableRef <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
-              SelectTableRef <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary,
-              JoinTableRef <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary
+            [ RelationExprTableRef <$> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary,
+              FuncTableRef <$> Qc.arbitrary <*> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary,
+              SelectTableRef <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary,
+              JoinTableRef <$> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary
             ]

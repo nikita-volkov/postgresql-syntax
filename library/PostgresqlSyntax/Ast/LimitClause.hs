@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import PostgresqlSyntax.Ast.SelectLimitValue
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -95,6 +95,6 @@ instance Qc.Arbitrary LimitClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ LimitLimitClause <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
-        FetchOnlyLimitClause <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
+      [ LimitLimitClause <$> Qc.arbitrary <*> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary),
+        FetchOnlyLimitClause <$> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
       ]

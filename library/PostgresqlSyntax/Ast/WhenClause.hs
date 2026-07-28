@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.WhenClause where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
@@ -32,4 +32,4 @@ instance IsAst WhenClause where
 
 instance Qc.Arbitrary WhenClause where
   shrink = Qc.genericShrink
-  arbitrary = WhenClause <$> Qc.downscale arbitrary <*> Qc.downscale arbitrary
+  arbitrary = WhenClause <$> Gens.downscale arbitrary <*> Gens.downscale arbitrary

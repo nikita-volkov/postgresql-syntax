@@ -14,7 +14,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -113,7 +113,7 @@ instance Qc.Arbitrary SelectNoParens where
           return (SelectNoParens Nothing selectClause Nothing Nothing Nothing)
         else
           SelectNoParens
-            <$> Qc.downscale Qc.arbitrary
+            <$> Gens.downscale Qc.arbitrary
             <*> Qc.arbitrary
             <*> Qc.arbitrary
             <*> Qc.arbitrary

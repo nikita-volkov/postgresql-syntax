@@ -18,8 +18,8 @@ import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -154,12 +154,12 @@ instance Qc.Arbitrary CExpr where
             [ ColumnrefCExpr <$> Qc.arbitrary,
               AexprConstCExpr <$> Qc.arbitrary,
               ParamCExpr <$> Qc.choose (1, 19) <*> Qc.arbitrary,
-              InParensCExpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+              InParensCExpr <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
               CaseCExpr <$> Qc.arbitrary,
               FuncCExpr <$> Qc.arbitrary,
-              SelectWithParensCExpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
-              ExistsCExpr <$> Qc.downscale Qc.arbitrary,
-              ArrayCExpr <$> Qc.downscale Qc.arbitrary,
+              SelectWithParensCExpr <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
+              ExistsCExpr <$> Gens.downscale Qc.arbitrary,
+              ArrayCExpr <$> Gens.downscale Qc.arbitrary,
               ExplicitRowCExpr <$> Qc.arbitrary,
               ImplicitRowCExpr <$> Qc.arbitrary,
               GroupingCExpr <$> Qc.arbitrary

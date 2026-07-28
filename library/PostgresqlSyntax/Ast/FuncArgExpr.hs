@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.FuncArgExpr where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -64,7 +64,7 @@ instance Qc.Arbitrary FuncArgExpr where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprFuncArgExpr <$> Qc.downscale Qc.arbitrary,
-        ColonEqualsFuncArgExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-        EqualsGreaterFuncArgExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+      [ ExprFuncArgExpr <$> Gens.downscale Qc.arbitrary,
+        ColonEqualsFuncArgExpr <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+        EqualsGreaterFuncArgExpr <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary
       ]

@@ -5,7 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -49,6 +49,6 @@ instance Qc.Arbitrary SortBy where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UsingSortBy <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-        AscDescSortBy <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+      [ UsingSortBy <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
+        AscDescSortBy <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
       ]

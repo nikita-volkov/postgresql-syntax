@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.FuncConstArgs where
 
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -27,4 +27,4 @@ instance IsAst FuncConstArgs where
 
 instance Qc.Arbitrary FuncConstArgs where
   shrink = Qc.genericShrink
-  arbitrary = FuncConstArgs <$> Qc.nonEmptyUpTo 6 Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary
+  arbitrary = FuncConstArgs <$> Gens.nonEmptyUpTo 6 Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary

@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -35,4 +35,4 @@ instance IsAst ImplicitRow where
 
 instance Qc.Arbitrary ImplicitRow where
   shrink = Qc.genericShrink
-  arbitrary = ImplicitRow <$> arbitrary <*> Qc.downscale arbitrary
+  arbitrary = ImplicitRow <$> arbitrary <*> Gens.downscale arbitrary

@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.TableFuncElementList where
 
 import PostgresqlSyntax.Ast.TableFuncElement
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst TableFuncElementList where
 
 instance Qc.Arbitrary TableFuncElementList where
   shrink = Qc.genericShrink
-  arbitrary = TableFuncElementList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = TableFuncElementList <$> Gens.nonEmptyUpTo 6 Qc.arbitrary

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.Targeting where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.TargetList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -61,5 +61,5 @@ instance Qc.Arbitrary Targeting where
     Qc.oneof
       [ NormalTargeting <$> Qc.arbitrary,
         AllTargeting <$> Qc.arbitrary,
-        DistinctTargeting <$> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
+        DistinctTargeting <$> Gens.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary
       ]

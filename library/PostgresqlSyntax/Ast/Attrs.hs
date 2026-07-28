@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.Attrs where
 import Control.Applicative.Combinators.NonEmpty (some)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -42,4 +42,4 @@ instance IsAst Attrs where
 
 instance Qc.Arbitrary Attrs where
   shrink = Qc.genericShrink
-  arbitrary = Attrs <$> Qc.nonEmptyUpTo 9 Qc.arbitrary
+  arbitrary = Attrs <$> Gens.nonEmptyUpTo 9 Qc.arbitrary

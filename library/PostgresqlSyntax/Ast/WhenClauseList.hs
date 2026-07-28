@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.WhenClauseList where
 
 import PostgresqlSyntax.Ast.WhenClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst WhenClauseList where
 
 instance Qc.Arbitrary WhenClauseList where
   shrink = Qc.genericShrink
-  arbitrary = WhenClauseList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = WhenClauseList <$> Gens.nonEmptyUpTo 6 Qc.arbitrary

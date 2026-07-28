@@ -17,7 +17,7 @@ import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -156,11 +156,11 @@ instance Qc.Arbitrary SimpleSelect where
                 <$> Qc.arbitrary
                 <*> Qc.arbitrary
                 <*> Qc.arbitrary
-                <*> Qc.downscale Qc.arbitrary
+                <*> Gens.downscale Qc.arbitrary
                 <*> Qc.arbitrary
-                <*> Qc.downscale Qc.arbitrary
+                <*> Gens.downscale Qc.arbitrary
                 <*> Qc.arbitrary,
-              ValuesSimpleSelect <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
+              ValuesSimpleSelect <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
               TableSimpleSelect <$> Qc.arbitrary,
               BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
             ]

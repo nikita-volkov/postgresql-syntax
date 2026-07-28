@@ -6,7 +6,7 @@ import PostgresqlSyntax.Ast.CExpr (CExpr)
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -153,10 +153,10 @@ instance Qc.Arbitrary BExpr where
         else
           Qc.oneof
             [ CExprBExpr <$> Qc.arbitrary,
-              TypecastBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
-              PlusBExpr <$> Qc.downscale Qc.arbitrary,
-              MinusBExpr <$> Qc.downscale Qc.arbitrary,
-              SymbolicBinOpBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              QualOpBExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              IsOpBExpr <$> safeBExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+              TypecastBExpr <$> safeBExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              PlusBExpr <$> Gens.downscale Qc.arbitrary,
+              MinusBExpr <$> Gens.downscale Qc.arbitrary,
+              SymbolicBinOpBExpr <$> safeBExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              QualOpBExpr <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              IsOpBExpr <$> safeBExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary
             ]

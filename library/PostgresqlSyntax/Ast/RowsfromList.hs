@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.RowsfromList where
 
 import PostgresqlSyntax.Ast.RowsfromItem
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst RowsfromList where
 
 instance Qc.Arbitrary RowsfromList where
   shrink = Qc.genericShrink
-  arbitrary = RowsfromList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary
+  arbitrary = RowsfromList <$> Gens.nonEmptyUpTo 7 Qc.arbitrary

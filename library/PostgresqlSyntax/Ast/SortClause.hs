@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SortClause where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.SortBy
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -32,4 +32,4 @@ instance IsAst SortClause where
 
 instance Qc.Arbitrary SortClause where
   shrink = Qc.genericShrink
-  arbitrary = SortClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary
+  arbitrary = SortClause <$> Gens.nonEmptyUpTo 7 Qc.arbitrary

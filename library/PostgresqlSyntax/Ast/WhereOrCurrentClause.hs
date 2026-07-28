@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.WhereOrCurrentClause where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -47,6 +47,6 @@ instance Qc.Arbitrary WhereOrCurrentClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprWhereOrCurrentClause <$> Qc.downscale Qc.arbitrary,
+      [ ExprWhereOrCurrentClause <$> Gens.downscale Qc.arbitrary,
         CursorWhereOrCurrentClause <$> Qc.arbitrary
       ]

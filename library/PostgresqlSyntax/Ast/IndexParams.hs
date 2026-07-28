@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.IndexParams where
 
 import PostgresqlSyntax.Ast.IndexElem
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst IndexParams where
 
 instance Qc.Arbitrary IndexParams where
   shrink = Qc.genericShrink
-  arbitrary = IndexParams <$> Qc.nonEmptyUpTo 4 Qc.arbitrary
+  arbitrary = IndexParams <$> Gens.nonEmptyUpTo 4 Qc.arbitrary

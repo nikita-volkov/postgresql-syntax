@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.TypeList where
 
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst TypeList where
 
 instance Qc.Arbitrary TypeList where
   shrink = Qc.genericShrink
-  arbitrary = TypeList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = TypeList <$> Gens.nonEmptyUpTo 6 Qc.arbitrary

@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.InsertColumnList where
 
 import PostgresqlSyntax.Ast.InsertColumnItem
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst InsertColumnList where
 
 instance Qc.Arbitrary InsertColumnList where
   shrink = Qc.genericShrink
-  arbitrary = InsertColumnList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = InsertColumnList <$> Gens.nonEmptyUpTo 6 Qc.arbitrary

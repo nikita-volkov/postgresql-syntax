@@ -10,7 +10,7 @@ import PostgresqlSyntax.Ast.Iconst
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.Ast.Xconst
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -117,7 +117,7 @@ instance Qc.Arbitrary AexprConst where
         SAexprConst <$> Qc.arbitrary,
         BAexprConst <$> Qc.arbitrary,
         XAexprConst <$> Qc.arbitrary,
-        FuncAexprConst <$> Qc.arbitrary <*> Qc.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary,
+        FuncAexprConst <$> Qc.arbitrary <*> Gens.terminatingMaybe Qc.arbitrary <*> Qc.arbitrary,
         ConstTypenameAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,
         StringIntervalAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,
         IntIntervalAexprConst <$> Qc.arbitrary <*> Qc.arbitrary,

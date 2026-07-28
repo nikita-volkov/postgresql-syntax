@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.ArrayBounds where
 
 import PostgresqlSyntax.Ast.Iconst
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -25,4 +25,4 @@ instance IsAst ArrayBounds where
 
 instance Qc.Arbitrary ArrayBounds where
   shrink = Qc.genericShrink
-  arbitrary = ArrayBounds <$> Qc.nonEmptyUpTo 3 (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])
+  arbitrary = ArrayBounds <$> Gens.nonEmptyUpTo 3 (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])

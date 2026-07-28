@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.OverlayList where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -54,7 +54,7 @@ instance Qc.Arbitrary OverlayList where
   shrink = Qc.genericShrink
   arbitrary =
     OverlayList
-      <$> Qc.downscale Qc.arbitrary
-      <*> Qc.downscale Qc.arbitrary
-      <*> Qc.downscale Qc.arbitrary
-      <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+      <$> Gens.downscale Qc.arbitrary
+      <*> Gens.downscale Qc.arbitrary
+      <*> Gens.downscale Qc.arbitrary
+      <*> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)

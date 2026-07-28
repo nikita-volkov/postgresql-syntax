@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.OnConflictDo where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SetClauseList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -51,6 +51,6 @@ instance Qc.Arbitrary OnConflictDo where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UpdateOnConflictDo <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
+      [ UpdateOnConflictDo <$> Qc.arbitrary <*> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary),
         pure NothingOnConflictDo
       ]

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.WithClause where
 import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CommonTableExpr
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -34,4 +34,4 @@ instance IsAst WithClause where
 
 instance Qc.Arbitrary WithClause where
   shrink = Qc.genericShrink
-  arbitrary = WithClause <$> arbitrary <*> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = WithClause <$> arbitrary <*> Gens.nonEmptyUpTo 6 Qc.arbitrary

@@ -20,7 +20,7 @@ import PostgresqlSyntax.Ast.SubqueryOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -386,36 +386,36 @@ instance Qc.Arbitrary AExpr where
           Qc.oneof
             [ CExprAExpr <$> Qc.arbitrary,
               pure DefaultAExpr,
-              TypecastAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
-              CollateAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
-              AtTimeZoneAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
-              PlusAExpr <$> Qc.downscale Qc.arbitrary,
-              MinusAExpr <$> Qc.downscale Qc.arbitrary,
-              SymbolicBinOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              PrefixQualOpAExpr <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              SuffixQualOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary,
-              AndAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
-              OrAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.downscale Qc.arbitrary,
-              NotAExpr <$> Qc.downscale Qc.arbitrary,
+              TypecastAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              CollateAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              AtTimeZoneAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Gens.downscale Qc.arbitrary,
+              PlusAExpr <$> Gens.downscale Qc.arbitrary,
+              MinusAExpr <$> Gens.downscale Qc.arbitrary,
+              SymbolicBinOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              PrefixQualOpAExpr <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              SuffixQualOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
+              AndAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Gens.downscale Qc.arbitrary,
+              OrAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Gens.downscale Qc.arbitrary,
+              NotAExpr <$> Gens.downscale Qc.arbitrary,
               ( do
-                  a <- safeAExprOperand (Qc.downscale Qc.arbitrary)
+                  a <- safeAExprOperand (Gens.downscale Qc.arbitrary)
                   b <- Qc.arbitrary
                   c <- Qc.arbitrary
-                  e <- Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+                  e <- Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)
                   -- See @renderVerbalRhs@ in the 'IsAst' instance above:
                   -- whenever there's an escape clause, @d@ must be
                   -- parenthesized up front so the generated value already
                   -- matches what parsing the (necessarily parenthesized)
                   -- rendering reconstructs.
                   d <- case e of
-                    Nothing -> Qc.downscale Qc.arbitrary
-                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Qc.downscale Qc.arbitrary
+                    Nothing -> Gens.downscale Qc.arbitrary
+                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Gens.downscale Qc.arbitrary
                   pure (VerbalExprBinOpAExpr a b c d e)
               ),
-              ReversableOpAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,
-              IsnullAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary),
-              NotnullAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary),
+              ReversableOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,
+              IsnullAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary),
+              NotnullAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary),
               OverlapsAExpr <$> Qc.arbitrary <*> Qc.arbitrary,
-              SubqueryAExpr <$> safeAExprOperand (Qc.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              UniqueAExpr <$> Qc.downscale Qc.arbitrary
+              SubqueryAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              UniqueAExpr <$> Gens.downscale Qc.arbitrary
             ]

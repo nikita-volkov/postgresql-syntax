@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.OnConflict where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ConfExpr
 import PostgresqlSyntax.Ast.OnConflictDo
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -37,4 +37,4 @@ instance IsAst OnConflict where
 
 instance Qc.Arbitrary OnConflict where
   shrink = Qc.genericShrink
-  arbitrary = OnConflict <$> Qc.terminatingMaybe arbitrary <*> arbitrary
+  arbitrary = OnConflict <$> Gens.terminatingMaybe arbitrary <*> arbitrary

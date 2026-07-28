@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.JoinedTable where
 
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -51,9 +51,9 @@ instance Qc.Arbitrary JoinedTable where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then MethJoinedTable <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+        then MethJoinedTable <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary
         else
           Qc.oneof
-            [ InParensJoinedTable <$> Qc.downscale Qc.arbitrary,
-              MethJoinedTable <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+            [ InParensJoinedTable <$> Gens.downscale Qc.arbitrary,
+              MethJoinedTable <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary
             ]

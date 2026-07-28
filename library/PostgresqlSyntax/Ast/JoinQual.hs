@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.JoinQual where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -35,6 +35,6 @@ instance Qc.Arbitrary JoinQual where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UsingJoinQual <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
-        OnJoinQual <$> Qc.downscale Qc.arbitrary
+      [ UsingJoinQual <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
+        OnJoinQual <$> Gens.downscale Qc.arbitrary
       ]

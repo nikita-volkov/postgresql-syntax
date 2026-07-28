@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.IndexParams
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -45,6 +45,6 @@ instance Qc.Arbitrary ConfExpr where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ WhereConfExpr <$> Qc.arbitrary <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary),
+      [ WhereConfExpr <$> Qc.arbitrary <*> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary),
         ConstraintConfExpr <$> Qc.arbitrary
       ]

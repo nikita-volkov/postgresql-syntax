@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.CaseExpr where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.WhenClauseList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -51,4 +51,4 @@ instance IsAst CaseExpr where
 
 instance Qc.Arbitrary CaseExpr where
   shrink = Qc.genericShrink
-  arbitrary = CaseExpr <$> Qc.terminatingMaybe (Qc.downscale arbitrary) <*> arbitrary <*> Qc.terminatingMaybe (Qc.downscale arbitrary)
+  arbitrary = CaseExpr <$> Gens.terminatingMaybe (Gens.downscale arbitrary) <*> arbitrary <*> Gens.terminatingMaybe (Gens.downscale arbitrary)

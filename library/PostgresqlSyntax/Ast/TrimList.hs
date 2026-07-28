@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.TrimList where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
@@ -39,7 +39,7 @@ instance Qc.Arbitrary TrimList where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ExprFromExprListTrimList <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+      [ ExprFromExprListTrimList <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
         FromExprListTrimList <$> Qc.arbitrary,
         ExprListTrimList <$> Qc.arbitrary
       ]

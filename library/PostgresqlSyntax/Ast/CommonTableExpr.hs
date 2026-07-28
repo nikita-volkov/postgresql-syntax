@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.CommonTableExpr where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.PreparableStmt
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -54,6 +54,6 @@ instance Qc.Arbitrary CommonTableExpr where
   arbitrary =
     CommonTableExpr
       <$> Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
       <*> Qc.arbitrary

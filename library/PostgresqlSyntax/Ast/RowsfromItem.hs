@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.RowsfromItem where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.TableFuncElementList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -36,4 +36,4 @@ instance IsAst RowsfromItem where
 
 instance Qc.Arbitrary RowsfromItem where
   shrink = Qc.genericShrink
-  arbitrary = RowsfromItem <$> arbitrary <*> Qc.terminatingMaybe arbitrary
+  arbitrary = RowsfromItem <$> arbitrary <*> Gens.terminatingMaybe arbitrary

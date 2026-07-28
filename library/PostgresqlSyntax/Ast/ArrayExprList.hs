@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.ArrayExprList where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.ArrayExpr (ArrayExpr)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst ArrayExprList where
 
 instance Qc.Arbitrary ArrayExprList where
   shrink = Qc.genericShrink
-  arbitrary = ArrayExprList <$> Qc.nonEmptyUpTo 100 (Qc.downscale Qc.arbitrary)
+  arbitrary = ArrayExprList <$> Gens.nonEmptyUpTo 100 (Gens.downscale Qc.arbitrary)

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.IndirectionEl where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -94,6 +94,6 @@ instance Qc.Arbitrary IndirectionEl where
           Qc.oneof
             [ AttrNameIndirectionEl <$> Qc.arbitrary,
               pure AllIndirectionEl,
-              ExprIndirectionEl <$> Qc.downscale Qc.arbitrary,
-              SliceIndirectionEl <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+              ExprIndirectionEl <$> Gens.downscale Qc.arbitrary,
+              SliceIndirectionEl <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary
             ]

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.IndexElemDef where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -42,5 +42,5 @@ instance Qc.Arbitrary IndexElemDef where
     Qc.oneof
       [ IdIndexElemDef <$> Qc.arbitrary,
         FuncIndexElemDef <$> Qc.arbitrary,
-        ExprIndexElemDef <$> Qc.downscale Qc.arbitrary
+        ExprIndexElemDef <$> Gens.downscale Qc.arbitrary
       ]

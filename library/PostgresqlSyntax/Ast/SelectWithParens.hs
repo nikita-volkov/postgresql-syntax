@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SelectWithParens where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, unparenthesizedSelectNoParens)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -56,7 +56,7 @@ instance IsAst SelectWithParens where
 instance Qc.Arbitrary SelectWithParens where
   shrink = Qc.genericShrink
   arbitrary =
-    Qc.oneofRec
+    Gens.oneofRec
       [ NoParensSelectWithParens <$> Qc.arbitrary
       ]
       [ WithParensSelectWithParens <$> Qc.arbitrary

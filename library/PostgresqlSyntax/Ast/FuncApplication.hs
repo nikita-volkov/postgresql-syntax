@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.FuncApplication where
 
 import PostgresqlSyntax.Ast.FuncApplicationParams
 import PostgresqlSyntax.Ast.FuncName
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
@@ -36,4 +36,4 @@ instance IsAst FuncApplication where
 
 instance Qc.Arbitrary FuncApplication where
   shrink = Qc.genericShrink
-  arbitrary = FuncApplication <$> arbitrary <*> Qc.terminatingMaybe arbitrary
+  arbitrary = FuncApplication <$> arbitrary <*> Gens.terminatingMaybe arbitrary

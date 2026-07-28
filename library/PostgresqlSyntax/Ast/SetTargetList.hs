@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SetTargetList where
 
 import PostgresqlSyntax.Ast.SetTarget
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -24,4 +24,4 @@ instance IsAst SetTargetList where
 
 instance Qc.Arbitrary SetTargetList where
   shrink = Qc.genericShrink
-  arbitrary = SetTargetList <$> Qc.nonEmptyUpTo 6 Qc.arbitrary
+  arbitrary = SetTargetList <$> Gens.nonEmptyUpTo 6 Qc.arbitrary

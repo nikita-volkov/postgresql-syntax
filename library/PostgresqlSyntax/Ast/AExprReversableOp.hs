@@ -5,7 +5,7 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import PostgresqlSyntax.Ast.InExpr
 import PostgresqlSyntax.Ast.TypeList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -104,10 +104,10 @@ instance Qc.Arbitrary AExprReversableOp where
               pure TrueAExprReversableOp,
               pure FalseAExprReversableOp,
               pure UnknownAExprReversableOp,
-              DistinctFromAExprReversableOp <$> Qc.downscale Qc.arbitrary,
-              OfAExprReversableOp <$> Qc.downscale Qc.arbitrary,
-              BetweenAExprReversableOp <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              BetweenSymmetricAExprReversableOp <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-              InAExprReversableOp <$> Qc.downscale Qc.arbitrary,
+              DistinctFromAExprReversableOp <$> Gens.downscale Qc.arbitrary,
+              OfAExprReversableOp <$> Gens.downscale Qc.arbitrary,
+              BetweenAExprReversableOp <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              BetweenSymmetricAExprReversableOp <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+              InAExprReversableOp <$> Gens.downscale Qc.arbitrary,
               pure DocumentAExprReversableOp
             ]

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.SetTarget where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Indirection
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -29,4 +29,4 @@ instance IsAst SetTarget where
 
 instance Qc.Arbitrary SetTarget where
   shrink = Qc.genericShrink
-  arbitrary = SetTarget <$> arbitrary <*> Qc.terminatingMaybe arbitrary
+  arbitrary = SetTarget <$> arbitrary <*> Gens.terminatingMaybe arbitrary

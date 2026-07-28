@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SubstrListFromFor where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
@@ -56,8 +56,8 @@ instance Qc.Arbitrary SubstrListFromFor where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ FromForSubstrListFromFor <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-        ForFromSubstrListFromFor <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-        FromSubstrListFromFor <$> Qc.downscale Qc.arbitrary,
-        ForSubstrListFromFor <$> Qc.downscale Qc.arbitrary
+      [ FromForSubstrListFromFor <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+        ForFromSubstrListFromFor <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+        FromSubstrListFromFor <$> Gens.downscale Qc.arbitrary,
+        ForSubstrListFromFor <$> Gens.downscale Qc.arbitrary
       ]

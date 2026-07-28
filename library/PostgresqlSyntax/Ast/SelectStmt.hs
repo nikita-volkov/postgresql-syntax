@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SelectStmt where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -36,4 +36,4 @@ instance Qc.Arbitrary SelectStmt where
   -- as @NoParensSelectStmt (SelectNoParens Nothing (WithParensSelectClause
   -- _) Nothing Nothing Nothing)@, never as a bare @WithParensSelectStmt@.
   -- Generating the latter would therefore never round-trip.
-  arbitrary = NoParensSelectStmt <$> Qc.downscale Qc.arbitrary
+  arbitrary = NoParensSelectStmt <$> Gens.downscale Qc.arbitrary

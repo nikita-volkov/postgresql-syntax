@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.SetClause where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.SetTarget
 import PostgresqlSyntax.Ast.SetTargetList
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -48,6 +48,6 @@ instance Qc.Arbitrary SetClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ TargetSetClause <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
-        TargetListSetClause <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+      [ TargetSetClause <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+        TargetListSetClause <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary
       ]

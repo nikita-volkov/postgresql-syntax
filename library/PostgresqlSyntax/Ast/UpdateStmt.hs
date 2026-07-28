@@ -8,7 +8,7 @@ import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -67,9 +67,9 @@ instance Qc.Arbitrary UpdateStmt where
   shrink = Qc.genericShrink
   arbitrary =
     UpdateStmt
-      <$> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+      <$> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)
       <*> Qc.arbitrary
       <*> Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary

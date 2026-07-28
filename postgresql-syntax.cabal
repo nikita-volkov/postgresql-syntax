@@ -235,8 +235,8 @@ library
     PostgresqlSyntax.Ast.Xconst
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
-    PostgresqlSyntax.Extras.QuickCheck
     PostgresqlSyntax.Extras.TextBuilder
+    PostgresqlSyntax.Helpers.Gens
     PostgresqlSyntax.Helpers.Parsers
     PostgresqlSyntax.Helpers.Shrinks
     PostgresqlSyntax.Helpers.TextBuilders

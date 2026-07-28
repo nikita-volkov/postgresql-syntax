@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.Indirection where
 
 import Control.Applicative.Combinators.NonEmpty (some)
 import PostgresqlSyntax.Ast.IndirectionEl
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (some)
 import qualified Test.QuickCheck as Qc
@@ -23,4 +23,4 @@ instance IsAst Indirection where
 
 instance Qc.Arbitrary Indirection where
   shrink = Qc.genericShrink
-  arbitrary = Indirection <$> Qc.nonEmptyUpTo 4 Qc.arbitrary
+  arbitrary = Indirection <$> Gens.nonEmptyUpTo 4 Qc.arbitrary

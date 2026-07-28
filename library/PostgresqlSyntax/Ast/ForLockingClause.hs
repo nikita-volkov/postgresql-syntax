@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.ForLockingClause where
 
 import PostgresqlSyntax.Ast.ForLockingItem
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -36,6 +36,6 @@ instance Qc.Arbitrary ForLockingClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ ItemsForLockingClause <$> Qc.nonEmptyUpTo 7 Qc.arbitrary,
+      [ ItemsForLockingClause <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
         pure ReadOnlyForLockingClause
       ]

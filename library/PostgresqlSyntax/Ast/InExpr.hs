@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.InExpr where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -39,6 +39,6 @@ instance Qc.Arbitrary InExpr where
         then ExprListInExpr <$> Qc.arbitrary
         else
           Qc.oneof
-            [ SelectInExpr <$> Qc.downscale Qc.arbitrary,
+            [ SelectInExpr <$> Gens.downscale Qc.arbitrary,
               ExprListInExpr <$> Qc.arbitrary
             ]

@@ -5,7 +5,7 @@ import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FrameClause
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -74,6 +74,6 @@ instance Qc.Arbitrary WindowSpecification where
   arbitrary =
     WindowSpecification
       <$> Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary

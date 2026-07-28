@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.AnyOperator where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
@@ -52,5 +52,5 @@ instance Qc.Arbitrary AnyOperator where
       else
         Qc.oneof
           [ AllOpAnyOperator <$> Qc.arbitrary,
-            QualifiedAnyOperator <$> Qc.arbitrary <*> Qc.downscale Qc.arbitrary
+            QualifiedAnyOperator <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary
           ]

@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.ForLockingItem where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ForLockingStrength
 import PostgresqlSyntax.Ast.QualifiedName
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -46,4 +46,4 @@ instance IsAst ForLockingItem where
 
 instance Qc.Arbitrary ForLockingItem where
   shrink = Qc.genericShrink
-  arbitrary = ForLockingItem <$> arbitrary <*> Qc.terminatingMaybe arbitrary <*> arbitrary
+  arbitrary = ForLockingItem <$> arbitrary <*> Gens.terminatingMaybe arbitrary <*> arbitrary

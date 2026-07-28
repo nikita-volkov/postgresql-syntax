@@ -6,7 +6,7 @@ import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -71,8 +71,8 @@ instance Qc.Arbitrary FuncExpr where
     Qc.oneof
       [ ApplicationFuncExpr
           <$> Qc.arbitrary
-          <*> Qc.terminatingMaybe Qc.arbitrary
-          <*> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
-          <*> Qc.terminatingMaybe Qc.arbitrary,
+          <*> Gens.terminatingMaybe Qc.arbitrary
+          <*> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)
+          <*> Gens.terminatingMaybe Qc.arbitrary,
         SubexprFuncExpr <$> Qc.arbitrary
       ]

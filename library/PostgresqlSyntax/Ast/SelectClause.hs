@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SelectClause where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect (SimpleSelect)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -41,6 +41,6 @@ instance Qc.Arbitrary SelectClause where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ SimpleSelectSelectClause <$> Qc.downscale Qc.arbitrary,
-        WithParensSelectClause <$> Qc.downscale Qc.arbitrary
+      [ SimpleSelectSelectClause <$> Gens.downscale Qc.arbitrary,
+        WithParensSelectClause <$> Gens.downscale Qc.arbitrary
       ]

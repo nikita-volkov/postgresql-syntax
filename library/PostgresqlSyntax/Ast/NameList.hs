@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.NameList where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -40,4 +40,4 @@ instance IsAst NameList where
 
 instance Qc.Arbitrary NameList where
   shrink = Qc.genericShrink
-  arbitrary = NameList <$> Qc.nonEmptyUpTo 7 Qc.arbitrary
+  arbitrary = NameList <$> Gens.nonEmptyUpTo 7 Qc.arbitrary

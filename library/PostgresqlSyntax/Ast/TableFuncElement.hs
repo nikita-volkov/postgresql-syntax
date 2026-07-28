@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -37,4 +37,4 @@ instance IsAst TableFuncElement where
 
 instance Qc.Arbitrary TableFuncElement where
   shrink = Qc.genericShrink
-  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Qc.terminatingMaybe arbitrary
+  arbitrary = TableFuncElement <$> arbitrary <*> arbitrary <*> Gens.terminatingMaybe arbitrary

@@ -10,8 +10,8 @@ import PostgresqlSyntax.Ast.SubstrList
 import PostgresqlSyntax.Ast.TrimList
 import PostgresqlSyntax.Ast.TrimModifier
 import PostgresqlSyntax.Ast.Typename
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -164,7 +164,7 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
             ]
         else
           Qc.oneof
-            [ CollationForFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary,
+            [ CollationForFuncExprCommonSubexpr <$> Gens.downscale Qc.arbitrary,
               pure CurrentDateFuncExprCommonSubexpr,
               -- The @Iconst@ here is parsed via 'Parsers.decimal' (unsigned), so
               -- it must never be negative — mirroring
@@ -179,14 +179,14 @@ instance Qc.Arbitrary FuncExprCommonSubexpr where
               pure UserFuncExprCommonSubexpr,
               pure CurrentCatalogFuncExprCommonSubexpr,
               pure CurrentSchemaFuncExprCommonSubexpr,
-              CastFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+              CastFuncExprCommonSubexpr <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
               ExtractFuncExprCommonSubexpr <$> Qc.arbitrary,
               OverlayFuncExprCommonSubexpr <$> Qc.arbitrary,
               PositionFuncExprCommonSubexpr <$> Qc.arbitrary,
               SubstringFuncExprCommonSubexpr <$> Qc.arbitrary,
-              TreatFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.arbitrary,
+              TreatFuncExprCommonSubexpr <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
               TrimFuncExprCommonSubexpr <$> Qc.arbitrary <*> Qc.arbitrary,
-              NullIfFuncExprCommonSubexpr <$> Qc.downscale Qc.arbitrary <*> Qc.downscale Qc.arbitrary,
+              NullIfFuncExprCommonSubexpr <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
               CoalesceFuncExprCommonSubexpr <$> Qc.arbitrary,
               GreatestFuncExprCommonSubexpr <$> Qc.arbitrary,
               LeastFuncExprCommonSubexpr <$> Qc.arbitrary

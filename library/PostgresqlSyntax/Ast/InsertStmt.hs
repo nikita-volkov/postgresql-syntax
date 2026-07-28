@@ -6,7 +6,7 @@ import PostgresqlSyntax.Ast.InsertTarget
 import PostgresqlSyntax.Ast.OnConflict
 import PostgresqlSyntax.Ast.TargetList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
-import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
@@ -56,8 +56,8 @@ instance Qc.Arbitrary InsertStmt where
   shrink = Qc.genericShrink
   arbitrary =
     InsertStmt
-      <$> Qc.terminatingMaybe (Qc.downscale Qc.arbitrary)
+      <$> Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)
       <*> Qc.arbitrary
       <*> Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
-      <*> Qc.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
+      <*> Gens.terminatingMaybe Qc.arbitrary
