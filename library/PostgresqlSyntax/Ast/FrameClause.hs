@@ -3,9 +3,9 @@ module PostgresqlSyntax.Ast.FrameClause where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.FrameExtent
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WindowExclusionClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

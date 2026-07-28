@@ -1,8 +1,9 @@
 module PostgresqlSyntax.Ast.ExplicitRow where
 
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

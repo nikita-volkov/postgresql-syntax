@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SelectLimitValue where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

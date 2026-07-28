@@ -2,9 +2,9 @@ module PostgresqlSyntax.Ast.OffsetClause where
 
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

@@ -16,11 +16,12 @@ import PostgresqlSyntax.Ast.FuncExpr
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
-import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

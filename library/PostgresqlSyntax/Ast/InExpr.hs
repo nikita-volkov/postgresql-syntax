@@ -2,8 +2,9 @@ module PostgresqlSyntax.Ast.InExpr where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

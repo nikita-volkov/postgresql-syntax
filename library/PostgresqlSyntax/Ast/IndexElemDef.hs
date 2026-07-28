@@ -3,7 +3,8 @@ module PostgresqlSyntax.Ast.IndexElemDef where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncExprWindowless
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

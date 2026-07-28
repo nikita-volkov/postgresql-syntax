@@ -12,7 +12,6 @@ import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
 import PostgresqlSyntax.Ast.CExpr (CExpr)
 import qualified PostgresqlSyntax.Ast.CExpr as CExpr
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.Row
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
@@ -22,6 +21,8 @@ import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.VerbalExprBinOp
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

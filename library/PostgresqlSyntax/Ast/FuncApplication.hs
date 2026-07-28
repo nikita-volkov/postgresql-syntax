@@ -2,8 +2,8 @@ module PostgresqlSyntax.Ast.FuncApplication where
 
 import PostgresqlSyntax.Ast.FuncApplicationParams
 import PostgresqlSyntax.Ast.FuncName
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

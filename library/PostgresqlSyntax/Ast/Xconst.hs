@@ -2,8 +2,8 @@ module PostgresqlSyntax.Ast.Xconst where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

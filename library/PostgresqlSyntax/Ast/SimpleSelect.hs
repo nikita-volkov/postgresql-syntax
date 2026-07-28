@@ -10,7 +10,6 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.GroupByItem
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptTempTableName
 import PostgresqlSyntax.Ast.RelationExpr
 import PostgresqlSyntax.Ast.SelectBinOp
@@ -20,6 +19,8 @@ import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

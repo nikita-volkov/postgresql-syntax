@@ -2,7 +2,8 @@ module PostgresqlSyntax.Ast.ArrayExpr where
 
 import PostgresqlSyntax.Ast.ArrayExprList
 import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

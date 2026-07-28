@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.CallStmt where
 
 import PostgresqlSyntax.Ast.FuncApplication
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

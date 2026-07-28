@@ -2,8 +2,9 @@ module PostgresqlSyntax.Ast.Ident where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate

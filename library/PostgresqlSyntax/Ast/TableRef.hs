@@ -4,13 +4,14 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.FuncAliasClause
 import PostgresqlSyntax.Ast.FuncTable
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinMeth
 import PostgresqlSyntax.Ast.JoinedTable
 import PostgresqlSyntax.Ast.RelationExpr
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.TablesampleClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, head, many, some, tail, try)

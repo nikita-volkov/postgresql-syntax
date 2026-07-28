@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.QualOp where
 
 import PostgresqlSyntax.Ast.AnyOperator
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Op
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

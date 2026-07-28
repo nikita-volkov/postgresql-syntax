@@ -3,11 +3,12 @@ module PostgresqlSyntax.Ast.InsertStmt where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertRest
 import PostgresqlSyntax.Ast.InsertTarget
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OnConflict
 import PostgresqlSyntax.Ast.TargetList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

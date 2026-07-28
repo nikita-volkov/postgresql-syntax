@@ -1,7 +1,8 @@
 module PostgresqlSyntax.Ast.Sconst where
 
 import qualified Data.Text as Text
-import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

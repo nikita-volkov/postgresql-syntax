@@ -4,7 +4,7 @@
 -- Benchmark for the "keyword allocation cost in wide alternations" concern
 -- raised in <https://github.com/nikita-volkov/postgresql-syntax/issues/21>.
 --
--- Compares the shipped, cheap 'PostgresqlSyntax.Ast.Internal.keyword'
+-- Compares the shipped, cheap 'PostgresqlSyntax.Helpers.Parsers.keyword'
 -- (a bare 'empty' on mismatch, no allocation beyond the consumed text)
 -- against a richer alternative that reports a proper \"expected one of ...\"
 -- error via 'Text.Megaparsec.failure' (as PR #20 proposed), the way it would
@@ -12,10 +12,10 @@
 --
 -- Both implementations here pin the reported error offset via
 -- 'Megaparsec.setOffset', matching the fix applied to the shipped
--- 'PostgresqlSyntax.Ast.Internal.keyword' to stay correct under megaparsec
+-- 'PostgresqlSyntax.Helpers.Parsers.keyword' to stay correct under megaparsec
 -- >=9.8's stricter '(<|>)' error-merging. That fix is what makes the rich
 -- variant produce complete "expecting ..." lists at all under current
--- megaparsec; see 'PostgresqlSyntax.Ast.Internal.keyword''s haddock.
+-- megaparsec; see 'PostgresqlSyntax.Helpers.Parsers.keyword''s haddock.
 module Main where
 
 import Criterion.Main
@@ -24,11 +24,11 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import HeadedMegaparsec (HeadedParsec, parse, toParsec)
 import qualified PostgresqlSyntax
+import Prelude
 import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
-import Prelude
 
--- * Shared token scanner (mirrors 'PostgresqlSyntax.Ast.Internal.anyKeyword')
+-- * Shared token scanner (mirrors 'PostgresqlSyntax.Helpers.Parsers.anyKeyword')
 
 firstIdentifierChar :: Char -> Bool
 firstIdentifierChar x = Char.isAlpha x || x == '_' || x >= '\200' && x <= '\377'

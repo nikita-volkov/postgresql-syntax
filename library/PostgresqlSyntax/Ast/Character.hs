@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.Character where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OptVarying
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

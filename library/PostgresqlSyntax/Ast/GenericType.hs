@@ -4,8 +4,9 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Attrs
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

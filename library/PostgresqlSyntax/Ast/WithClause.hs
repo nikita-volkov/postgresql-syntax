@@ -3,9 +3,10 @@ module PostgresqlSyntax.Ast.WithClause where
 import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.CommonTableExpr
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

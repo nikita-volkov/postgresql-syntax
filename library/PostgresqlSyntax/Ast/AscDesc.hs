@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.AscDesc where
 
-import PostgresqlSyntax.Ast.Internal
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

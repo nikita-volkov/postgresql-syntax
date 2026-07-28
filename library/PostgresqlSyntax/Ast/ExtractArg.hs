@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.ExtractArg where
 
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Sconst
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

@@ -1,9 +1,10 @@
 module PostgresqlSyntax.Ast.SetTargetList where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

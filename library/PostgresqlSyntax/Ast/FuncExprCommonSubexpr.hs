@@ -4,7 +4,6 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.ExtractList
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverlayList
 import PostgresqlSyntax.Ast.PositionList
 import PostgresqlSyntax.Ast.SubstrList
@@ -13,6 +12,8 @@ import PostgresqlSyntax.Ast.TrimModifier
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

@@ -2,9 +2,10 @@ module PostgresqlSyntax.Ast.RowsfromItem where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.FuncExprWindowless
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.TableFuncElementList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

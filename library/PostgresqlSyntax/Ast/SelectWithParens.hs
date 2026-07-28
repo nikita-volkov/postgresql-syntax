@@ -1,9 +1,10 @@
 module PostgresqlSyntax.Ast.SelectWithParens where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, unparenthesizedSelectNoParens)
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

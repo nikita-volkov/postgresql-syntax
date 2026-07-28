@@ -2,9 +2,9 @@ module PostgresqlSyntax.Ast.OverClause where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.WindowSpecification
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

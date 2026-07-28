@@ -3,9 +3,9 @@ module PostgresqlSyntax.Ast.Attrs where
 import Control.Applicative.Combinators.NonEmpty (some)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
+import PostgresqlSyntax.Helpers.Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

@@ -3,11 +3,12 @@ module PostgresqlSyntax.Ast.BExpr where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.BExprIsOp
 import PostgresqlSyntax.Ast.CExpr (CExpr)
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
 import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

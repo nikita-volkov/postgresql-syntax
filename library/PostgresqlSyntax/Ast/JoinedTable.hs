@@ -1,9 +1,10 @@
 module PostgresqlSyntax.Ast.JoinedTable where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

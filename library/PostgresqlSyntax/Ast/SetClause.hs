@@ -1,10 +1,11 @@
 module PostgresqlSyntax.Ast.SetClause where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SetTarget
 import PostgresqlSyntax.Ast.SetTargetList
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

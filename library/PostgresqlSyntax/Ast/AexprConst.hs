@@ -7,11 +7,12 @@ import PostgresqlSyntax.Ast.Fconst
 import PostgresqlSyntax.Ast.FuncConstArgs
 import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.Iconst
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Sconst
 import PostgresqlSyntax.Ast.Xconst
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

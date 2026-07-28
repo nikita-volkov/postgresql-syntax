@@ -4,10 +4,11 @@ import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.OverClause
 import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

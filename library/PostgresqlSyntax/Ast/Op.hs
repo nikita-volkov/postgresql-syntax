@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.Op where
 
 import qualified Data.Text as Text
-import PostgresqlSyntax.Ast.Internal
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude

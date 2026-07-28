@@ -1,7 +1,6 @@
 module PostgresqlSyntax.Ast.UpdateStmt where
 
 import qualified HeadedMegaparsec as Parser
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
 import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.SetClauseList
@@ -10,6 +9,8 @@ import PostgresqlSyntax.Ast.TargetList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.Parsers
+import PostgresqlSyntax.Helpers.TextBuilders
 import qualified PostgresqlSyntax.Extras.QuickCheck as Qc
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)

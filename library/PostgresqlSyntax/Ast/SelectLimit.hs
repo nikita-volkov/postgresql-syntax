@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SelectLimit where
 
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.LimitClause
 import PostgresqlSyntax.Ast.OffsetClause
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc

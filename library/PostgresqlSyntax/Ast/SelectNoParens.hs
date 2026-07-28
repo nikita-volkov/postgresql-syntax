@@ -8,7 +8,6 @@ where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.ForLockingClause
-import PostgresqlSyntax.Ast.Internal
 import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.SelectLimit
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
@@ -16,6 +15,7 @@ import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelec
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Parser
+import PostgresqlSyntax.Helpers.TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
