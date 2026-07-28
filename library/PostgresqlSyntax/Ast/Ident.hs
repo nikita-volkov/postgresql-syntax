@@ -4,7 +4,7 @@ import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.Helpers.Shrinks
+import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
@@ -79,8 +79,8 @@ typeFunctionName =
 
 instance Qc.Arbitrary Ident where
   shrink = \case
-    QuotedIdent a -> QuotedIdent <$> shrinkText a
-    UnquotedIdent a -> UnquotedIdent <$> shrinkText a
+    QuotedIdent a -> QuotedIdent <$> Shrinks.textTail a
+    UnquotedIdent a -> UnquotedIdent <$> Shrinks.textTail a
   arbitrary =
     Qc.frequency
       [ (95, UnquotedIdent <$> unquotedIdentText),

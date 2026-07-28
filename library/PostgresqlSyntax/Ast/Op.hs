@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.Op where
 
 import qualified Data.Text as Text
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.Helpers.Shrinks
+import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude
@@ -27,7 +27,7 @@ instance IsAst Op where
       Just err -> fail (Text.unpack err)
 
 instance Qc.Arbitrary Op where
-  shrink (Op a) = Op <$> filter (isNothing . Validation.op) (shrinkText a)
+  shrink (Op a) = Op <$> filter (isNothing . Validation.op) (Shrinks.nonEmptyText a)
   arbitrary = Op <$> genOpText `Qc.suchThat` (isNothing . Validation.op)
     where
       genOpText = do
