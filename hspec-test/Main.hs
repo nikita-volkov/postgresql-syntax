@@ -8,6 +8,7 @@ import PostgresqlSyntax
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck (Property, counterexample, (===))
+import qualified Test.QuickCheck as Qc
 import Prelude
 
 main :: IO ()
@@ -165,6 +166,155 @@ main = hspec $ parallel $ do
     prop "WithClause" (roundTrip @WithClause)
     prop "Xconst" (roundTrip @Xconst)
 
+  describe "Generator bounds" $ do
+    -- These properties are independent of parsing — they only generate a
+    -- value and measure its rendered length — so they also cover types the
+    -- round-trip suite omits for *parse* reasons ('OptVarying',
+    -- 'TypenameArrayDimensions'). See 'generatorBounds' for the two
+    -- invariants: the generator must terminate with a small value at size 0,
+    -- and must stay within a rendered-length budget at the suite's max size.
+    prop "AExpr" (generatorBounds @AExpr)
+    prop "AExprReversableOp" (generatorBounds @AExprReversableOp)
+    prop "AexprConst" (generatorBounds @AexprConst)
+    prop "AliasClause" (generatorBounds @AliasClause)
+    prop "AllOp" (generatorBounds @AllOp)
+    prop "AnyName" (generatorBounds @AnyName)
+    prop "AnyOperator" (generatorBounds @AnyOperator)
+    prop "ArrayBounds" (generatorBounds @ArrayBounds)
+    prop "ArrayExpr" (generatorBounds @ArrayExpr)
+    prop "ArrayExprList" (generatorBounds @ArrayExprList)
+    prop "AscDesc" (generatorBounds @AscDesc)
+    prop "Attrs" (generatorBounds @Attrs)
+    prop "BExpr" (generatorBounds @BExpr)
+    prop "BExprIsOp" (generatorBounds @BExprIsOp)
+    prop "Bconst" (generatorBounds @Bconst)
+    prop "Bit" (generatorBounds @Bit)
+    prop "CExpr" (generatorBounds @CExpr)
+    prop "CallStmt" (generatorBounds @CallStmt)
+    prop "CaseExpr" (generatorBounds @CaseExpr)
+    prop "Character" (generatorBounds @Character)
+    prop "Columnref" (generatorBounds @Columnref)
+    prop "CommonTableExpr" (generatorBounds @CommonTableExpr)
+    prop "ConfExpr" (generatorBounds @ConfExpr)
+    prop "ConstCharacter" (generatorBounds @ConstCharacter)
+    prop "ConstDatetime" (generatorBounds @ConstDatetime)
+    prop "ConstTypename" (generatorBounds @ConstTypename)
+    prop "DeleteStmt" (generatorBounds @DeleteStmt)
+    prop "ExplicitRow" (generatorBounds @ExplicitRow)
+    prop "ExprList" (generatorBounds @ExprList)
+    prop "ExtractArg" (generatorBounds @ExtractArg)
+    prop "ExtractList" (generatorBounds @ExtractList)
+    prop "Fconst" (generatorBounds @Fconst)
+    prop "ForLockingClause" (generatorBounds @ForLockingClause)
+    prop "ForLockingItem" (generatorBounds @ForLockingItem)
+    prop "ForLockingStrength" (generatorBounds @ForLockingStrength)
+    prop "FrameBound" (generatorBounds @FrameBound)
+    prop "FrameClause" (generatorBounds @FrameClause)
+    prop "FrameClauseMode" (generatorBounds @FrameClauseMode)
+    prop "FrameExtent" (generatorBounds @FrameExtent)
+    prop "FuncAliasClause" (generatorBounds @FuncAliasClause)
+    prop "FuncApplication" (generatorBounds @FuncApplication)
+    prop "FuncApplicationParams" (generatorBounds @FuncApplicationParams)
+    prop "FuncArgExpr" (generatorBounds @FuncArgExpr)
+    prop "FuncConstArgs" (generatorBounds @FuncConstArgs)
+    prop "FuncExpr" (generatorBounds @FuncExpr)
+    prop "FuncExprCommonSubexpr" (generatorBounds @FuncExprCommonSubexpr)
+    prop "FuncExprWindowless" (generatorBounds @FuncExprWindowless)
+    prop "FuncName" (generatorBounds @FuncName)
+    prop "FuncTable" (generatorBounds @FuncTable)
+    prop "GenericType" (generatorBounds @GenericType)
+    prop "GroupByItem" (generatorBounds @GroupByItem)
+    prop "Iconst" (generatorBounds @Iconst)
+    prop "Ident" (generatorBounds @Ident)
+    prop "ImplicitRow" (generatorBounds @ImplicitRow)
+    prop "InExpr" (generatorBounds @InExpr)
+    prop "IndexElem" (generatorBounds @IndexElem)
+    prop "IndexElemDef" (generatorBounds @IndexElemDef)
+    prop "IndexParams" (generatorBounds @IndexParams)
+    prop "Indirection" (generatorBounds @Indirection)
+    prop "IndirectionEl" (generatorBounds @IndirectionEl)
+    prop "InsertColumnItem" (generatorBounds @InsertColumnItem)
+    prop "InsertColumnList" (generatorBounds @InsertColumnList)
+    prop "InsertRest" (generatorBounds @InsertRest)
+    prop "InsertStmt" (generatorBounds @InsertStmt)
+    prop "InsertTarget" (generatorBounds @InsertTarget)
+    prop "Interval" (generatorBounds @Interval)
+    prop "IntervalSecond" (generatorBounds @IntervalSecond)
+    prop "JoinMeth" (generatorBounds @JoinMeth)
+    prop "JoinQual" (generatorBounds @JoinQual)
+    prop "JoinType" (generatorBounds @JoinType)
+    prop "JoinedTable" (generatorBounds @JoinedTable)
+    prop "LimitClause" (generatorBounds @LimitClause)
+    prop "MathOp" (generatorBounds @MathOp)
+    prop "NameList" (generatorBounds @NameList)
+    prop "NullsOrder" (generatorBounds @NullsOrder)
+    prop "Numeric" (generatorBounds @Numeric)
+    prop "OffsetClause" (generatorBounds @OffsetClause)
+    prop "OnConflict" (generatorBounds @OnConflict)
+    prop "OnConflictDo" (generatorBounds @OnConflictDo)
+    prop "Op" (generatorBounds @PostgresqlSyntax.Op)
+    prop "OptOrdinality" (generatorBounds @OptOrdinality)
+    prop "OptTempTableName" (generatorBounds @OptTempTableName)
+    prop "OptVarying" (generatorBounds @OptVarying)
+    prop "OverClause" (generatorBounds @OverClause)
+    prop "OverlayList" (generatorBounds @OverlayList)
+    prop "OverrideKind" (generatorBounds @OverrideKind)
+    prop "PositionList" (generatorBounds @PositionList)
+    prop "PreparableStmt" (generatorBounds @PreparableStmt)
+    prop "QualAllOp" (generatorBounds @QualAllOp)
+    prop "QualOp" (generatorBounds @QualOp)
+    prop "QualifiedName" (generatorBounds @QualifiedName)
+    prop "RelationExpr" (generatorBounds @RelationExpr)
+    prop "RelationExprOptAlias" (generatorBounds @RelationExprOptAlias)
+    prop "Row" (generatorBounds @Row)
+    prop "RowsfromItem" (generatorBounds @RowsfromItem)
+    prop "RowsfromList" (generatorBounds @RowsfromList)
+    prop "Sconst" (generatorBounds @Sconst)
+    prop "SelectBinOp" (generatorBounds @SelectBinOp)
+    prop "SelectClause" (generatorBounds @SelectClause)
+    prop "SelectFetchFirstValue" (generatorBounds @SelectFetchFirstValue)
+    prop "SelectLimit" (generatorBounds @SelectLimit)
+    prop "SelectLimitValue" (generatorBounds @SelectLimitValue)
+    prop "SelectNoParens" (generatorBounds @SelectNoParens)
+    prop "SelectStmt" (generatorBounds @SelectStmt)
+    prop "SelectWithParens" (generatorBounds @SelectWithParens)
+    prop "SetClause" (generatorBounds @SetClause)
+    prop "SetClauseList" (generatorBounds @SetClauseList)
+    prop "SetTarget" (generatorBounds @SetTarget)
+    prop "SetTargetList" (generatorBounds @SetTargetList)
+    prop "SimpleSelect" (generatorBounds @SimpleSelect)
+    prop "SimpleTypename" (generatorBounds @SimpleTypename)
+    prop "SortBy" (generatorBounds @SortBy)
+    prop "SortClause" (generatorBounds @SortClause)
+    prop "SubType" (generatorBounds @SubType)
+    prop "SubqueryOp" (generatorBounds @SubqueryOp)
+    prop "SubstrList" (generatorBounds @SubstrList)
+    prop "SubstrListFromFor" (generatorBounds @SubstrListFromFor)
+    prop "SymbolicExprBinOp" (generatorBounds @SymbolicExprBinOp)
+    prop "TableFuncElement" (generatorBounds @TableFuncElement)
+    prop "TableFuncElementList" (generatorBounds @TableFuncElementList)
+    prop "TableRef" (generatorBounds @TableRef)
+    prop "TablesampleClause" (generatorBounds @TablesampleClause)
+    prop "TargetEl" (generatorBounds @TargetEl)
+    prop "TargetList" (generatorBounds @TargetList)
+    prop "Targeting" (generatorBounds @Targeting)
+    prop "Timezone" (generatorBounds @Timezone)
+    prop "TrimList" (generatorBounds @TrimList)
+    prop "TrimModifier" (generatorBounds @TrimModifier)
+    prop "TypeList" (generatorBounds @TypeList)
+    prop "Typename" (generatorBounds @Typename)
+    prop "TypenameArrayDimensions" (generatorBounds @TypenameArrayDimensions)
+    prop "UpdateStmt" (generatorBounds @UpdateStmt)
+    prop "VerbalExprBinOp" (generatorBounds @VerbalExprBinOp)
+    prop "WhenClause" (generatorBounds @WhenClause)
+    prop "WhenClauseList" (generatorBounds @WhenClauseList)
+    prop "WhereOrCurrentClause" (generatorBounds @WhereOrCurrentClause)
+    prop "WindowDefinition" (generatorBounds @WindowDefinition)
+    prop "WindowExclusionClause" (generatorBounds @WindowExclusionClause)
+    prop "WindowSpecification" (generatorBounds @WindowSpecification)
+    prop "WithClause" (generatorBounds @WithClause)
+    prop "Xconst" (generatorBounds @Xconst)
+
   describe "Parsers" $ do
     it "preparableStmt"
       $ forM_
@@ -263,6 +413,60 @@ roundTrip :: (IsAst a, Eq a, Show a) => a -> Property
 roundTrip a = counterexample (Text.unpack sql) (parse sql === Right a)
   where
     sql = toText a
+
+-- * Generator-bound properties
+--
+-- Two invariants every 'Arbitrary' instance in this library must satisfy,
+-- independent of parsing (hence covering types that don't round-trip as a
+-- top-level parse target either):
+--
+-- 1. 'terminatesAtZero': at size 0 the generator must escape every recursive
+--    strongly-connected component and yield a small value. A non-escaping
+--    base case turns size-0 generation into an unbounded random walk that
+--    renders to arbitrarily deep nesting.
+-- 2. 'growsBounded': at the suite's maximum size (hspec's default 'maxSize'
+--    is 100) the rendered output must stay within a budget, so a generator
+--    that explodes super-linearly — e.g. a list whose length doesn't consume
+--    the size budget — is caught by its output length rather than by a stack
+--    overflow deep inside a round-trip prop.
+
+-- | Rendered-length ceiling for size-0 generation. A well-behaved generator
+-- produces a leaf at size 0, so this only ever trips on a non-terminating
+-- base case (which renders unbounded nesting).
+zeroSizeMaxLen :: Int
+zeroSizeMaxLen = 500
+
+-- | The size at which the growth bound is measured. Matches hspec's default
+-- 'maxSize', i.e. the largest size any prop in this suite is run at.
+maxGenSize :: Int
+maxGenSize = 100
+
+-- | Rendered-length budget at 'maxGenSize'. Catches super-linear (e.g.
+-- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't bound.
+maxGenSizeMaxLen :: Int
+maxGenSizeMaxLen = 10000
+
+terminatesAtZero :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
+terminatesAtZero =
+  Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
+    let len = Text.length (toText x)
+     in Qc.counterexample
+          ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
+          (len <= zeroSizeMaxLen)
+
+growsBounded :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
+growsBounded =
+  Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
+    let len = Text.length (toText x)
+     in Qc.counterexample
+          ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
+          (len <= maxGenSizeMaxLen)
+
+-- | Both generator invariants conjoined so each type appears once.
+-- QuickCheck reports which conjunct fails.
+generatorBounds :: forall a. (IsAst a, Qc.Arbitrary a, Show a) => Qc.Property
+generatorBounds =
+  terminatesAtZero @a Qc..&&. growsBounded @a
 
 -- * Example-based parse helpers
 
