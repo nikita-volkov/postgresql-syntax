@@ -205,31 +205,43 @@ onlyArbitrarySpec = byTypeName @a (arbitrarySpec @a)
 -- 'onlyArbitrarySpec'.
 arbitrarySpec :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 arbitrarySpec =
+  -- Two invariants every 'Arbitrary' instance in this library must satisfy,
+  -- independent of parsing (hence the only properties run for the node types
+  -- that can't round-trip as a top-level parse target — see
+  -- 'onlyArbitrarySpec'):
+  --
+  -- 1. 'terminatesAtZero': at size 0 the generator must escape every recursive
+  --    strongly-connected component and yield a small value. A non-escaping
+  --    base case turns size-0 generation into an unbounded random walk that
+  --    renders to arbitrarily deep nesting.
+  -- 2. 'growsBounded': at the suite's maximum size (hspec's default 'maxSize'
+  --    is 100) the rendered output must stay within a budget, so a generator
+  --    that explodes super-linearly — e.g. a list whose length doesn't consume
+  --    the size budget — is caught by its output length rather than by a stack
+  --    overflow deep inside a round-trip prop.
   describe "Arbitrary" $ do
-    prop "Has proper generator bounds" generatorBoundsProperty
+    prop "Terminates at size 0" terminatesAtZero
+    prop "Grows boundedly" growsBounded
   where
-    -- Two invariants every 'Arbitrary' instance in this library must satisfy,
-    -- independent of parsing (hence the only property run for the node types
-    -- that can't round-trip as a top-level parse target — see
-    -- 'onlyArbitrarySpec'):
-    --
-    -- 1. 'terminatesAtZero': at size 0 the generator must escape every recursive
-    --    strongly-connected component and yield a small value. A non-escaping
-    --    base case turns size-0 generation into an unbounded random walk that
-    --    renders to arbitrarily deep nesting.
-    -- 2. 'growsBounded': at the suite's maximum size (hspec's default 'maxSize'
-    --    is 100) the rendered output must stay within a budget, so a generator
-    --    that explodes super-linearly — e.g. a list whose length doesn't consume
-    --    the size budget — is caught by its output length rather than by a stack
-    --    overflow deep inside a round-trip prop.
-
-    generatorBoundsProperty =
-      terminatesAtZero Qc..&&. growsBounded
+    terminatesAtZero =
+      Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
+        let len = Text.length (toText x)
+         in Qc.counterexample
+              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
+              (len <= zeroSizeMaxLen)
       where
         -- Rendered-length ceiling for size-0 generation. A well-behaved
         -- generator produces a leaf at size 0, so this only ever trips on a
         -- non-terminating base case (which renders unbounded nesting).
         zeroSizeMaxLen = 500
+
+    growsBounded =
+      Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
+        let len = Text.length (toText x)
+         in Qc.counterexample
+              ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
+              (len <= maxGenSizeMaxLen)
+      where
         -- The size at which the growth bound is measured. Matches hspec's
         -- default 'maxSize', i.e. the largest size any prop in this suite is
         -- run at.
@@ -238,20 +250,6 @@ arbitrarySpec =
         -- quasi-polynomial) explosion that a @div 2@-per-edge rule doesn't
         -- bound.
         maxGenSizeMaxLen = 10000
-
-        terminatesAtZero =
-          Qc.forAll (Qc.resize 0 (Qc.arbitrary @a)) $ \x ->
-            let len = Text.length (toText x)
-             in Qc.counterexample
-                  ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")")
-                  (len <= zeroSizeMaxLen)
-
-        growsBounded =
-          Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
-            let len = Text.length (toText x)
-             in Qc.counterexample
-                  ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
-                  (len <= maxGenSizeMaxLen)
 
 byTypeName :: forall a. (Typeable.Typeable a) => Spec -> Spec
 byTypeName = describe typeName
