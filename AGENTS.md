@@ -1,9 +1,9 @@
 # References
 
-- Grammar file (primary source of info): https://github.com/postgres/postgres/blob/master/src/backend/parser/gram.y
-- Keywords file: https://github.com/postgres/postgres/blob/master/src/include/parser/kwlist.h
-- Scanner: https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l
-- Other files (for extra info): https://github.com/postgres/postgres/tree/master/src/backend/parser
+- Grammar file (primary source of info): https://github.com/postgres/postgres/blob/c12c101b0846b1e6488f2dc986a852fbc6bf2e3b/src/backend/parser/gram.y
+- Keywords file: https://github.com/postgres/postgres/blob/c12c101b0846b1e6488f2dc986a852fbc6bf2e3b/src/include/parser/kwlist.h
+- Scanner: https://github.com/postgres/postgres/blob/c12c101b0846b1e6488f2dc986a852fbc6bf2e3b/src/backend/parser/scan.l
+- Other files (for extra info): https://github.com/postgres/postgres/tree/c12c101b0846b1e6488f2dc986a852fbc6bf2e3b/src/backend/parser
 
 # `Arbitrary` instances for `Ast` types
 
