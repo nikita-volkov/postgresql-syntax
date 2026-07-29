@@ -132,3 +132,20 @@ with an accident of this library's parser implementation.
 No code was changed. This document exists so the collision, the ruled-out
 fix, and the real reason it doesn't work are captured before the next
 session re-derives them from scratch.
+
+## Resolution (2026-07-29, same-day follow-up)
+
+The open questions above are answered in
+`docs/2026-07-29-nullability-settings-plan.md`, which was implemented in the
+same session. Summary:
+
+1. **Yes**, the nullability extension is worth keeping — it is used by the
+   downstream `hasql-th` package's `text?[]?` spelling.
+2. The collision is **contained, not resolved**: standard mode (`mempty`) is
+   faithful Postgres where `?` is never a marker; extended mode
+   (`nullabilityMarkers True`) claims only the **unspaced** `?` immediately
+   after a `Typename`. This gives up exactly one real-Postgres spelling:
+   `x::jsonb? 'b'`. The spaced form `x::jsonb ? 'b'` works in both modes.
+3. Breaking: `parse x` → `parse mempty x`, version bumped to 0.5.0.0.
+4. Renders emit `?` for both flags when markers are enabled.
+5. `Arbitrary` keeps hard-coding both flags to `False` (valid under `mempty`).
