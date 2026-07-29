@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.FrameBound where
 
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, safeAExprOperand)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
@@ -51,6 +51,6 @@ instance Qc.Arbitrary FrameBound where
       [ pure UnboundedPrecedingFrameBound,
         pure UnboundedFollowingFrameBound,
         pure CurrentRowFrameBound,
-        PrecedingFrameBound <$> Gens.downscale Qc.arbitrary,
-        FollowingFrameBound <$> Gens.downscale Qc.arbitrary
+        PrecedingFrameBound <$> safeAExprOperand (Gens.downscale Qc.arbitrary),
+        FollowingFrameBound <$> safeAExprOperand (Gens.downscale Qc.arbitrary)
       ]

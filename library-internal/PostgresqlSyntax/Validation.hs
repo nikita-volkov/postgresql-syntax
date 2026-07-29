@@ -34,18 +34,21 @@ op a =
   if Text.null a
     then Just ("Operator is empty")
     else
-      if Text.isInfixOf "--" a
-        then Just ("Operator contains a prohibited \"--\" sequence: " <> a)
+      if Text.any (not . Predicate.opChar) a
+        then Just ("Operator contains a char that's not a valid operator char: " <> a)
         else
-          if Text.isInfixOf "/*" a
-            then Just ("Operator contains a prohibited \"/*\" sequence: " <> a)
+          if Text.isInfixOf "--" a
+            then Just ("Operator contains a prohibited \"--\" sequence: " <> a)
             else
-              if Predicate.inSet KeywordSet.nonOp a
-                then Just ("Operator is not generic: " <> a)
+              if Text.isInfixOf "/*" a
+                then Just ("Operator contains a prohibited \"/*\" sequence: " <> a)
                 else
-                  if Text.find Predicate.prohibitionLiftingOpChar a & isJust
-                    then Nothing
+                  if Predicate.inSet KeywordSet.nonOp a
+                    then Just ("Operator is not generic: " <> a)
                     else
-                      if Predicate.prohibitedOpChar (Text.last a)
-                        then Just ("Operator ends with a prohibited char: " <> a)
-                        else Nothing
+                      if Text.find Predicate.prohibitionLiftingOpChar a & isJust
+                        then Nothing
+                        else
+                          if Predicate.prohibitedOpChar (Text.last a)
+                            then Just ("Operator ends with a prohibited char: " <> a)
+                            else Nothing

@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SortBy where
 
 import qualified HeadedMegaparsec as Parser
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser, safeAExprOperand)
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
@@ -49,6 +49,6 @@ instance Qc.Arbitrary SortBy where
   shrink = Qc.genericShrink
   arbitrary =
     Qc.oneof
-      [ UsingSortBy <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary,
-        AscDescSortBy <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
+      [ UsingSortBy <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,
+        AscDescSortBy <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary
       ]
