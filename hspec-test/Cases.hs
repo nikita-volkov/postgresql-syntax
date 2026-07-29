@@ -71,6 +71,79 @@ spec = do
         ]
         (parsesTo @Sconst)
 
+  -- Grammar constructs pinned directly against
+  -- @references/gram.y@ at the commit recorded in AGENTS.md.
+  describe "Postgres grammar conformance" $ do
+    -- gram.y:15985,15987 have only @a_expr qual_Op a_expr@ and
+    -- @qual_Op a_expr@ — the postfix @a_expr qual_Op@ form was removed
+    -- from Postgres in v14.
+    it "rejects postfix operators" $ do
+      rejects @AExpr "1 +#"
+      rejects @AExpr "1 OPERATOR(pg_catalog.+#)"
+      rejects @AExpr "a +#"
+
+    -- gram.y:17567 frame_bound. UNBOUNDED is an unreserved keyword, so
+    -- @UNBOUNDED PRECEDING@ is ambiguous with @a_expr PRECEDING@ where
+    -- the a_expr is a column named "unbounded"; gram.y:915 resolves it by
+    -- giving UNBOUNDED lower precedence than PRECEDING, i.e. the keyword
+    -- reading wins and the column reading needs quoting.
+    it "frame_bound" $ do
+      let render :: FrameBound -> Text
+          render = toText
+      fmap render (parse @FrameBound "unbounded preceding") `shouldBe` Right "UNBOUNDED PRECEDING"
+      fmap render (parse @FrameBound "unbounded following") `shouldBe` Right "UNBOUNDED FOLLOWING"
+      fmap render (parse @FrameBound "current row") `shouldBe` Right "CURRENT ROW"
+      fmap render (parse @FrameBound "1 preceding") `shouldBe` Right "1 PRECEDING"
+      fmap render (parse @FrameBound "a following") `shouldBe` Right "a FOLLOWING"
+      fmap render (parse @FrameBound "\"unbounded\" preceding") `shouldBe` Right "\"unbounded\" PRECEDING"
+
+    -- gram.y:17428 window_specification: the sort clause and the
+    -- partition clause are both followed by opt_frame_clause, whose
+    -- leading keywords (RANGE/ROWS/GROUPS, kwlist.h:375,408,201) are
+    -- unreserved and therefore also legal ColIds.
+    it "window_specification terminators are not swallowed by the expression" $ do
+      parsesTo @WindowSpecification "(order by a rows unbounded preceding)"
+      parsesTo @WindowSpecification "(order by a range unbounded preceding)"
+      parsesTo @WindowSpecification "(partition by a groups unbounded preceding)"
+      parsesTo @WindowSpecification "(partition by a order by b rows 1 preceding)"
+
+    -- gram.y:8596 opt_nulls_order and gram.y:14056 sortby. NULLS is
+    -- unreserved (kwlist.h:315), so it is simultaneously a legal ColId and
+    -- the lead-in to the nulls-order clause; Postgres separates the two
+    -- readings with a two-token lexer lookahead (the NULLS_LA token,
+    -- gram.y:864).
+    it "sortby" $ do
+      let render :: SortBy -> Text
+          render = toText
+      fmap render (parse @SortBy "a") `shouldBe` Right "a"
+      fmap render (parse @SortBy "a asc") `shouldBe` Right "a ASC"
+      fmap render (parse @SortBy "a desc nulls last") `shouldBe` Right "a DESC NULLS LAST"
+      fmap render (parse @SortBy "a nulls first") `shouldBe` Right "a NULLS FIRST"
+      fmap render (parse @SortBy "a using > nulls last") `shouldBe` Right "a USING > NULLS LAST"
+      -- With the SortBy filter still blanket-excluding "nulls" from ColId,
+      -- a bare column named "nulls" cannot currently be parsed as a
+      -- SortBy target at all (not just as a nulls-order lead-in).
+      -- Deviates from references/gram.y: Postgres's NULLS_LA lookahead
+      -- (gram.y:864, 8596) only fires before FIRST/LAST, so a column
+      -- literally named "nulls" is a legal bare sort key there.
+      -- filteredColIdLike's blanket exclusion is coarser. Pre-existing;
+      -- pinned here, not fixed — known follow-up.
+      case parse @SortBy "nulls" of
+        Left _ -> pure ()
+        Right _ -> expectationFailure "expected a parse failure for bare \"nulls\""
+
+    -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
+    -- opt_nulls_order. index_elem_options' operator-class name
+    -- (opt_qualified_name, gram.y:8525) is a bare ColId, so it is
+    -- directly ambiguous with the unreserved NULLS that follows it.
+    it "index_elem" $ do
+      let render :: IndexElem -> Text
+          render = toText
+      fmap render (parse @IndexElem "a") `shouldBe` Right "a"
+      fmap render (parse @IndexElem "a nulls first") `shouldBe` Right "a NULLS FIRST"
+      fmap render (parse @IndexElem "a text_ops nulls first") `shouldBe` Right "a text_ops NULLS FIRST"
+      fmap render (parse @IndexElem "a collate \"C\" text_ops desc") `shouldBe` Right "a COLLATE \"C\" text_ops DESC"
+
   describe "Nesting depth" $ do
     it "redundant parens, depth 50"
       $ parsesWithin @AExpr 5 (Text.replicate 50 "(" <> "a + b" <> Text.replicate 50 ")")
@@ -112,6 +185,16 @@ parsesTo input =
   case parse @a input of
     Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
     Right _ -> pure ()
+
+-- | Asserts that the input is *not* accepted. Used to pin grammar
+-- constructs that Postgres itself rejects.
+rejects :: forall a. (HasCallStack, IsAst a, Show a) => Text -> Expectation
+rejects input =
+  case parse @a input of
+    Left _ -> pure ()
+    Right a ->
+      expectationFailure
+        ("expected a parse failure\ninput: " <> Text.unpack input <> "\nparsed: " <> show a)
 
 reportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectation
 reportsError input expected =

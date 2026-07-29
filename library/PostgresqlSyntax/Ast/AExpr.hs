@@ -52,7 +52,6 @@ import qualified Test.QuickCheck as Qc
 --   | a_expr NOT_EQUALS a_expr
 --   | a_expr qual_Op a_expr
 --   | qual_Op a_expr
---   | a_expr qual_Op
 --   | a_expr AND a_expr
 --   | a_expr OR a_expr
 --   | NOT a_expr
@@ -106,7 +105,6 @@ data AExpr
   | MinusAExpr AExpr
   | SymbolicBinOpAExpr AExpr SymbolicExprBinOp AExpr
   | PrefixQualOpAExpr QualOp AExpr
-  | SuffixQualOpAExpr AExpr QualOp
   | AndAExpr AExpr AExpr
   | OrAExpr AExpr AExpr
   | NotAExpr AExpr
@@ -130,7 +128,6 @@ instance IsAst AExpr where
     MinusAExpr a -> "- " <> toTextBuilder a
     SymbolicBinOpAExpr a b c -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
     PrefixQualOpAExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
-    SuffixQualOpAExpr a b -> renderOperand a <> " " <> toTextBuilder b
     AndAExpr a b -> renderOperand a <> " AND " <> toTextBuilder b
     OrAExpr a b -> renderOperand a <> " OR " <> toTextBuilder b
     NotAExpr a -> "NOT " <> toTextBuilder a
@@ -238,7 +235,6 @@ customizedParser cExpr = suffixRec base suffix
           CollateAExpr a <$> (Parsers.space1 *> Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser),
           AtTimeZoneAExpr a <$> (Parsers.space1 *> Parsers.keyphrase "at time zone" *> Parsers.space1 *> Parser.endHead *> aExpr),
           Parsers.symbolicBinOpExpr a aExpr SymbolicBinOpAExpr,
-          SuffixQualOpAExpr a <$> (Parsers.space *> parser),
           AndAExpr a <$> (Parsers.space1 *> Parsers.keyword "and" *> Parsers.space1 *> Parser.endHead *> aExpr),
           OrAExpr a <$> (Parsers.space1 *> Parsers.keyword "or" *> Parsers.space1 *> Parser.endHead *> aExpr),
           do
@@ -330,27 +326,29 @@ filteredParser excluded = customizedParser (CExpr.customizedParser (Parsers.filt
 -- @renderOperand@ in the 'IsAst' instance above for why that position is
 -- special. A shape is bounded when parsing it can never end in an
 -- unrestricted recursive @a_expr@ call, i.e. control is guaranteed to
--- return to @suffixRec@'s loop once it's done, __and__ nothing that could
--- follow (a Parsers.keyword introducing the next suffix, e.g. @AT@ of @AT TIME
--- ZONE@, or an @ESCAPE@ clause external to this value entirely) could be
--- mistaken for the start of a fresh operand.
+-- return to @suffixRec@'s loop once it's done.
 --
--- 'SuffixQualOpAExpr' fails that second half: since its trailing @qual_Op@
--- has no operand of its own yet, @suffixRec@'s loop tries
--- @symbolicBinOpExpr@ again on whatever follows — and if that's a bare word
--- that isn't reserved (like @AT@), it gets swallowed as this "postfix"
--- operator's operand instead of being left for the Parsers.keyword that was
--- actually meant to follow. E.g. @x +# AT TIME ZONE y@, meant as
--- @AtTimeZoneAExpr (SuffixQualOpAExpr x (+#)) y@, reparses instead as
--- @SymbolicBinOpAExpr x (+#) (CExprAExpr (ColumnrefCExpr "AT"))@ followed by
--- leftover, unparseable @TIME ZONE y@.
+-- Note this predicate is purely about operator precedence and
+-- associativity: an unbounded shape is one whose own rendering ends in an
+-- unrestricted recursive @a_expr@, so placed bare in the left position it
+-- would re-absorb the suffix that follows (e.g. rendering
+-- @SymbolicBinOpAExpr (NotAExpr x) op y@ plainly as @NOT x op y@ reparses
+-- as @NotAExpr (SymbolicBinOpAExpr x op y)@). It is /not/ a general
+-- terminator-keyword guard — it isn't a general-purpose mechanism against
+-- an expression swallowing a keyword that terminates an enclosing
+-- production; the only shape that ever created that hazard by construction
+-- was the postfix @a_expr qual_Op@ production, which no longer exists here
+-- or in @references/gram.y@ (see gram.y:15985,15987; Postgres removed
+-- postfix operators in v14). It does incidentally get reused for that
+-- purpose in "PostgresqlSyntax.Ast.TargetEl" (to stop an @OrAExpr@'s right
+-- operand from absorbing a following implicit alias) — that's just one
+-- call site's use of it, not evidence of general applicability.
 isBoundedAExprOperand :: AExpr -> Bool
 isBoundedAExprOperand = \case
   PlusAExpr {} -> False
   MinusAExpr {} -> False
   NotAExpr {} -> False
   PrefixQualOpAExpr {} -> False
-  SuffixQualOpAExpr {} -> False
   AtTimeZoneAExpr {} -> False
   SymbolicBinOpAExpr {} -> False
   AndAExpr {} -> False
@@ -403,7 +401,6 @@ instance Qc.Arbitrary AExpr where
               MinusAExpr <$> Gens.downscale Qc.arbitrary,
               SymbolicBinOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
               PrefixQualOpAExpr <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
-              SuffixQualOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
               AndAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Gens.downscale Qc.arbitrary,
               OrAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Gens.downscale Qc.arbitrary,
               NotAExpr <$> Gens.downscale Qc.arbitrary,
