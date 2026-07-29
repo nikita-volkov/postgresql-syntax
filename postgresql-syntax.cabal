@@ -89,9 +89,7 @@ library
   hs-source-dirs: library
   exposed-modules:
     PostgresqlSyntax
-
-  other-modules:
-    PostgresqlSyntax.Ast
+    PostgresqlSyntax.IsAst
     PostgresqlSyntax.Ast.AExpr
     PostgresqlSyntax.Ast.AexprConst
     PostgresqlSyntax.Ast.AExprReversableOp
@@ -233,6 +231,9 @@ library
     PostgresqlSyntax.Ast.WindowSpecification
     PostgresqlSyntax.Ast.WithClause
     PostgresqlSyntax.Ast.Xconst
+
+  other-modules:
+    PostgresqlSyntax.Ast
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
@@ -240,7 +241,6 @@ library
     PostgresqlSyntax.Helpers.Parsers
     PostgresqlSyntax.Helpers.Shrinks
     PostgresqlSyntax.Helpers.TextBuilders
-    PostgresqlSyntax.IsAst
 
   build-depends:
     base >=4.12 && <5,
@@ -262,13 +262,157 @@ test-suite hspec-test
   hs-source-dirs: hspec-test
   main-is: Main.hs
   other-modules:
-    Cases
-    Properties
+    Helpers
+    Spec
+    Ast.AExprReversableOpSpec
+    Ast.AExprSpec
+    Ast.AexprConstSpec
+    Ast.AliasClauseSpec
+    Ast.AllOpSpec
+    Ast.AnyNameSpec
+    Ast.AnyOperatorSpec
+    Ast.ArrayBoundsSpec
+    Ast.ArrayExprListSpec
+    Ast.ArrayExprSpec
+    Ast.AscDescSpec
+    Ast.AttrsSpec
+    Ast.BExprIsOpSpec
+    Ast.BExprSpec
+    Ast.BconstSpec
+    Ast.BitSpec
+    Ast.CExprSpec
+    Ast.CallStmtSpec
+    Ast.CaseExprSpec
+    Ast.CharacterSpec
+    Ast.ColumnrefSpec
+    Ast.CommonTableExprSpec
+    Ast.ConfExprSpec
+    Ast.ConstCharacterSpec
+    Ast.ConstDatetimeSpec
+    Ast.ConstTypenameSpec
+    Ast.DeleteStmtSpec
+    Ast.ExplicitRowSpec
+    Ast.ExprListSpec
+    Ast.ExtractArgSpec
+    Ast.ExtractListSpec
+    Ast.FconstSpec
+    Ast.ForLockingClauseSpec
+    Ast.ForLockingItemSpec
+    Ast.ForLockingStrengthSpec
+    Ast.FrameBoundSpec
+    Ast.FrameClauseModeSpec
+    Ast.FrameClauseSpec
+    Ast.FrameExtentSpec
+    Ast.FuncAliasClauseSpec
+    Ast.FuncApplicationParamsSpec
+    Ast.FuncApplicationSpec
+    Ast.FuncArgExprSpec
+    Ast.FuncConstArgsSpec
+    Ast.FuncExprCommonSubexprSpec
+    Ast.FuncExprSpec
+    Ast.FuncExprWindowlessSpec
+    Ast.FuncNameSpec
+    Ast.FuncTableSpec
+    Ast.GenericTypeSpec
+    Ast.GroupByItemSpec
+    Ast.IconstSpec
+    Ast.IdentSpec
+    Ast.ImplicitRowSpec
+    Ast.InExprSpec
+    Ast.IndexElemDefSpec
+    Ast.IndexElemSpec
+    Ast.IndexParamsSpec
+    Ast.IndirectionElSpec
+    Ast.IndirectionSpec
+    Ast.InsertColumnItemSpec
+    Ast.InsertColumnListSpec
+    Ast.InsertRestSpec
+    Ast.InsertStmtSpec
+    Ast.InsertTargetSpec
+    Ast.IntervalSecondSpec
+    Ast.IntervalSpec
+    Ast.JoinMethSpec
+    Ast.JoinQualSpec
+    Ast.JoinTypeSpec
+    Ast.JoinedTableSpec
+    Ast.LimitClauseSpec
+    Ast.MathOpSpec
+    Ast.NameListSpec
+    Ast.NullsOrderSpec
+    Ast.NumericSpec
+    Ast.OffsetClauseSpec
+    Ast.OnConflictDoSpec
+    Ast.OnConflictSpec
+    Ast.OpSpec
+    Ast.OptOrdinalitySpec
+    Ast.OptTempTableNameSpec
+    Ast.OptVaryingSpec
+    Ast.OverClauseSpec
+    Ast.OverlayListSpec
+    Ast.OverrideKindSpec
+    Ast.PositionListSpec
+    Ast.PreparableStmtSpec
+    Ast.QualAllOpSpec
+    Ast.QualOpSpec
+    Ast.QualifiedNameSpec
+    Ast.RelationExprOptAliasSpec
+    Ast.RelationExprSpec
+    Ast.RowSpec
+    Ast.RowsfromItemSpec
+    Ast.RowsfromListSpec
+    Ast.SconstSpec
+    Ast.SelectBinOpSpec
+    Ast.SelectClauseSpec
+    Ast.SelectFetchFirstValueSpec
+    Ast.SelectLimitSpec
+    Ast.SelectLimitValueSpec
+    Ast.SelectNoParensSpec
+    Ast.SelectStmtSpec
+    Ast.SelectWithParensSpec
+    Ast.SetClauseListSpec
+    Ast.SetClauseSpec
+    Ast.SetTargetListSpec
+    Ast.SetTargetSpec
+    Ast.SimpleSelectSpec
+    Ast.SimpleTypenameSpec
+    Ast.SortBySpec
+    Ast.SortClauseSpec
+    Ast.SubTypeSpec
+    Ast.SubqueryOpSpec
+    Ast.SubstrListFromForSpec
+    Ast.SubstrListSpec
+    Ast.SymbolicExprBinOpSpec
+    Ast.TableFuncElementListSpec
+    Ast.TableFuncElementSpec
+    Ast.TableRefSpec
+    Ast.TablesampleClauseSpec
+    Ast.TargetElSpec
+    Ast.TargetListSpec
+    Ast.TargetingSpec
+    Ast.TimezoneSpec
+    Ast.TrimListSpec
+    Ast.TrimModifierSpec
+    Ast.TypeListSpec
+    Ast.TypenameArrayDimensionsSpec
+    Ast.TypenameSpec
+    Ast.UpdateStmtSpec
+    Ast.VerbalExprBinOpSpec
+    Ast.WhenClauseListSpec
+    Ast.WhenClauseSpec
+    Ast.WhereOrCurrentClauseSpec
+    Ast.WindowDefinitionSpec
+    Ast.WindowExclusionClauseSpec
+    Ast.WindowSpecificationSpec
+    Ast.WithClauseSpec
+    Ast.XconstSpec
 
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
+
+  build-tool-depends:
+    hspec-discover:hspec-discover >=2.10 && <3,
 
   build-depends:
     hspec >=2.10 && <3,
