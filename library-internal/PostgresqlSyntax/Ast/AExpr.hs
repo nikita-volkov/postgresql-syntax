@@ -5,6 +5,7 @@ module PostgresqlSyntax.Ast.AExpr
     safeAExprOperand,
     selectWithParensAExpr,
     refineToSelectWithParens,
+    canonicalize,
   )
 where
 
@@ -402,10 +403,31 @@ refineToSelectWithParens = \case
   CExprAExpr (CExpr.SelectWithParensCExpr a Nothing) -> Just a
   _ -> Nothing
 
+-- |
+-- Collapses the non-canonical @Right@-wrapping-a-bare-@select_with_parens@
+-- shape of 'SubqueryAExpr'\'s final field to the @Left@ shape the parser
+-- actually produces for it.
+--
+-- @a_expr subquery_Op sub_type select_with_parens@ (i.e. @Left@) and
+-- @a_expr subquery_Op sub_type '(' a_expr ')'@ (i.e. @Right@) overlap
+-- whenever the parenthesized @a_expr@ is itself nothing but a bare,
+-- indirection-less @select_with_parens@: both parse @x = ANY ((select 1))@.
+-- @suffix@ tries the @select_with_parens@ alternative before the
+-- parenthesized @a_expr@ one (see the @d <- Left <$> ... <|> Right <$> ...@
+-- line above), so that's always what the parser returns — never @Right@ —
+-- making the latter non-canonical for this shape. Both 'arbitrary' and
+-- 'shrink' can otherwise construct it, which renders fine but parses back to
+-- a different, canonical value and so breaks the roundtrip property.
+canonicalize :: AExpr -> AExpr
+canonicalize = \case
+  SubqueryAExpr a b c (Right d)
+    | Just inner <- refineToSelectWithParens d -> SubqueryAExpr a b c (Left inner)
+  other -> other
+
 instance Qc.Arbitrary AExpr where
-  shrink = Qc.genericShrink
+  shrink = fmap canonicalize . Qc.genericShrink
   arbitrary =
-    Qc.sized $ \n ->
+    fmap canonicalize $ Qc.sized $ \n ->
       if n <= 1
         then pure DefaultAExpr
         else

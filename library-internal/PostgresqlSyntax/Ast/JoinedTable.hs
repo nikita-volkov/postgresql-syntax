@@ -1,10 +1,8 @@
 module PostgresqlSyntax.Ast.JoinedTable where
 
 import PostgresqlSyntax.Ast.JoinMeth
-import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef, joinedTableParser, renderJoinedTable)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
-import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
@@ -30,21 +28,22 @@ data JoinedTable
   | MethJoinedTable JoinMeth TableRef TableRef
   deriving (Show, Generic, Eq, Ord, Data)
 
+-- |
+-- Delegates to 'PostgresqlSyntax.Ast.TableRef.renderJoinedTable'\/
+-- 'PostgresqlSyntax.Ast.TableRef.joinedTableParser' rather than combining
+-- 'TableRef'\'s and 'JoinMeth'\'s own instances directly: a bare @table_ref@
+-- parse is greedy — it absorbs any trailing @CROSS JOIN@\/@JOIN@\/@NATURAL
+-- JOIN@ continuation into itself (see 'PostgresqlSyntax.Ast.TableRef'\'s
+-- @recur@) — so parsing this type's own @b@ field with the plain exported
+-- 'PostgresqlSyntax.Ast.TableRef.parser' would always swallow the @a@\/@c@
+-- that's meant to follow it, and 'JoinMeth'\'s own renderer places a
+-- 'PostgresqlSyntax.Ast.JoinQual' immediately after the @JOIN@ keyword
+-- rather than after @c@ (see its own doc for why). 'TableRef' is the only
+-- module with both this type and 'TableRef' in scope non-abstractly at
+-- once, so it hosts the one correct, round-trippable implementation.
 instance IsAst JoinedTable where
-  toTextBuilder settings = \case
-    InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
-    MethJoinedTable a b c -> toTextBuilder settings b <> " " <> toTextBuilder settings a <> " " <> toTextBuilder settings c
-  parser settings =
-    InParensJoinedTable
-      <$> Parsers.inParens (parser settings)
-        <|> ( do
-                b <- parser settings
-                Parsers.space1
-                a <- parser settings
-                Parsers.space1
-                c <- parser settings
-                return (MethJoinedTable a b c)
-            )
+  toTextBuilder = renderJoinedTable
+  parser = joinedTableParser
 
 instance Qc.Arbitrary JoinedTable where
   shrink = Qc.genericShrink
