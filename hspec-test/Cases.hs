@@ -98,7 +98,7 @@ spec = do
         \on u.id = p.user_id\n\
         \inner join edgenode.provider_branch as b\n\
         \on b.provider_fk = p.provider_id"
-        "(20,\"offset=20:\\nunexpected space\\nexpecting end of input\\n\")"
+        "(21,\"offset=21:\\nunexpected 'a'\\nexpecting end of input or white space\\n\")"
     it "Typo in NOT keyword"
       $ reportsError @PreparableStmt
         "select i :: int8 from auth.user as u\n\
