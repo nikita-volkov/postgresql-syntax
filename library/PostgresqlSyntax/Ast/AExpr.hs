@@ -333,12 +333,16 @@ filteredParser excluded = customizedParser (CExpr.customizedParser (Parsers.filt
 -- unrestricted recursive @a_expr@, so placed bare in the left position it
 -- would re-absorb the suffix that follows (e.g. rendering
 -- @SymbolicBinOpAExpr (NotAExpr x) op y@ plainly as @NOT x op y@ reparses
--- as @NotAExpr (SymbolicBinOpAExpr x op y)@). It is *not* a guard against
+-- as @NotAExpr (SymbolicBinOpAExpr x op y)@). It is /not/ a general
+-- terminator-keyword guard — it isn't a general-purpose mechanism against
 -- an expression swallowing a keyword that terminates an enclosing
--- production — the only shape that ever created that hazard was the
--- postfix @a_expr qual_Op@ production, which no longer exists here or in
--- @references/gram.y@ (see gram.y:15985,15987; Postgres removed postfix
--- operators in v14).
+-- production; the only shape that ever created that hazard by construction
+-- was the postfix @a_expr qual_Op@ production, which no longer exists here
+-- or in @references/gram.y@ (see gram.y:15985,15987; Postgres removed
+-- postfix operators in v14). It does incidentally get reused for that
+-- purpose in "PostgresqlSyntax.Ast.TargetEl" (to stop an @OrAExpr@'s right
+-- operand from absorbing a following implicit alias) — that's just one
+-- call site's use of it, not evidence of general applicability.
 isBoundedAExprOperand :: AExpr -> Bool
 isBoundedAExprOperand = \case
   PlusAExpr {} -> False

@@ -122,16 +122,20 @@ spec = do
       fmap render (parse @SortBy "a using > nulls last") `shouldBe` Right "a USING > NULLS LAST"
       -- With the SortBy filter still blanket-excluding "nulls" from ColId,
       -- a bare column named "nulls" cannot currently be parsed as a
-      -- SortBy target at all (not just as a nulls-order lead-in). This
-      -- pins today's (over-broad) behaviour; it is revisited in Task 4's
-      -- filter-narrowing steps.
+      -- SortBy target at all (not just as a nulls-order lead-in).
+      -- Deviates from references/gram.y: Postgres's NULLS_LA lookahead
+      -- (gram.y:864, 8596) only fires before FIRST/LAST, so a column
+      -- literally named "nulls" is a legal bare sort key there.
+      -- filteredColIdLike's blanket exclusion is coarser. Pre-existing;
+      -- pinned here, not fixed — known follow-up.
       case parse @SortBy "nulls" of
         Left _ -> pure ()
         Right _ -> expectationFailure "expected a parse failure for bare \"nulls\""
 
-    -- gram.y:8557 index_elem: ColId index_elem_options, and gram.y:8524
-    -- opt_nulls_order. opt_class is an any_name, i.e. a bare ColId, so it
-    -- is directly ambiguous with the unreserved NULLS that follows it.
+    -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
+    -- opt_nulls_order. index_elem_options' operator-class name
+    -- (opt_qualified_name, gram.y:8525) is a bare ColId, so it is
+    -- directly ambiguous with the unreserved NULLS that follows it.
     it "index_elem" $ do
       let render :: IndexElem -> Text
           render = toText

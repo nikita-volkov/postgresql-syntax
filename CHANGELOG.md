@@ -33,7 +33,10 @@
   of round-trip failures: the rendering `<operand> <operator>` left the
   operator without a right-hand side, so reparsing swallowed whatever
   keyword followed (`PRECEDING`, `FOLLOWING`, `ROWS`, an implicit column
-  alias, or the `?` of the `Typename` nullability extension) as its operand.
+  alias, or — in the postfix case specifically — the `?` of the `Typename`
+  nullability extension) as its operand. Only the postfix-triggered `?`
+  swallow is fixed by this; `Op "?"` colliding with the nullability
+  extension as a *binary* operator is a separate, still-open issue.
 
 ## Fixes
 
