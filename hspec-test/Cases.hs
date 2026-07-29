@@ -71,6 +71,42 @@ spec = do
         ]
         (parsesTo @Sconst)
 
+  -- Grammar constructs pinned directly against
+  -- @references/gram.y@ at the commit recorded in AGENTS.md.
+  describe "Postgres grammar conformance" $ do
+    -- gram.y:15985,15987 have only @a_expr qual_Op a_expr@ and
+    -- @qual_Op a_expr@ — the postfix @a_expr qual_Op@ form was removed
+    -- from Postgres in v14.
+    it "rejects postfix operators" $ do
+      rejects @AExpr "1 +#"
+      rejects @AExpr "1 OPERATOR(pg_catalog.+#)"
+      rejects @AExpr "a +#"
+
+    -- gram.y:17567 frame_bound. UNBOUNDED is an unreserved keyword, so
+    -- @UNBOUNDED PRECEDING@ is ambiguous with @a_expr PRECEDING@ where
+    -- the a_expr is a column named "unbounded"; gram.y:915 resolves it by
+    -- giving UNBOUNDED lower precedence than PRECEDING, i.e. the keyword
+    -- reading wins and the column reading needs quoting.
+    it "frame_bound" $ do
+      let render :: FrameBound -> Text
+          render = toText
+      fmap render (parse @FrameBound "unbounded preceding") `shouldBe` Right "UNBOUNDED PRECEDING"
+      fmap render (parse @FrameBound "unbounded following") `shouldBe` Right "UNBOUNDED FOLLOWING"
+      fmap render (parse @FrameBound "current row") `shouldBe` Right "CURRENT ROW"
+      fmap render (parse @FrameBound "1 preceding") `shouldBe` Right "1 PRECEDING"
+      fmap render (parse @FrameBound "a following") `shouldBe` Right "a FOLLOWING"
+      fmap render (parse @FrameBound "\"unbounded\" preceding") `shouldBe` Right "\"unbounded\" PRECEDING"
+
+    -- gram.y:17428 window_specification: the sort clause and the
+    -- partition clause are both followed by opt_frame_clause, whose
+    -- leading keywords (RANGE/ROWS/GROUPS, kwlist.h:375,408,201) are
+    -- unreserved and therefore also legal ColIds.
+    it "window_specification terminators are not swallowed by the expression" $ do
+      parsesTo @WindowSpecification "(order by a rows unbounded preceding)"
+      parsesTo @WindowSpecification "(order by a range unbounded preceding)"
+      parsesTo @WindowSpecification "(partition by a groups unbounded preceding)"
+      parsesTo @WindowSpecification "(partition by a order by b rows 1 preceding)"
+
   describe "Nesting depth" $ do
     it "redundant parens, depth 50"
       $ parsesWithin @AExpr 5 (Text.replicate 50 "(" <> "a + b" <> Text.replicate 50 ")")
@@ -112,6 +148,16 @@ parsesTo input =
   case parse @a input of
     Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
     Right _ -> pure ()
+
+-- | Asserts that the input is *not* accepted. Used to pin grammar
+-- constructs that Postgres itself rejects.
+rejects :: forall a. (HasCallStack, IsAst a, Show a) => Text -> Expectation
+rejects input =
+  case parse @a input of
+    Left _ -> pure ()
+    Right a ->
+      expectationFailure
+        ("expected a parse failure\ninput: " <> Text.unpack input <> "\nparsed: " <> show a)
 
 reportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectation
 reportsError input expected =
