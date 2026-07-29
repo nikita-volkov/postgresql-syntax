@@ -24,6 +24,16 @@
   `IntervalSecond`, `OptOrdinality`. Code that pattern-matched these as
   `Either`/`Maybe`/`Text`/`Bool` directly needs to match on the new
   constructors instead.
+- Removed the `SuffixQualOpAExpr` constructor of `AExpr`. It modelled the
+  postfix operator production (`a_expr qual_Op`), which Postgres removed in
+  version 14 — `x OPERATOR(pg_catalog.+#)` is a syntax error in every
+  supported server version, so the parser no longer accepts it and the
+  renderer can no longer emit it. Code pattern-matching or constructing
+  `SuffixQualOpAExpr` needs to drop those cases. This also removes a family
+  of round-trip failures: the rendering `<operand> <operator>` left the
+  operator without a right-hand side, so reparsing swallowed whatever
+  keyword followed (`PRECEDING`, `FOLLOWING`, `ROWS`, an implicit column
+  alias, or the `?` of the `Typename` nullability extension) as its operand.
 
 ## Fixes
 
