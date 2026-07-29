@@ -7,7 +7,9 @@ module PostgresqlSyntax.Ast.SimpleSelect
 where
 
 import qualified HeadedMegaparsec as Parser
+import qualified Text.Megaparsec as Megaparsec
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.GroupByItem
 import PostgresqlSyntax.Ast.OptTempTableName
@@ -77,15 +79,19 @@ instance IsAst SimpleSelect where
       windowClause a = "WINDOW " <> TextBuilders.commaNonEmpty toTextBuilder a
       valuesClause a = "VALUES " <> TextBuilders.commaNonEmpty (TextBuilders.renderInParens . toTextBuilder) a
   parser = do
-    a <- baseSimpleSelect
+    a <- baseSimpleSelect <|> Parser.parse (Megaparsec.try (Parser.toParsec withParensHead))
     extendMany suffix a
     where
-      suffix headSimpleSelect = do
+      suffix headSimpleSelect = binopExtension (SimpleSelectSelectClause headSimpleSelect)
+      withParensHead = do
+        swp <- parser
+        binopExtension (WithParensSelectClause swp)
+      binopExtension headClause = do
         op <- Parsers.space1 *> parser <* Parsers.space1
         Parser.endHead
         distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
         rhs <- selectClauseBase >>= extendSelectClause
-        return (BinSimpleSelect op (SimpleSelectSelectClause headSimpleSelect) distinct rhs)
+        return (BinSimpleSelect op headClause distinct rhs)
 
 -- |
 -- The non-recursive base cases only (no @select_clause BINOP

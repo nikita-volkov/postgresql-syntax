@@ -32,10 +32,8 @@ instance IsAst SelectClause where
     SimpleSelectSelectClause a -> toTextBuilder a
     WithParensSelectClause a -> toTextBuilder a
   parser =
-    asum
-      [ WithParensSelectClause <$> parser,
-        SimpleSelectSelectClause <$> parser
-      ]
+    SimpleSelectSelectClause <$> parser
+      <|> WithParensSelectClause <$> parser
 
 instance Qc.Arbitrary SelectClause where
   shrink = Qc.genericShrink
