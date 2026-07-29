@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.FrameBound where
 
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser, safeAExprOperand)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
@@ -40,7 +41,7 @@ instance IsAst FrameBound where
         <|> CurrentRowFrameBound
       <$ Parsers.keyphrase "current row"
         <|> do
-          a <- filteredParser ["preceding", "following"]
+          a <- AExpr.filteredParser ["preceding", "following"]
           Parsers.space1
           PrecedingFrameBound a <$ Parsers.keyword "preceding" <|> FollowingFrameBound a <$ Parsers.keyword "following"
 
@@ -51,6 +52,6 @@ instance Qc.Arbitrary FrameBound where
       [ pure UnboundedPrecedingFrameBound,
         pure UnboundedFollowingFrameBound,
         pure CurrentRowFrameBound,
-        PrecedingFrameBound <$> safeAExprOperand (Gens.downscale Qc.arbitrary),
-        FollowingFrameBound <$> safeAExprOperand (Gens.downscale Qc.arbitrary)
+        PrecedingFrameBound <$> Gens.downscale Qc.arbitrary,
+        FollowingFrameBound <$> Gens.downscale Qc.arbitrary
       ]
