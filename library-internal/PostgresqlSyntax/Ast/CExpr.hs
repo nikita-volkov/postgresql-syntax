@@ -1,11 +1,12 @@
 module PostgresqlSyntax.Ast.CExpr
   ( CExpr (..),
     customizedParser,
+    canonicalize,
   )
 where
 
 import qualified HeadedMegaparsec as Parser
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, refineToSelectWithParens)
 import PostgresqlSyntax.Ast.AexprConst
 import PostgresqlSyntax.Ast.ArrayExpr
 import PostgresqlSyntax.Ast.CaseExpr
@@ -16,7 +17,7 @@ import PostgresqlSyntax.Ast.FuncExpr
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, withParensSelectWithParens)
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
@@ -145,9 +146,9 @@ customizedParser settings colIdParser =
         ]
 
 instance Qc.Arbitrary CExpr where
-  shrink = Qc.genericShrink
+  shrink = fmap canonicalize . Qc.genericShrink
   arbitrary =
-    Qc.sized $ \n ->
+    fmap canonicalize $ Qc.sized $ \n ->
       if n <= 1
         then ColumnrefCExpr <$> Qc.arbitrary
         else
@@ -165,3 +166,25 @@ instance Qc.Arbitrary CExpr where
               ImplicitRowCExpr <$> Qc.arbitrary,
               GroupingCExpr <$> Qc.arbitrary
             ]
+
+-- |
+-- Collapses the non-canonical @InParensCExpr@-wrapping-a-@SelectWithParensCExpr@
+-- shape to the @SelectWithParensCExpr@\/@WithParensSelectWithParens@ shape the
+-- parser actually produces for it.
+--
+-- @'(' a_expr ')' opt_indirection@ (i.e. 'InParensCExpr') and
+-- @select_with_parens@ (i.e. 'SelectWithParensCExpr') overlap whenever the
+-- inner @a_expr@ is itself nothing but a bare, indirection-less
+-- @select_with_parens@: both parse @((select 1))@. 'customizedParser' tries
+-- the @select_with_parens@ alternative before @parenthesizedExprCExpr@, so
+-- that's always what the parser returns — never 'InParensCExpr' — making
+-- the latter non-canonical for this shape. Both 'arbitrary' and 'shrink' can
+-- otherwise construct it (shrinking the outer indirection to @Nothing@ is
+-- exactly how it arises), which renders fine but parses back to a
+-- different, canonical value and so breaks the roundtrip property.
+canonicalize :: CExpr -> CExpr
+canonicalize = \case
+  InParensCExpr a outerIndirection
+    | Just inner <- refineToSelectWithParens a ->
+        SelectWithParensCExpr (withParensSelectWithParens inner) outerIndirection
+  other -> other

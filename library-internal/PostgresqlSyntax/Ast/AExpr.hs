@@ -4,6 +4,7 @@ module PostgresqlSyntax.Ast.AExpr
     isBoundedAExprOperand,
     safeAExprOperand,
     selectWithParensAExpr,
+    refineToSelectWithParens,
   )
 where
 
@@ -177,9 +178,13 @@ instance IsAst AExpr where
         -- Already explicitly parenthesized (as the 'Qc.Arbitrary'
         -- instance below always arranges whenever it generates an escape
         -- clause) — render as-is instead of adding a second, redundant
-        -- layer of parens.
+        -- layer of parens. 'CExpr.canonicalize' can turn the
+        -- 'CExpr.InParensCExpr' the generator constructs into a
+        -- 'CExpr.SelectWithParensCExpr' (see its doc), which self-parenthesizes
+        -- just the same, so both shapes count as "already parenthesized" here.
         Just _
           | CExprAExpr (CExpr.InParensCExpr _ _) <- d -> toTextBuilder settings d
+          | CExprAExpr (CExpr.SelectWithParensCExpr _ _) <- d -> toTextBuilder settings d
           | otherwise -> TextBuilders.renderInParens (toTextBuilder settings d)
       -- Distinct from 'PostgresqlSyntax.Ast.AExprReversableOp'\'s own
       -- @toTextBuilder@ (which bakes in the "positive" @IS@\/@BETWEEN@\/@IN@
@@ -385,6 +390,18 @@ safeAExprOperand gen = do
 selectWithParensAExpr :: SelectWithParens -> AExpr
 selectWithParensAExpr a = CExprAExpr (CExpr.SelectWithParensCExpr a Nothing)
 
+-- |
+-- If an 'AExpr' is a bare, indirection-less 'PostgresqlSyntax.Ast.CExpr.SelectWithParensCExpr'
+-- wrapping, returns the wrapped 'SelectWithParens'. The inverse of
+-- 'selectWithParensAExpr', exposed for the same @hs-boot@-abstraction reason
+-- — see "PostgresqlSyntax.Ast.CExpr", which needs it to canonicalize an
+-- @'(' a_expr ')'@\/@select_with_parens@ ambiguity analogous to the one
+-- described there.
+refineToSelectWithParens :: AExpr -> Maybe SelectWithParens
+refineToSelectWithParens = \case
+  CExprAExpr (CExpr.SelectWithParensCExpr a Nothing) -> Just a
+  _ -> Nothing
+
 instance Qc.Arbitrary AExpr where
   shrink = Qc.genericShrink
   arbitrary =
@@ -417,7 +434,7 @@ instance Qc.Arbitrary AExpr where
                   -- rendering reconstructs.
                   d <- case e of
                     Nothing -> Gens.downscale Qc.arbitrary
-                    Just _ -> (\x -> CExprAExpr (CExpr.InParensCExpr x Nothing)) <$> Gens.downscale Qc.arbitrary
+                    Just _ -> (\x -> CExprAExpr (CExpr.canonicalize (CExpr.InParensCExpr x Nothing))) <$> Gens.downscale Qc.arbitrary
                   pure (VerbalExprBinOpAExpr a b c d e)
               ),
               ReversableOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,

@@ -20,3 +20,6 @@ instance Arbitrary SelectWithParens
 
 -- | See "PostgresqlSyntax.Ast.SelectWithParens" for the full documentation.
 withParensSelectWithParensInner :: SelectWithParens -> Maybe SelectWithParens
+
+-- | See "PostgresqlSyntax.Ast.SelectWithParens" for the full documentation.
+withParensSelectWithParens :: SelectWithParens -> SelectWithParens

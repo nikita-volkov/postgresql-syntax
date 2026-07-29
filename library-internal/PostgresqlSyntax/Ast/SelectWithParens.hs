@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.SelectWithParens
   ( SelectWithParens (..),
     withParensSelectWithParensInner,
+    withParensSelectWithParens,
   )
 where
 
@@ -90,3 +91,12 @@ withParensSelectWithParensInner :: SelectWithParens -> Maybe SelectWithParens
 withParensSelectWithParensInner = \case
   WithParensSelectWithParens a -> Just a
   _ -> Nothing
+
+-- |
+-- Smart constructor for the @WithParensSelectWithParens@ shape, for modules
+-- that can only see 'SelectWithParens' via its @hs-boot@ (which keeps it
+-- abstract to break an import cycle) — see "PostgresqlSyntax.Ast.CExpr",
+-- which needs it to canonicalize a @'(' a_expr ')'@\/@select_with_parens@
+-- ambiguity analogous to the one described above.
+withParensSelectWithParens :: SelectWithParens -> SelectWithParens
+withParensSelectWithParens = WithParensSelectWithParens
