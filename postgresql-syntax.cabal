@@ -64,29 +64,7 @@ library internal
   import: base-settings
   hs-source-dirs: library-internal
   exposed-modules:
-    PostgresqlSyntax.CharSet
-    PostgresqlSyntax.KeywordSet
-    PostgresqlSyntax.Predicate
-    PostgresqlSyntax.Prelude
-    PostgresqlSyntax.Validation
-
-  build-depends:
-    base >=4.12 && <5,
-    bytestring >=0.10 && <0.13,
-    case-insensitive >=1.2.1 && <2,
-    hashable >=1.3.5 && <2,
-    headed-megaparsec >=0.2.0.1 && <0.3,
-    QuickCheck >=2.14 && <3,
-    text >=1 && <3,
-    text-builder >=1 && <1.1,
-    unordered-containers >=0.2.16 && <0.3,
-
-library
-  import: base-settings
-  hs-source-dirs: library
-  exposed-modules:
-    PostgresqlSyntax
-    PostgresqlSyntax.IsAst
+    PostgresqlSyntax.Ast
     PostgresqlSyntax.Ast.AExpr
     PostgresqlSyntax.Ast.AexprConst
     PostgresqlSyntax.Ast.AExprReversableOp
@@ -228,9 +206,7 @@ library
     PostgresqlSyntax.Ast.WindowSpecification
     PostgresqlSyntax.Ast.WithClause
     PostgresqlSyntax.Ast.Xconst
-
-  other-modules:
-    PostgresqlSyntax.Ast
+    PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
@@ -238,6 +214,11 @@ library
     PostgresqlSyntax.Helpers.Parsers
     PostgresqlSyntax.Helpers.Shrinks
     PostgresqlSyntax.Helpers.TextBuilders
+    PostgresqlSyntax.IsAst
+    PostgresqlSyntax.KeywordSet
+    PostgresqlSyntax.Predicate
+    PostgresqlSyntax.Prelude
+    PostgresqlSyntax.Validation
 
   build-depends:
     base >=4.12 && <5,
@@ -247,11 +228,20 @@ library
     headed-megaparsec >=0.2.0.1 && <0.3,
     megaparsec >=9.2 && <10,
     parser-combinators >=1.3 && <1.4,
-    postgresql-syntax:internal,
     QuickCheck >=2.14 && <3,
     text >=1 && <3,
     text-builder >=1 && <1.1,
     unordered-containers >=0.2.16 && <0.3,
+
+library
+  import: base-settings
+  hs-source-dirs: library
+  exposed-modules:
+    PostgresqlSyntax
+
+  build-depends:
+    base >=4.12 && <5,
+    postgresql-syntax:internal,
 
 test-suite hspec-test
   import: base-settings
@@ -259,11 +249,9 @@ test-suite hspec-test
   hs-source-dirs: hspec-test
   main-is: Main.hs
   other-modules:
-    Helpers
-    Spec
+    Ast.AexprConstSpec
     Ast.AExprReversableOpSpec
     Ast.AExprSpec
-    Ast.AexprConstSpec
     Ast.AliasClauseSpec
     Ast.AllOpSpec
     Ast.AnyNameSpec
@@ -273,13 +261,13 @@ test-suite hspec-test
     Ast.ArrayExprSpec
     Ast.AscDescSpec
     Ast.AttrsSpec
+    Ast.BconstSpec
     Ast.BExprIsOpSpec
     Ast.BExprSpec
-    Ast.BconstSpec
     Ast.BitSpec
-    Ast.CExprSpec
     Ast.CallStmtSpec
     Ast.CaseExprSpec
+    Ast.CExprSpec
     Ast.CharacterSpec
     Ast.ColumnrefSpec
     Ast.CommonTableExprSpec
@@ -315,12 +303,12 @@ test-suite hspec-test
     Ast.IconstSpec
     Ast.IdentSpec
     Ast.ImplicitRowSpec
-    Ast.InExprSpec
     Ast.IndexElemDefSpec
     Ast.IndexElemSpec
     Ast.IndexParamsSpec
     Ast.IndirectionElSpec
     Ast.IndirectionSpec
+    Ast.InExprSpec
     Ast.InsertColumnItemSpec
     Ast.InsertColumnListSpec
     Ast.InsertRestSpec
@@ -328,10 +316,10 @@ test-suite hspec-test
     Ast.InsertTargetSpec
     Ast.IntervalSecondSpec
     Ast.IntervalSpec
+    Ast.JoinedTableSpec
     Ast.JoinMethSpec
     Ast.JoinQualSpec
     Ast.JoinTypeSpec
-    Ast.JoinedTableSpec
     Ast.LimitClauseSpec
     Ast.MathOpSpec
     Ast.NameListSpec
@@ -350,13 +338,13 @@ test-suite hspec-test
     Ast.PositionListSpec
     Ast.PreparableStmtSpec
     Ast.QualAllOpSpec
-    Ast.QualOpSpec
     Ast.QualifiedNameSpec
+    Ast.QualOpSpec
     Ast.RelationExprOptAliasSpec
     Ast.RelationExprSpec
-    Ast.RowSpec
     Ast.RowsfromItemSpec
     Ast.RowsfromListSpec
+    Ast.RowSpec
     Ast.SconstSpec
     Ast.SelectBinOpSpec
     Ast.SelectClauseSpec
@@ -374,18 +362,18 @@ test-suite hspec-test
     Ast.SimpleTypenameSpec
     Ast.SortBySpec
     Ast.SortClauseSpec
-    Ast.SubTypeSpec
     Ast.SubqueryOpSpec
     Ast.SubstrListFromForSpec
     Ast.SubstrListSpec
+    Ast.SubTypeSpec
     Ast.SymbolicExprBinOpSpec
     Ast.TableFuncElementListSpec
     Ast.TableFuncElementSpec
     Ast.TableRefSpec
     Ast.TablesampleClauseSpec
     Ast.TargetElSpec
-    Ast.TargetListSpec
     Ast.TargetingSpec
+    Ast.TargetListSpec
     Ast.TimezoneSpec
     Ast.TrimListSpec
     Ast.TrimModifierSpec
@@ -402,6 +390,8 @@ test-suite hspec-test
     Ast.WindowSpecificationSpec
     Ast.WithClauseSpec
     Ast.XconstSpec
+    Helpers
+    Spec
 
   ghc-options:
     -threaded
@@ -409,11 +399,12 @@ test-suite hspec-test
     -with-rtsopts=-N
 
   build-tool-depends:
-    hspec-discover:hspec-discover >=2.10 && <3,
+    hspec-discover:hspec-discover >=2.10 && <3
 
   build-depends:
     hspec >=2.10 && <3,
     postgresql-syntax,
+    postgresql-syntax:internal,
     QuickCheck >=2.14 && <3,
     rerebase >=1.6.1 && <2,
 

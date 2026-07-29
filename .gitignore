@@ -21,6 +21,7 @@
 !/bench/
 !/hedgehog-test/
 !/library/
+!/library-internal/
 !/nesting-bench/
 !/references/
 !/hspec-test/
