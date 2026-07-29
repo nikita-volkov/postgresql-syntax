@@ -6,7 +6,7 @@ where
 import qualified HeadedMegaparsec as Parser
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (selectWithParensAExpr)
 import PostgresqlSyntax.Ast.ExprList
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, withParensSelectWithParensInner)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, refineToSelectWithParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
@@ -65,6 +65,6 @@ instance Qc.Arbitrary InExpr where
 canonicalize :: InExpr -> InExpr
 canonicalize = \case
   SelectInExpr a
-    | Just inner <- withParensSelectWithParensInner a ->
+    | Just inner <- refineToSelectWithParens a ->
         ExprListInExpr (ExprList (selectWithParensAExpr inner :| []))
   other -> other

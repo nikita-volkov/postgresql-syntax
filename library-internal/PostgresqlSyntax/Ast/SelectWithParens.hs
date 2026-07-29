@@ -1,12 +1,13 @@
 module PostgresqlSyntax.Ast.SelectWithParens
   ( SelectWithParens (..),
-    withParensSelectWithParensInner,
+    refineToSelectWithParens,
     withParensSelectWithParens,
   )
 where
 
 import qualified HeadedMegaparsec as Parser
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens, afterSelectWithParensClause, trivialSelectWithParensWrapper, unparenthesizedSelectNoParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens)
+import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SelectNoParens as SelectNoParens
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
@@ -54,8 +55,8 @@ instance IsAst SelectWithParens where
         asum
           [ do
               a <- Parser.wrapToHead (parser settings)
-              either WithParensSelectWithParens NoParensSelectWithParens <$> afterSelectWithParensClause settings a,
-            NoParensSelectWithParens <$> unparenthesizedSelectNoParens settings
+              either WithParensSelectWithParens NoParensSelectWithParens <$> SelectNoParens.afterSelectWithParensClauseParser settings a,
+            NoParensSelectWithParens <$> SelectNoParens.unparenthesizedSelectNoParensParser settings
           ]
 
 instance Qc.Arbitrary SelectWithParens where
@@ -77,7 +78,7 @@ instance Qc.Arbitrary SelectWithParens where
 canonicalize :: SelectWithParens -> SelectWithParens
 canonicalize = \case
   NoParensSelectWithParens a
-    | Just c <- trivialSelectWithParensWrapper a -> WithParensSelectWithParens c
+    | Just c <- SelectNoParens.refineToSelectWithParens a -> WithParensSelectWithParens c
   other -> other
 
 -- |
@@ -87,8 +88,8 @@ canonicalize = \case
 -- to break an import cycle) — see "PostgresqlSyntax.Ast.InExpr", which
 -- needs it to canonicalize a @select_with_parens@\/@expr_list@ ambiguity
 -- analogous to the one described above.
-withParensSelectWithParensInner :: SelectWithParens -> Maybe SelectWithParens
-withParensSelectWithParensInner = \case
+refineToSelectWithParens :: SelectWithParens -> Maybe SelectWithParens
+refineToSelectWithParens = \case
   WithParensSelectWithParens a -> Just a
   _ -> Nothing
 

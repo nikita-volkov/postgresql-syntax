@@ -22,10 +22,8 @@ instance IsAst SelectNoParens
 
 instance Arbitrary SelectNoParens
 
-unparenthesizedSelectNoParens :: Settings -> Parser SelectNoParens
+unparenthesizedSelectNoParensParser :: Settings -> Parser SelectNoParens
 
-selectNoParensAfterClause :: Settings -> Maybe WithClause -> SelectClause -> Parser SelectNoParens
+afterSelectWithParensClauseParser :: Settings -> SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
 
-afterSelectWithParensClause :: Settings -> SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
-
-trivialSelectWithParensWrapper :: SelectNoParens -> Maybe SelectWithParens
+refineToSelectWithParens :: SelectNoParens -> Maybe SelectWithParens

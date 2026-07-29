@@ -19,7 +19,7 @@ instance IsAst SelectWithParens
 instance Arbitrary SelectWithParens
 
 -- | See "PostgresqlSyntax.Ast.SelectWithParens" for the full documentation.
-withParensSelectWithParensInner :: SelectWithParens -> Maybe SelectWithParens
+refineToSelectWithParens :: SelectWithParens -> Maybe SelectWithParens
 
 -- | See "PostgresqlSyntax.Ast.SelectWithParens" for the full documentation.
 withParensSelectWithParens :: SelectWithParens -> SelectWithParens
