@@ -107,6 +107,39 @@ spec = do
       parsesTo @WindowSpecification "(partition by a groups unbounded preceding)"
       parsesTo @WindowSpecification "(partition by a order by b rows 1 preceding)"
 
+    -- gram.y:8596 opt_nulls_order and gram.y:14056 sortby. NULLS is
+    -- unreserved (kwlist.h:315), so it is simultaneously a legal ColId and
+    -- the lead-in to the nulls-order clause; Postgres separates the two
+    -- readings with a two-token lexer lookahead (the NULLS_LA token,
+    -- gram.y:864).
+    it "sortby" $ do
+      let render :: SortBy -> Text
+          render = toText
+      fmap render (parse @SortBy "a") `shouldBe` Right "a"
+      fmap render (parse @SortBy "a asc") `shouldBe` Right "a ASC"
+      fmap render (parse @SortBy "a desc nulls last") `shouldBe` Right "a DESC NULLS LAST"
+      fmap render (parse @SortBy "a nulls first") `shouldBe` Right "a NULLS FIRST"
+      fmap render (parse @SortBy "a using > nulls last") `shouldBe` Right "a USING > NULLS LAST"
+      -- With the SortBy filter still blanket-excluding "nulls" from ColId,
+      -- a bare column named "nulls" cannot currently be parsed as a
+      -- SortBy target at all (not just as a nulls-order lead-in). This
+      -- pins today's (over-broad) behaviour; it is revisited in Task 4's
+      -- filter-narrowing steps.
+      case parse @SortBy "nulls" of
+        Left _ -> pure ()
+        Right _ -> expectationFailure "expected a parse failure for bare \"nulls\""
+
+    -- gram.y:8557 index_elem: ColId index_elem_options, and gram.y:8524
+    -- opt_nulls_order. opt_class is an any_name, i.e. a bare ColId, so it
+    -- is directly ambiguous with the unreserved NULLS that follows it.
+    it "index_elem" $ do
+      let render :: IndexElem -> Text
+          render = toText
+      fmap render (parse @IndexElem "a") `shouldBe` Right "a"
+      fmap render (parse @IndexElem "a nulls first") `shouldBe` Right "a NULLS FIRST"
+      fmap render (parse @IndexElem "a text_ops nulls first") `shouldBe` Right "a text_ops NULLS FIRST"
+      fmap render (parse @IndexElem "a collate \"C\" text_ops desc") `shouldBe` Right "a COLLATE \"C\" text_ops DESC"
+
   describe "Nesting depth" $ do
     it "redundant parens, depth 50"
       $ parsesWithin @AExpr 5 (Text.replicate 50 "(" <> "a + b" <> Text.replicate 50 ")")
