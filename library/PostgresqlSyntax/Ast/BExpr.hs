@@ -35,7 +35,6 @@ import qualified Test.QuickCheck as Qc
 --   | b_expr NOT_EQUALS b_expr
 --   | b_expr qual_Op b_expr
 --   | qual_Op b_expr
---   | b_expr qual_Op
 --   | b_expr IS DISTINCT FROM b_expr
 --   | b_expr IS NOT DISTINCT FROM b_expr
 --   | b_expr IS OF '(' type_list ')'

@@ -74,8 +74,8 @@ instance Qc.Arbitrary TargetEl where
         -- expr here is followed directly by a bare alias identifier with
         -- nothing but a space — exactly the hazard
         -- 'PostgresqlSyntax.Ast.AExpr.isBoundedAExprOperand' guards
-        -- against (e.g. a trailing 'PostgresqlSyntax.Ast.AExpr.SuffixQualOpAExpr'
-        -- would otherwise swallow the alias as its own operand instead).
+        -- against (e.g. rendering an 'PostgresqlSyntax.Ast.AExpr.OrAExpr'
+        -- bare here would let its right operand absorb the alias).
         ImplicitlyAliasedExprTargetEl <$> AExpr.safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
         ExprTargetEl <$> Gens.downscale Qc.arbitrary
       ]
