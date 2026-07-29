@@ -24,7 +24,6 @@ common base-settings
   default-language: Haskell2010
   default-extensions:
     ApplicativeDo
-    Arrows
     BangPatterns
     ConstraintKinds
     DataKinds
@@ -51,12 +50,10 @@ common base-settings
     OverloadedStrings
     ParallelListComp
     PatternGuards
-    QuasiQuotes
     RankNTypes
     RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
-    TemplateHaskell
     TupleSections
     TypeApplications
     TypeFamilies
@@ -67,30 +64,6 @@ library internal
   import: base-settings
   hs-source-dirs: library-internal
   exposed-modules:
-    PostgresqlSyntax.CharSet
-    PostgresqlSyntax.KeywordSet
-    PostgresqlSyntax.Predicate
-    PostgresqlSyntax.Prelude
-    PostgresqlSyntax.Validation
-
-  build-depends:
-    base >=4.12 && <5,
-    bytestring >=0.10 && <0.13,
-    case-insensitive >=1.2.1 && <2,
-    hashable >=1.3.5 && <2,
-    headed-megaparsec >=0.2.0.1 && <0.3,
-    QuickCheck >=2.14 && <3,
-    text >=1 && <3,
-    text-builder >=1 && <1.1,
-    unordered-containers >=0.2.16 && <0.3,
-
-library
-  import: base-settings
-  hs-source-dirs: library
-  exposed-modules:
-    PostgresqlSyntax
-
-  other-modules:
     PostgresqlSyntax.Ast
     PostgresqlSyntax.Ast.AExpr
     PostgresqlSyntax.Ast.AexprConst
@@ -233,6 +206,7 @@ library
     PostgresqlSyntax.Ast.WindowSpecification
     PostgresqlSyntax.Ast.WithClause
     PostgresqlSyntax.Ast.Xconst
+    PostgresqlSyntax.CharSet
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
@@ -241,6 +215,10 @@ library
     PostgresqlSyntax.Helpers.Shrinks
     PostgresqlSyntax.Helpers.TextBuilders
     PostgresqlSyntax.IsAst
+    PostgresqlSyntax.KeywordSet
+    PostgresqlSyntax.Predicate
+    PostgresqlSyntax.Prelude
+    PostgresqlSyntax.Validation
 
   build-depends:
     base >=4.12 && <5,
@@ -250,11 +228,20 @@ library
     headed-megaparsec >=0.2.0.1 && <0.3,
     megaparsec >=9.2 && <10,
     parser-combinators >=1.3 && <1.4,
-    postgresql-syntax:internal,
     QuickCheck >=2.14 && <3,
     text >=1 && <3,
     text-builder >=1 && <1.1,
     unordered-containers >=0.2.16 && <0.3,
+
+library
+  import: base-settings
+  hs-source-dirs: library
+  exposed-modules:
+    PostgresqlSyntax
+
+  build-depends:
+    base >=4.12 && <5,
+    postgresql-syntax:internal,
 
 test-suite hspec-test
   import: base-settings
@@ -262,17 +249,163 @@ test-suite hspec-test
   hs-source-dirs: hspec-test
   main-is: Main.hs
   other-modules:
-    Cases
-    Properties
+    Ast.AexprConstSpec
+    Ast.AExprReversableOpSpec
+    Ast.AExprSpec
+    Ast.AliasClauseSpec
+    Ast.AllOpSpec
+    Ast.AnyNameSpec
+    Ast.AnyOperatorSpec
+    Ast.ArrayBoundsSpec
+    Ast.ArrayExprListSpec
+    Ast.ArrayExprSpec
+    Ast.AscDescSpec
+    Ast.AttrsSpec
+    Ast.BconstSpec
+    Ast.BExprIsOpSpec
+    Ast.BExprSpec
+    Ast.BitSpec
+    Ast.CallStmtSpec
+    Ast.CaseExprSpec
+    Ast.CExprSpec
+    Ast.CharacterSpec
+    Ast.ColumnrefSpec
+    Ast.CommonTableExprSpec
+    Ast.ConfExprSpec
+    Ast.ConstCharacterSpec
+    Ast.ConstDatetimeSpec
+    Ast.ConstTypenameSpec
+    Ast.DeleteStmtSpec
+    Ast.ExplicitRowSpec
+    Ast.ExprListSpec
+    Ast.ExtractArgSpec
+    Ast.ExtractListSpec
+    Ast.FconstSpec
+    Ast.ForLockingClauseSpec
+    Ast.ForLockingItemSpec
+    Ast.ForLockingStrengthSpec
+    Ast.FrameBoundSpec
+    Ast.FrameClauseModeSpec
+    Ast.FrameClauseSpec
+    Ast.FrameExtentSpec
+    Ast.FuncAliasClauseSpec
+    Ast.FuncApplicationParamsSpec
+    Ast.FuncApplicationSpec
+    Ast.FuncArgExprSpec
+    Ast.FuncConstArgsSpec
+    Ast.FuncExprCommonSubexprSpec
+    Ast.FuncExprSpec
+    Ast.FuncExprWindowlessSpec
+    Ast.FuncNameSpec
+    Ast.FuncTableSpec
+    Ast.GenericTypeSpec
+    Ast.GroupByItemSpec
+    Ast.IconstSpec
+    Ast.IdentSpec
+    Ast.ImplicitRowSpec
+    Ast.IndexElemDefSpec
+    Ast.IndexElemSpec
+    Ast.IndexParamsSpec
+    Ast.IndirectionElSpec
+    Ast.IndirectionSpec
+    Ast.InExprSpec
+    Ast.InsertColumnItemSpec
+    Ast.InsertColumnListSpec
+    Ast.InsertRestSpec
+    Ast.InsertStmtSpec
+    Ast.InsertTargetSpec
+    Ast.IntervalSecondSpec
+    Ast.IntervalSpec
+    Ast.JoinedTableSpec
+    Ast.JoinMethSpec
+    Ast.JoinQualSpec
+    Ast.JoinTypeSpec
+    Ast.LimitClauseSpec
+    Ast.MathOpSpec
+    Ast.NameListSpec
+    Ast.NullsOrderSpec
+    Ast.NumericSpec
+    Ast.OffsetClauseSpec
+    Ast.OnConflictDoSpec
+    Ast.OnConflictSpec
+    Ast.OpSpec
+    Ast.OptOrdinalitySpec
+    Ast.OptTempTableNameSpec
+    Ast.OptVaryingSpec
+    Ast.OverClauseSpec
+    Ast.OverlayListSpec
+    Ast.OverrideKindSpec
+    Ast.PositionListSpec
+    Ast.PreparableStmtSpec
+    Ast.QualAllOpSpec
+    Ast.QualifiedNameSpec
+    Ast.QualOpSpec
+    Ast.RelationExprOptAliasSpec
+    Ast.RelationExprSpec
+    Ast.RowsfromItemSpec
+    Ast.RowsfromListSpec
+    Ast.RowSpec
+    Ast.SconstSpec
+    Ast.SelectBinOpSpec
+    Ast.SelectClauseSpec
+    Ast.SelectFetchFirstValueSpec
+    Ast.SelectLimitSpec
+    Ast.SelectLimitValueSpec
+    Ast.SelectNoParensSpec
+    Ast.SelectStmtSpec
+    Ast.SelectWithParensSpec
+    Ast.SetClauseListSpec
+    Ast.SetClauseSpec
+    Ast.SetTargetListSpec
+    Ast.SetTargetSpec
+    Ast.SimpleSelectSpec
+    Ast.SimpleTypenameSpec
+    Ast.SortBySpec
+    Ast.SortClauseSpec
+    Ast.SubqueryOpSpec
+    Ast.SubstrListFromForSpec
+    Ast.SubstrListSpec
+    Ast.SubTypeSpec
+    Ast.SymbolicExprBinOpSpec
+    Ast.TableFuncElementListSpec
+    Ast.TableFuncElementSpec
+    Ast.TableRefSpec
+    Ast.TablesampleClauseSpec
+    Ast.TargetElSpec
+    Ast.TargetingSpec
+    Ast.TargetListSpec
+    Ast.TimezoneSpec
+    Ast.TrimListSpec
+    Ast.TrimModifierSpec
+    Ast.TypeListSpec
+    Ast.TypenameArrayDimensionsSpec
+    Ast.TypenameSpec
+    Ast.UpdateStmtSpec
+    Ast.VerbalExprBinOpSpec
+    Ast.WhenClauseListSpec
+    Ast.WhenClauseSpec
+    Ast.WhereOrCurrentClauseSpec
+    Ast.WindowDefinitionSpec
+    Ast.WindowExclusionClauseSpec
+    Ast.WindowSpecificationSpec
+    Ast.WithClauseSpec
+    Ast.XconstSpec
+    Helpers.Expectations
+    Helpers.Specs
+    Spec
 
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
 
+  build-tool-depends:
+    hspec-discover:hspec-discover >=2.10 && <3
+
   build-depends:
     hspec >=2.10 && <3,
     postgresql-syntax,
+    postgresql-syntax:internal,
     QuickCheck >=2.14 && <3,
     rerebase >=1.6.1 && <2,
 

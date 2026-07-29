@@ -1,0 +1,11 @@
+module Ast.SelectClauseSpec (spec) where
+
+import Helpers.Specs
+import PostgresqlSyntax.Ast.SelectClause
+import Prelude
+import Test.Hspec
+
+spec :: Spec
+spec = do
+  itSatisfiesIsAst @SelectClause
+  itSatisfiesArbitrary @SelectClause
