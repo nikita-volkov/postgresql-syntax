@@ -29,7 +29,13 @@ instance IsAst SortBy where
     UsingSortBy a b c -> toTextBuilder a <> " USING " <> toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
     AscDescSortBy a b c -> toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
   parser = do
-    a <- filteredParser ["using", "asc", "desc", "nulls"]
+    -- gram.y:14056 sortby. Of the four words that can terminate this
+    -- a_expr, only NULLS is unreserved (kwlist.h:315) and therefore a
+    -- legal ColId; USING/ASC/DESC are reserved (kwlist.h:496,47,138) and
+    -- can never be absorbed. Postgres disambiguates NULLS with a
+    -- two-token lexer lookahead (NULLS_LA, gram.y:864); this exclusion is
+    -- the coarser recursive-descent equivalent.
+    a <- filteredParser ["nulls"]
     asum
       [ do
           Parsers.space1

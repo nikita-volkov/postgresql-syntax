@@ -41,7 +41,7 @@ instance IsAst FrameBound where
         <|> CurrentRowFrameBound
       <$ Parsers.keyphrase "current row"
         <|> do
-          a <- AExpr.filteredParser ["preceding", "following"]
+          a <- parser :: Parser AExpr
           Parsers.space1
           PrecedingFrameBound a <$ Parsers.keyword "preceding" <|> FollowingFrameBound a <$ Parsers.keyword "following"
 
