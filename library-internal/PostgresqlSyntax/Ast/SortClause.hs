@@ -23,12 +23,12 @@ newtype SortClause = SortClause (NonEmpty SortBy)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SortClause where
-  toTextBuilder (SortClause a) = "ORDER BY " <> TextBuilders.commaNonEmpty toTextBuilder a
-  parser = do
+  toTextBuilder settings (SortClause a) = "ORDER BY " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = do
     Parsers.keyphrase "order by"
     Parser.endHead
     Parsers.space1
-    SortClause <$> Parsers.sep1 Parsers.commaSeparator parser
+    SortClause <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary SortClause where
   shrink = Qc.genericShrink

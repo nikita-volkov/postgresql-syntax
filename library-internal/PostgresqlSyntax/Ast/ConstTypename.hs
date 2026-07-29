@@ -25,17 +25,17 @@ data ConstTypename
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ConstTypename where
-  toTextBuilder = \case
-    NumericConstTypename a -> toTextBuilder a
-    ConstBitConstTypename a -> toTextBuilder a
-    ConstCharacterConstTypename a -> toTextBuilder a
-    ConstDatetimeConstTypename a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    NumericConstTypename a -> toTextBuilder settings a
+    ConstBitConstTypename a -> toTextBuilder settings a
+    ConstCharacterConstTypename a -> toTextBuilder settings a
+    ConstDatetimeConstTypename a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ NumericConstTypename <$> parser,
-        ConstBitConstTypename <$> parser,
-        ConstCharacterConstTypename <$> parser,
-        ConstDatetimeConstTypename <$> parser
+      [ NumericConstTypename <$> parser settings,
+        ConstBitConstTypename <$> parser settings,
+        ConstCharacterConstTypename <$> parser settings,
+        ConstDatetimeConstTypename <$> parser settings
       ]
 
 instance Qc.Arbitrary ConstTypename where

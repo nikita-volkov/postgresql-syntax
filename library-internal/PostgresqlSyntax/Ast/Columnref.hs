@@ -20,11 +20,11 @@ data Columnref = Columnref Ident (Maybe Indirection)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Columnref where
-  toTextBuilder (Columnref a b) = toTextBuilder a <> foldMap toTextBuilder b
-  parser = do
-    a <- Parser.wrapToHead colId
+  toTextBuilder settings (Columnref a b) = toTextBuilder settings a <> foldMap (toTextBuilder settings) b
+  parser settings = do
+    a <- Parser.wrapToHead (colId settings)
     Parser.endHead
-    b <- optional (Parsers.space *> parser)
+    b <- optional (Parsers.space *> parser settings)
     return (Columnref a b)
 
 instance Qc.Arbitrary Columnref where

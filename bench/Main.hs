@@ -101,7 +101,7 @@ main = do
       noMatchToken = "zzzznotakeyword" :: Text.Text
 
   corpus <- replicateM 500 (Qc.generate (Qc.resize 15 (Qc.arbitrary @PostgresqlSyntax.PreparableStmt)))
-  let corpusTexts = map PostgresqlSyntax.toText corpus
+  let corpusTexts = map (PostgresqlSyntax.toText mempty) corpus
 
   defaultMain
     [ bgroup
@@ -120,5 +120,5 @@ main = do
         ],
       bgroup
         "full grammar on generated corpus (reference, shipped keyword only)"
-        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . PostgresqlSyntax.parse @PostgresqlSyntax.PreparableStmt)) corpusTexts]
+        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . PostgresqlSyntax.parse @PostgresqlSyntax.PreparableStmt mempty)) corpusTexts]
     ]

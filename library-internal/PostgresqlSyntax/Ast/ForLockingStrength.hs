@@ -22,12 +22,12 @@ data ForLockingStrength
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ForLockingStrength where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     UpdateForLockingStrength -> "FOR UPDATE"
     NoKeyUpdateForLockingStrength -> "FOR NO KEY UPDATE"
     ShareForLockingStrength -> "FOR SHARE"
     KeyForLockingStrength -> "FOR KEY SHARE"
-  parser =
+  parser settings =
     UpdateForLockingStrength
       <$ Parsers.keyphrase "for update"
         <|> NoKeyUpdateForLockingStrength

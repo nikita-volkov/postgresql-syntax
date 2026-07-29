@@ -24,15 +24,15 @@ data FuncApplication = FuncApplication FuncName (Maybe FuncApplicationParams)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncApplication where
-  toTextBuilder (FuncApplication a b) = toTextBuilder a <> "(" <> foldMap toTextBuilder b <> ")"
+  toTextBuilder settings (FuncApplication a b) = toTextBuilder settings a <> "(" <> foldMap (toTextBuilder settings) b <> ")"
 
   -- \"operator\" immediately followed by \"(\" is always parsed as the start
   -- of a qualified operator (@OPERATOR(...)@), never as a call to a function
   -- literally named \"operator\", mirroring how real PostgreSQL's grammar
   -- resolves the conflict between these two productions in favor of qual_op.
-  parser =
+  parser settings =
     Parsers.notFollowedBy (Parsers.keyword "operator" *> Parsers.space *> Parsers.char '(')
-      *> Parsers.inParensWithLabel FuncApplication parser (optional parser)
+      *> Parsers.inParensWithLabel FuncApplication (parser settings) (optional (parser settings))
 
 instance Qc.Arbitrary FuncApplication where
   shrink = Qc.genericShrink

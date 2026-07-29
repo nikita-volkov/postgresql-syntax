@@ -11,11 +11,11 @@ newtype CallStmt
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst CallStmt where
-  toTextBuilder (CallStmt a) = "CALL " <> toTextBuilder a
-  parser = do
+  toTextBuilder settings (CallStmt a) = "CALL " <> toTextBuilder settings a
+  parser settings = do
     Parsers.keyword "call"
     Parsers.space1
-    CallStmt <$> parser
+    CallStmt <$> parser settings
 
 instance Qc.Arbitrary CallStmt where
   shrink = Qc.genericShrink

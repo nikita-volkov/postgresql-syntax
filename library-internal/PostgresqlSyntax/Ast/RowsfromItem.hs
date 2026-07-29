@@ -23,16 +23,16 @@ data RowsfromItem = RowsfromItem FuncExprWindowless (Maybe TableFuncElementList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RowsfromItem where
-  toTextBuilder (RowsfromItem a b) = toTextBuilder a <> TextBuilders.suffixMaybe colDefList b
+  toTextBuilder settings (RowsfromItem a b) = toTextBuilder settings a <> TextBuilders.suffixMaybe colDefList b
     where
-      colDefList a' = "AS (" <> toTextBuilder a' <> ")"
-  parser = do
-    a <- parser
+      colDefList a' = "AS (" <> toTextBuilder settings a' <> ")"
+  parser settings = do
+    a <- parser settings
     Parser.endHead
     b <- optional (Parsers.space1 *> colDefList)
     return (RowsfromItem a b)
     where
-      colDefList = Parsers.keyword "as" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser)
+      colDefList = Parsers.keyword "as" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser settings)
 
 instance Qc.Arbitrary RowsfromItem where
   shrink = Qc.genericShrink

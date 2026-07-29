@@ -19,8 +19,8 @@ newtype ExprList = ExprList (NonEmpty AExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ExprList where
-  toTextBuilder (ExprList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = ExprList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (ExprList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = ExprList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary ExprList where
   shrink = Qc.genericShrink

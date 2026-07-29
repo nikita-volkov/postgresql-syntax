@@ -27,31 +27,31 @@ data InsertRest
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertRest where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     SelectInsertRest a b c ->
       TextBuilders.optLexemes
-        [ fmap (TextBuilders.renderInParens . toTextBuilder) a,
+        [ fmap (TextBuilders.renderInParens . toTextBuilder settings) a,
           fmap insertRestOverriding b,
-          Just (toTextBuilder c)
+          Just (toTextBuilder settings c)
         ]
     DefaultValuesInsertRest -> "DEFAULT VALUES"
     where
-      insertRestOverriding a = "OVERRIDING " <> toTextBuilder a <> " VALUE"
-  parser =
+      insertRestOverriding a = "OVERRIDING " <> toTextBuilder settings a <> " VALUE"
+  parser settings =
     asum
       [ DefaultValuesInsertRest <$ (Parsers.keyword "default" *> Parsers.space1 *> Parser.endHead *> Parsers.keyword "values"),
         do
-          a <- optional (Parsers.inParens parser <* Parsers.space1)
+          a <- optional (Parsers.inParens (parser settings) <* Parsers.space1)
           b <- optional $ do
             Parsers.keyword "overriding"
             Parsers.space1
             Parser.endHead
-            b <- parser
+            b <- parser settings
             Parsers.space1
             Parsers.keyword "value"
             Parsers.space1
             return b
-          c <- parser
+          c <- parser settings
           return (SelectInsertRest a b c)
       ]
 

@@ -23,24 +23,24 @@ data TablesampleClause = TablesampleClause FuncName ExprList (Maybe AExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TablesampleClause where
-  toTextBuilder (TablesampleClause a b c) =
-    "TABLESAMPLE " <> toTextBuilder a <> " (" <> toTextBuilder b <> ")" <> TextBuilders.suffixMaybe repeatableClause c
+  toTextBuilder settings (TablesampleClause a b c) =
+    "TABLESAMPLE " <> toTextBuilder settings a <> " (" <> toTextBuilder settings b <> ")" <> TextBuilders.suffixMaybe repeatableClause c
     where
-      repeatableClause a' = "REPEATABLE (" <> toTextBuilder a' <> ")"
-  parser = do
+      repeatableClause a' = "REPEATABLE (" <> toTextBuilder settings a' <> ")"
+  parser settings = do
     Parsers.keyword "tablesample"
     Parsers.space1
     Parser.endHead
-    a <- parser
+    a <- parser settings
     Parsers.space
-    b <- Parsers.inParens parser
+    b <- Parsers.inParens (parser settings)
     c <- optional (Parsers.space *> repeatableClause)
     return (TablesampleClause a b c)
     where
       repeatableClause = do
         Parsers.keyword "repeatable"
         Parsers.space
-        Parsers.inParens (Parser.endHead *> parser)
+        Parsers.inParens (Parser.endHead *> parser settings)
 
 instance Qc.Arbitrary TablesampleClause where
   shrink = Qc.genericShrink

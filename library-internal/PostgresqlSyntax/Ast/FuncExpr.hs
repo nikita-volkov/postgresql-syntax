@@ -30,27 +30,27 @@ data FuncExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncExpr where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     ApplicationFuncExpr a b c d ->
       TextBuilders.optLexemes
-        [ Just (toTextBuilder a),
+        [ Just (toTextBuilder settings a),
           fmap withinGroupClause b,
           fmap filterClause c,
-          fmap toTextBuilder d
+          fmap (toTextBuilder settings) d
         ]
-    SubexprFuncExpr a -> toTextBuilder a
+    SubexprFuncExpr a -> toTextBuilder settings a
     where
-      withinGroupClause a = "WITHIN GROUP (" <> toTextBuilder a <> ")"
-      filterClause a = "FILTER (WHERE " <> toTextBuilder a <> ")"
-  parser =
+      withinGroupClause a = "WITHIN GROUP (" <> toTextBuilder settings a <> ")"
+      filterClause a = "FILTER (WHERE " <> toTextBuilder settings a <> ")"
+  parser settings =
     asum
-      [ SubexprFuncExpr <$> parser,
+      [ SubexprFuncExpr <$> parser settings,
         do
-          a <- parser
+          a <- parser settings
           Parser.endHead
           b <- optional (Parsers.space1 *> withinGroupClause)
           c <- optional (Parsers.space1 *> filterClause)
-          d <- optional (Parsers.space1 *> parser)
+          d <- optional (Parsers.space1 *> parser settings)
           return (ApplicationFuncExpr a b c d)
       ]
     where
@@ -58,12 +58,12 @@ instance IsAst FuncExpr where
         Parsers.keyphrase "within group"
         Parser.endHead
         Parsers.space
-        Parsers.inParens parser
+        Parsers.inParens (parser settings)
       filterClause = do
         Parsers.keyword "filter"
         Parser.endHead
         Parsers.space
-        Parsers.inParens (Parsers.keyword "where" *> Parsers.space1 *> parser)
+        Parsers.inParens (Parsers.keyword "where" *> Parsers.space1 *> parser settings)
 
 instance Qc.Arbitrary FuncExpr where
   shrink = Qc.genericShrink

@@ -33,23 +33,23 @@ data JoinMeth
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst JoinMeth where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     CrossJoinMeth -> "CROSS JOIN"
-    QualJoinMeth a b -> TextBuilders.optLexemes [fmap toTextBuilder a, Just "JOIN", Just (toTextBuilder b)]
-    NaturalJoinMeth a -> TextBuilders.optLexemes [Just "NATURAL", fmap toTextBuilder a, Just "JOIN"]
-  parser =
+    QualJoinMeth a b -> TextBuilders.optLexemes [fmap (toTextBuilder settings) a, Just "JOIN", Just (toTextBuilder settings b)]
+    NaturalJoinMeth a -> TextBuilders.optLexemes [Just "NATURAL", fmap (toTextBuilder settings) a, Just "JOIN"]
+  parser settings =
     asum
       [ CrossJoinMeth <$ Parsers.keyphrase "cross join",
         do
-          a <- optional (parser <* Parsers.space1)
+          a <- optional (parser settings <* Parsers.space1)
           Parsers.keyword "join"
           Parsers.space1
-          b <- parser
+          b <- parser settings
           return (QualJoinMeth a b),
         do
           Parsers.keyword "natural"
           Parsers.space1
-          a <- optional (parser <* Parsers.space1)
+          a <- optional (parser settings <* Parsers.space1)
           Parsers.keyword "join"
           return (NaturalJoinMeth a)
       ]

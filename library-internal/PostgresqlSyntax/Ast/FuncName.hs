@@ -29,23 +29,23 @@ data FuncName
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncName where
-  toTextBuilder = \case
-    TypeFuncName a -> toTextBuilder a
-    IndirectedFuncName a b -> toTextBuilder a <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    TypeFuncName a -> toTextBuilder settings a
+    IndirectedFuncName a b -> toTextBuilder settings a <> toTextBuilder settings b
+  parser settings =
     IndirectedFuncName
       <$> Parser.wrapToHead colIdLikeName
-      <*> (Parsers.space *> parser)
+      <*> (Parsers.space *> parser settings)
         <|> TypeFuncName
       <$> typeFunctionNameLikeName
     where
       colIdLikeName =
         Parser.label "identifier" $
-          parser
+          parser settings
             <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
       typeFunctionNameLikeName =
         Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
-          <|> parser
+          <|> parser settings
 
 instance Qc.Arbitrary FuncName where
   shrink = Qc.genericShrink

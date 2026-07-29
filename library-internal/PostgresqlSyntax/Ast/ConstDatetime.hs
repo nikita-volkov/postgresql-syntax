@@ -23,30 +23,30 @@ data ConstDatetime
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ConstDatetime where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     TimestampConstDatetime a b ->
       TextBuilders.optLexemes
         [ Just "TIMESTAMP",
           fmap (TextBuilders.renderInParens . TextBuilder.int64Dec) a,
-          fmap toTextBuilder b
+          fmap (toTextBuilder settings) b
         ]
     TimeConstDatetime a b ->
       TextBuilders.optLexemes
         [ Just "TIME",
           fmap (TextBuilders.renderInParens . TextBuilder.int64Dec) a,
-          fmap toTextBuilder b
+          fmap (toTextBuilder settings) b
         ]
-  parser =
+  parser settings =
     asum
       [ do
           Parsers.keyword "timestamp"
           a <- optional (Parsers.space1 *> Parsers.inParens Parsers.decimal)
-          b <- optional (Parsers.space1 *> parser)
+          b <- optional (Parsers.space1 *> parser settings)
           return (TimestampConstDatetime a b),
         do
           Parsers.keyword "time"
           a <- optional (Parsers.space1 *> Parsers.inParens Parsers.decimal)
-          b <- optional (Parsers.space1 *> parser)
+          b <- optional (Parsers.space1 *> parser settings)
           return (TimeConstDatetime a b)
       ]
 

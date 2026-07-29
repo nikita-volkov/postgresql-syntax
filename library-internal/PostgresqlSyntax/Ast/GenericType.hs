@@ -30,15 +30,15 @@ data GenericType = GenericType Ident (Maybe Attrs) (Maybe ExprList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst GenericType where
-  toTextBuilder (GenericType a b c) = toTextBuilder a <> foldMap toTextBuilder b <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) c
-  parser = do
+  toTextBuilder settings (GenericType a b c) = toTextBuilder settings a <> foldMap (toTextBuilder settings) b <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder settings) c
+  parser settings = do
     a <- typeFunctionNameLikeName
     Parser.endHead
-    b <- optional (Parsers.space *> parser)
-    c <- optional (Parsers.space1 *> Parsers.inParens parser)
+    b <- optional (Parsers.space *> parser settings)
+    c <- optional (Parsers.space1 *> Parsers.inParens (parser settings))
     return (GenericType a b c)
     where
-      typeFunctionNameLikeName = Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser
+      typeFunctionNameLikeName = Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName <|> parser settings
 
 instance Qc.Arbitrary GenericType where
   shrink = Qc.genericShrink

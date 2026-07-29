@@ -27,18 +27,18 @@ data ForLockingItem = ForLockingItem ForLockingStrength (Maybe (NonEmpty Qualifi
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ForLockingItem where
-  toTextBuilder (ForLockingItem a b c) =
+  toTextBuilder settings (ForLockingItem a b c) =
     TextBuilders.optLexemes
-      [ Just (toTextBuilder a),
+      [ Just (toTextBuilder settings a),
         fmap lockedRelsList b,
         fmap nowaitOrSkip c
       ]
     where
-      lockedRelsList a' = "OF " <> TextBuilders.commaNonEmpty toTextBuilder a'
+      lockedRelsList a' = "OF " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a'
       nowaitOrSkip = bool "NOWAIT" "SKIP LOCKED"
-  parser = do
-    strength <- parser
-    rels <- optional $ Parsers.space1 *> Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.sep1 Parsers.commaSeparator parser
+  parser settings = do
+    strength <- parser settings
+    rels <- optional $ Parsers.space1 *> Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.sep1 Parsers.commaSeparator (parser settings)
     nowaitOrSkip <- optional (Parsers.space1 *> nowaitOrSkip)
     return (ForLockingItem strength rels nowaitOrSkip)
     where

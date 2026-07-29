@@ -3,6 +3,7 @@ module PostgresqlSyntax.Ast.AExpr where
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.IsAst (IsAst)
 import PostgresqlSyntax.Prelude (Bool, Data, Eq, Ord, Parser, Show, Text)
+import PostgresqlSyntax.Settings (Settings)
 import Test.QuickCheck (Arbitrary, Gen)
 
 data AExpr
@@ -23,7 +24,7 @@ instance Arbitrary AExpr
 -- accepted as a trailing bare column-reference identifier. Needed by
 -- "PostgresqlSyntax.Ast.SortBy", which must not let @a_expr@ swallow a
 -- keyword (@USING@\/@ASC@\/@DESC@\/@NULLS@) that is meant to terminate it.
-filteredParser :: [Text] -> Parser AExpr
+filteredParser :: Settings -> [Text] -> Parser AExpr
 
 -- | See "PostgresqlSyntax.Ast.AExpr" for the full documentation.
 isBoundedAExprOperand :: AExpr -> Bool

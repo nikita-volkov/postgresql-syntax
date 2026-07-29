@@ -25,29 +25,29 @@ data SortBy
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SortBy where
-  toTextBuilder = \case
-    UsingSortBy a b c -> toTextBuilder a <> " USING " <> toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
-    AscDescSortBy a b c -> toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b <> TextBuilders.suffixMaybe toTextBuilder c
-  parser = do
+  toTextBuilder settings = \case
+    UsingSortBy a b c -> toTextBuilder settings a <> " USING " <> toTextBuilder settings b <> TextBuilders.suffixMaybe (toTextBuilder settings) c
+    AscDescSortBy a b c -> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> TextBuilders.suffixMaybe (toTextBuilder settings) c
+  parser settings = do
     -- gram.y:14056 sortby. Of the four words that can terminate this
     -- a_expr, only NULLS is unreserved (kwlist.h:315) and therefore a
     -- legal ColId; USING/ASC/DESC are reserved (kwlist.h:496,47,138) and
     -- can never be absorbed. Postgres disambiguates NULLS with a
     -- two-token lexer lookahead (NULLS_LA, gram.y:864); this exclusion is
     -- the coarser recursive-descent equivalent.
-    a <- filteredParser ["nulls"]
+    a <- filteredParser settings ["nulls"]
     asum
       [ do
           Parsers.space1
           Parsers.keyword "using"
           Parsers.space1
           Parser.endHead
-          b <- parser
-          c <- optional (Parsers.space1 *> parser)
+          b <- parser settings
+          c <- optional (Parsers.space1 *> parser settings)
           return (UsingSortBy a b c),
         do
-          b <- optional (Parsers.space1 *> parser)
-          c <- optional (Parsers.space1 *> parser)
+          b <- optional (Parsers.space1 *> parser settings)
+          c <- optional (Parsers.space1 *> parser settings)
           return (AscDescSortBy a b c)
       ]
 

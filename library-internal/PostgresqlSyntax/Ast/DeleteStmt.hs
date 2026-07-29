@@ -28,31 +28,31 @@ data DeleteStmt = DeleteStmt (Maybe WithClause) RelationExprOptAlias (Maybe (Non
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst DeleteStmt where
-  toTextBuilder (DeleteStmt a b c d e) =
-    TextBuilders.prefixMaybe toTextBuilder a
+  toTextBuilder settings (DeleteStmt a b c d e) =
+    TextBuilders.prefixMaybe (toTextBuilder settings) a
       <> "DELETE FROM "
-      <> toTextBuilder b
+      <> toTextBuilder settings b
       <> TextBuilders.suffixMaybe usingClause c
-      <> TextBuilders.suffixMaybe toTextBuilder d
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) d
       <> TextBuilders.suffixMaybe returningClause e
     where
-      usingClause a' = "USING " <> TextBuilders.commaNonEmpty toTextBuilder a'
-      returningClause = mappend "RETURNING " . toTextBuilder
-  parser = do
-    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+      usingClause a' = "USING " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a'
+      returningClause = mappend "RETURNING " . toTextBuilder settings
+  parser settings = do
+    a <- optional (Parser.wrapToHead (parser settings) <* Parsers.space1)
     Parsers.keyword "delete"
     Parsers.space1
     Parser.endHead
     Parsers.keyword "from"
     Parsers.space1
-    b <- RelationExprOptAlias.customizedParser ["using", "where", "returning"]
+    b <- RelationExprOptAlias.customizedParser settings ["using", "where", "returning"]
     c <- optional (Parsers.space1 *> usingClause)
-    d <- optional (Parsers.space1 *> parser)
+    d <- optional (Parsers.space1 *> parser settings)
     e <- optional (Parsers.space1 *> returningClause)
     return (DeleteStmt a b c d e)
     where
-      usingClause = Parsers.keyword "using" *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser
-      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
+      usingClause = Parsers.keyword "using" *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator (parser settings)
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary DeleteStmt where
   shrink = Qc.genericShrink

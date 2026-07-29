@@ -24,17 +24,17 @@ data IndexElemDef
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IndexElemDef where
-  toTextBuilder = \case
-    IdIndexElemDef a -> toTextBuilder a
-    FuncIndexElemDef a -> toTextBuilder a
-    ExprIndexElemDef a -> TextBuilders.renderInParens (toTextBuilder a)
-  parser =
+  toTextBuilder settings = \case
+    IdIndexElemDef a -> toTextBuilder settings a
+    FuncIndexElemDef a -> toTextBuilder settings a
+    ExprIndexElemDef a -> TextBuilders.renderInParens (toTextBuilder settings a)
+  parser settings =
     ExprIndexElemDef
-      <$> Parsers.inParens parser
+      <$> Parsers.inParens (parser settings)
         <|> FuncIndexElemDef
-      <$> parser
+      <$> parser settings
         <|> IdIndexElemDef
-      <$> colId
+      <$> colId settings
 
 instance Qc.Arbitrary IndexElemDef where
   shrink = Qc.genericShrink

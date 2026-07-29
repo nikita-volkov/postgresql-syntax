@@ -20,10 +20,10 @@ data SelectStmt
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectStmt where
-  toTextBuilder = \case
-    NoParensSelectStmt a -> toTextBuilder a
-    WithParensSelectStmt a -> toTextBuilder a
-  parser = NoParensSelectStmt <$> parser <|> WithParensSelectStmt <$> parser
+  toTextBuilder settings = \case
+    NoParensSelectStmt a -> toTextBuilder settings a
+    WithParensSelectStmt a -> toTextBuilder settings a
+  parser settings = NoParensSelectStmt <$> parser settings <|> WithParensSelectStmt <$> parser settings
 
 instance Qc.Arbitrary SelectStmt where
   shrink = Qc.genericShrink

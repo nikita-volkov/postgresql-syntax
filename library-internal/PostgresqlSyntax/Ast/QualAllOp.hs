@@ -21,13 +21,13 @@ data QualAllOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst QualAllOp where
-  toTextBuilder = \case
-    AllQualAllOp a -> toTextBuilder a
-    AnyQualAllOp a -> "OPERATOR (" <> toTextBuilder a <> ")"
-  parser =
+  toTextBuilder settings = \case
+    AllQualAllOp a -> toTextBuilder settings a
+    AnyQualAllOp a -> "OPERATOR (" <> toTextBuilder settings a <> ")"
+  parser settings =
     asum
-      [ AnyQualAllOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser)),
-        AllQualAllOp <$> parser
+      [ AnyQualAllOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parsers.inParens (Parser.endHead *> parser settings)),
+        AllQualAllOp <$> parser settings
       ]
 
 instance Qc.Arbitrary QualAllOp where

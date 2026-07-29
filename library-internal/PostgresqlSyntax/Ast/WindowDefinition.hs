@@ -18,8 +18,8 @@ data WindowDefinition = WindowDefinition Ident WindowSpecification
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WindowDefinition where
-  toTextBuilder (WindowDefinition a b) = toTextBuilder a <> " AS " <> toTextBuilder b
-  parser = WindowDefinition <$> (colId <* Parsers.space1 <* Parsers.keyword "as" <* Parsers.space1 <* Parser.endHead) <*> parser
+  toTextBuilder settings (WindowDefinition a b) = toTextBuilder settings a <> " AS " <> toTextBuilder settings b
+  parser settings = WindowDefinition <$> (colId settings <* Parsers.space1 <* Parsers.keyword "as" <* Parsers.space1 <* Parser.endHead) <*> parser settings
 
 instance Qc.Arbitrary WindowDefinition where
   shrink = Qc.genericShrink

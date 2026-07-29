@@ -28,19 +28,19 @@ data PreparableStmt
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst PreparableStmt where
-  toTextBuilder = \case
-    SelectPreparableStmt a -> toTextBuilder a
-    InsertPreparableStmt a -> toTextBuilder a
-    UpdatePreparableStmt a -> toTextBuilder a
-    DeletePreparableStmt a -> toTextBuilder a
-    CallPreparableStmt a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    SelectPreparableStmt a -> toTextBuilder settings a
+    InsertPreparableStmt a -> toTextBuilder settings a
+    UpdatePreparableStmt a -> toTextBuilder settings a
+    DeletePreparableStmt a -> toTextBuilder settings a
+    CallPreparableStmt a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ SelectPreparableStmt <$> parser,
-        InsertPreparableStmt <$> parser,
-        UpdatePreparableStmt <$> parser,
-        DeletePreparableStmt <$> parser,
-        CallPreparableStmt <$> parser
+      [ SelectPreparableStmt <$> parser settings,
+        InsertPreparableStmt <$> parser settings,
+        UpdatePreparableStmt <$> parser settings,
+        DeletePreparableStmt <$> parser settings,
+        CallPreparableStmt <$> parser settings
       ]
 
 instance Qc.Arbitrary PreparableStmt where

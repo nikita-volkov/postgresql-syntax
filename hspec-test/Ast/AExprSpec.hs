@@ -26,6 +26,6 @@ spec = do
     itParsesWithin @AExpr 5 coalesceSumInput
     it "OVERLAPS still parses" $ do
       let render :: AExpr -> Text
-          render = toText
-      fmap render (parse @AExpr "(1, 2) overlaps (3, 4)") `shouldBe` Right "(1, 2) OVERLAPS (3, 4)"
-      fmap render (parse @AExpr "row(1, 2) overlaps row(3, 4)") `shouldBe` Right "ROW (1, 2) OVERLAPS ROW (3, 4)"
+          render = toText mempty
+      fmap render (parse @AExpr mempty "(1, 2) overlaps (3, 4)") `shouldBe` Right "(1, 2) OVERLAPS (3, 4)"
+      fmap render (parse @AExpr mempty "row(1, 2) overlaps row(3, 4)") `shouldBe` Right "ROW (1, 2) OVERLAPS ROW (3, 4)"

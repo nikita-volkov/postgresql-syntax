@@ -19,8 +19,8 @@ data ExtractList = ExtractList ExtractArg AExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ExtractList where
-  toTextBuilder (ExtractList a b) = toTextBuilder a <> " FROM " <> toTextBuilder b
-  parser = ExtractList <$> parser <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> parser)
+  toTextBuilder settings (ExtractList a b) = toTextBuilder settings a <> " FROM " <> toTextBuilder settings b
+  parser settings = ExtractList <$> parser settings <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> parser settings)
 
 instance Qc.Arbitrary ExtractList where
   shrink = Qc.genericShrink

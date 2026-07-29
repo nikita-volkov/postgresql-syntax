@@ -27,21 +27,21 @@ data Character
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Character where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     CharacterCharacter a -> "CHARACTER" <> bool "" " VARYING" (coerce a :: Bool)
     CharCharacter a -> "CHAR" <> bool "" " VARYING" (coerce a :: Bool)
     VarcharCharacter -> "VARCHAR"
     NationalCharacterCharacter a -> "NATIONAL CHARACTER" <> bool "" " VARYING" (coerce a :: Bool)
     NationalCharCharacter a -> "NATIONAL CHAR" <> bool "" " VARYING" (coerce a :: Bool)
     NcharCharacter a -> "NCHAR" <> bool "" " VARYING" (coerce a :: Bool)
-  parser =
+  parser settings =
     asum
-      [ CharacterCharacter <$> (Parsers.keyword "character" *> parser),
-        CharCharacter <$> (Parsers.keyword "char" *> parser),
+      [ CharacterCharacter <$> (Parsers.keyword "character" *> parser settings),
+        CharCharacter <$> (Parsers.keyword "char" *> parser settings),
         VarcharCharacter <$ Parsers.keyword "varchar",
-        NationalCharacterCharacter <$> (Parsers.keyphrase "national character" *> parser),
-        NationalCharCharacter <$> (Parsers.keyphrase "national char" *> parser),
-        NcharCharacter <$> (Parsers.keyword "nchar" *> parser)
+        NationalCharacterCharacter <$> (Parsers.keyphrase "national character" *> parser settings),
+        NationalCharCharacter <$> (Parsers.keyphrase "national char" *> parser settings),
+        NcharCharacter <$> (Parsers.keyword "nchar" *> parser settings)
       ]
 
 instance Qc.Arbitrary Character where

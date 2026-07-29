@@ -19,8 +19,8 @@ newtype TableFuncElementList = TableFuncElementList (NonEmpty TableFuncElement)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TableFuncElementList where
-  toTextBuilder (TableFuncElementList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = TableFuncElementList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (TableFuncElementList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = TableFuncElementList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary TableFuncElementList where
   shrink = Qc.genericShrink

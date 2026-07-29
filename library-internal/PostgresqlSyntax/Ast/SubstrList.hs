@@ -27,13 +27,13 @@ data SubstrList
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SubstrList where
-  toTextBuilder = \case
-    ExprSubstrList a b -> toTextBuilder a <> " " <> toTextBuilder b
-    ExprListSubstrList a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    ExprSubstrList a b -> toTextBuilder settings a <> " " <> toTextBuilder settings b
+    ExprListSubstrList a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ ExprSubstrList <$> Parser.wrapToHead parser <*> (Parsers.space1 *> parser),
-        ExprListSubstrList <$> parser
+      [ ExprSubstrList <$> Parser.wrapToHead (parser settings) <*> (Parsers.space1 *> parser settings),
+        ExprListSubstrList <$> parser settings
       ]
 
 instance Qc.Arbitrary SubstrList where

@@ -18,8 +18,8 @@ newtype Bconst = Bconst Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Bconst where
-  toTextBuilder (Bconst a) = "B'" <> TextBuilder.text a <> "'"
-  parser = Parser.label "bit literal" $ do
+  toTextBuilder settings (Bconst a) = "B'" <> TextBuilder.text a <> "'"
+  parser settings = Parser.label "bit literal" $ do
     Parsers.string' "b'"
     Parser.endHead
     a <- Parsers.takeWhile1P (Just "0 or 1") (\b -> b == '0' || b == '1')

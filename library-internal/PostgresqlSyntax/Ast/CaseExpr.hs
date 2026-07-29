@@ -20,22 +20,22 @@ data CaseExpr = CaseExpr (Maybe AExpr) WhenClauseList (Maybe AExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst CaseExpr where
-  toTextBuilder (CaseExpr a b c) =
+  toTextBuilder settings (CaseExpr a b c) =
     TextBuilders.optLexemes
       [ Just "CASE",
-        fmap toTextBuilder a,
-        Just (toTextBuilder b),
+        fmap (toTextBuilder settings) a,
+        Just (toTextBuilder settings b),
         fmap caseDefault c,
         Just "END"
       ]
     where
-      caseDefault d = "ELSE " <> toTextBuilder d
-  parser = Parser.label "case expression" $ do
+      caseDefault d = "ELSE " <> toTextBuilder settings d
+  parser settings = Parser.label "case expression" $ do
     Parsers.keyword "case"
     Parsers.space1
     Parser.endHead
-    arg <- optional (parser <* Parsers.space1)
-    whenClauses <- parser
+    arg <- optional (parser settings <* Parsers.space1)
+    whenClauses <- parser settings
     Parsers.space1
     default' <- optional elseClause
     Parsers.keyword "end"
@@ -45,7 +45,7 @@ instance IsAst CaseExpr where
         Parsers.keyword "else"
         Parsers.space1
         Parser.endHead
-        a <- parser
+        a <- parser settings
         Parsers.space1
         return a
 

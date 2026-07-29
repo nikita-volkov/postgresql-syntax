@@ -32,13 +32,13 @@ newtype Attrs = Attrs (NonEmpty Ident)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Attrs where
-  toTextBuilder (Attrs a) = foldMap (mappend "." . toTextBuilder) a
-  parser = Attrs <$> some (Parsers.char '.' *> Parser.endHead *> Parsers.space *> colLabelLikeName)
+  toTextBuilder settings (Attrs a) = foldMap (mappend "." . toTextBuilder settings) a
+  parser settings = Attrs <$> some (Parsers.char '.' *> Parser.endHead *> Parsers.space *> colLabelLikeName)
     where
       colLabelLikeName =
         Parser.label "column label" $
           Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
-            <|> parser
+            <|> parser settings
 
 instance Qc.Arbitrary Attrs where
   shrink = Qc.genericShrink

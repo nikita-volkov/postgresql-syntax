@@ -9,6 +9,7 @@ import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 import qualified TextBuilder
 
@@ -21,10 +22,10 @@ data Ident = QuotedIdent Text | UnquotedIdent Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Ident where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     QuotedIdent a -> TextBuilder.char7 '"' <> TextBuilder.text (Text.replace "\"" "\"\"" a) <> TextBuilder.char7 '"'
     UnquotedIdent a -> TextBuilder.text a
-  parser = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
+  parser settings = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
     where
       quotedName = Parser.filter (const "Empty name") (not . Text.null) (Parsers.quotedString '"') & fmap QuotedIdent
 
@@ -42,10 +43,10 @@ instance IsAst Ident where
 -- permissive variant that most 'Ident'-typed fields elsewhere in
 -- "PostgresqlSyntax.Ast" should parse with, since 'Ident'\'s own generic
 -- 'parser' only accepts the strict @IDENT@ token (no Parsers.keyword fallback).
-colId :: Parser Ident
-colId =
+colId :: Settings -> Parser Ident
+colId settings =
   Parser.label "identifier" $
-    parser
+    parser settings
       <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 -- |
@@ -58,11 +59,11 @@ colId =
 --   |  type_func_name_keyword
 --   |  reserved_keyword
 -- @
-colLabel :: Parser Ident
-colLabel =
+colLabel :: Settings -> Parser Ident
+colLabel settings =
   Parser.label "column label" $
     Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
-      <|> parser
+      <|> parser settings
 
 -- |
 -- ==== References
@@ -72,10 +73,10 @@ colLabel =
 --   | unreserved_keyword
 --   | type_func_name_keyword
 -- @
-typeFunctionName :: Parser Ident
-typeFunctionName =
+typeFunctionName :: Settings -> Parser Ident
+typeFunctionName settings =
   Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
-    <|> parser
+    <|> parser settings
 
 instance Qc.Arbitrary Ident where
   shrink = \case

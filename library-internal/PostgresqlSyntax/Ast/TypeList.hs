@@ -19,8 +19,8 @@ newtype TypeList = TypeList (NonEmpty Typename)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TypeList where
-  toTextBuilder (TypeList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = TypeList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (TypeList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = TypeList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary TypeList where
   shrink = Qc.genericShrink

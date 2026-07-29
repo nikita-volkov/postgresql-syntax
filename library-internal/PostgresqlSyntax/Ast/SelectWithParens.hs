@@ -26,10 +26,10 @@ data SelectWithParens
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectWithParens where
-  toTextBuilder =
+  toTextBuilder settings =
     TextBuilders.renderInParens . \case
-      NoParensSelectWithParens a -> toTextBuilder a
-      WithParensSelectWithParens a -> toTextBuilder a
+      NoParensSelectWithParens a -> toTextBuilder settings a
+      WithParensSelectWithParens a -> toTextBuilder settings a
 
   -- @gram.y@ gives two productions, @'(' select_with_parens ')'@ and
   -- @'(' select_no_parens ')'@, and they overlap: a @select_no_parens@ may
@@ -47,14 +47,14 @@ instance IsAst SelectWithParens where
   -- parenthesised select, or @NoParensSelectWithParens@ of a
   -- @SelectNoParens@ whose clause is that same inner parenthesised select.
   -- Both render back to the same text. __The first is canonical.__
-  parser = Parsers.inParens selectWithParensBody
+  parser settings = Parsers.inParens selectWithParensBody
     where
       selectWithParensBody =
         asum
           [ do
-              a <- Parser.wrapToHead parser
-              either WithParensSelectWithParens NoParensSelectWithParens <$> afterSelectWithParensClause a,
-            NoParensSelectWithParens <$> unparenthesizedSelectNoParens
+              a <- Parser.wrapToHead (parser settings)
+              either WithParensSelectWithParens NoParensSelectWithParens <$> afterSelectWithParensClause settings a,
+            NoParensSelectWithParens <$> unparenthesizedSelectNoParens settings
           ]
 
 instance Qc.Arbitrary SelectWithParens where

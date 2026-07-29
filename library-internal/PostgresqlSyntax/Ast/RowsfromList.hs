@@ -19,8 +19,8 @@ newtype RowsfromList = RowsfromList (NonEmpty RowsfromItem)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RowsfromList where
-  toTextBuilder (RowsfromList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = RowsfromList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (RowsfromList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = RowsfromList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary RowsfromList where
   shrink = Qc.genericShrink

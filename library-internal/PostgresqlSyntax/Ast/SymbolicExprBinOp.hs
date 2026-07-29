@@ -12,14 +12,14 @@ data SymbolicExprBinOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SymbolicExprBinOp where
-  toTextBuilder = \case
-    MathSymbolicExprBinOp a -> toTextBuilder a
-    QualSymbolicExprBinOp a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    MathSymbolicExprBinOp a -> toTextBuilder settings a
+    QualSymbolicExprBinOp a -> toTextBuilder settings a
+  parser settings =
     QualSymbolicExprBinOp
-      <$> parser
+      <$> parser settings
         <|> MathSymbolicExprBinOp
-      <$> parser
+      <$> parser settings
 
 instance Qc.Arbitrary SymbolicExprBinOp where
   shrink = Qc.genericShrink

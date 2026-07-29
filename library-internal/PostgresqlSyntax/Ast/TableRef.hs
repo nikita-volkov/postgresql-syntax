@@ -68,41 +68,41 @@ data TableRef
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TableRef where
-  toTextBuilder = renderTableRef
+  toTextBuilder settings = renderTableRef
     where
       renderTableRef = \case
         RelationExprTableRef a b c ->
           TextBuilders.optLexemes
-            [ Just (toTextBuilder a),
-              fmap toTextBuilder b,
-              fmap toTextBuilder c
+            [ Just (toTextBuilder settings a),
+              fmap (toTextBuilder settings) b,
+              fmap (toTextBuilder settings) c
             ]
         FuncTableRef a b c ->
           TextBuilders.optLexemes
             [ if a then Just "LATERAL" else Nothing,
-              Just (toTextBuilder b),
-              fmap toTextBuilder c
+              Just (toTextBuilder settings b),
+              fmap (toTextBuilder settings) c
             ]
         SelectTableRef a b c ->
           TextBuilders.optLexemes
             [ if a then Just "LATERAL" else Nothing,
-              Just (toTextBuilder b),
-              fmap toTextBuilder c
+              Just (toTextBuilder settings b),
+              fmap (toTextBuilder settings) c
             ]
         JoinTableRef a b -> case b of
-          Just c -> TextBuilders.renderInParens (renderJoinedTable a) <> " " <> toTextBuilder c
+          Just c -> TextBuilders.renderInParens (renderJoinedTable a) <> " " <> toTextBuilder settings c
           Nothing -> renderJoinedTable a
       renderJoinedTable = \case
         InParensJoinedTable a -> TextBuilders.renderInParens (renderJoinedTable a)
         MethJoinedTable a b c -> case a of
           CrossJoinMeth -> renderTableRef b <> " CROSS JOIN " <> renderTableRef c
-          QualJoinMeth d e -> renderTableRef b <> TextBuilders.suffixMaybe toTextBuilder d <> " JOIN " <> renderTableRef c <> " " <> toTextBuilder e
-          NaturalJoinMeth d -> renderTableRef b <> " NATURAL" <> TextBuilders.suffixMaybe toTextBuilder d <> " JOIN " <> renderTableRef c
+          QualJoinMeth d e -> renderTableRef b <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> renderTableRef c <> " " <> toTextBuilder settings e
+          NaturalJoinMeth d -> renderTableRef b <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> renderTableRef c
 
   --
   -- >>> testParser tableRef "a left join b on (a.i = b.i)"
   -- JoinTableRef (MethJoinedTable (QualJoinMeth...
-  parser =
+  parser settings =
     Parser.label "table reference" $
       do
         tr <- nonTrailingTableRef
@@ -121,10 +121,10 @@ instance IsAst TableRef where
           [lateralTableRef <|> Parser.wrapToHead nonLateralTableRef <|> relationExprTableRef <|> joinedTableWithAliasTableRef <|> inParensJoinedTableTableRef]
         where
           relationExprTableRef = do
-            relationExpr <- parser
+            relationExpr <- parser settings
             Parser.endHead
-            optAliasClause <- optional (Parsers.space1 *> parser)
-            optTablesampleClause <- optional (Parsers.space1 *> parser)
+            optAliasClause <- optional (Parsers.space1 *> parser settings)
+            optTablesampleClause <- optional (Parsers.space1 *> parser settings)
             return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
           lateralTableRef = do
             Parsers.keyword "lateral"
@@ -135,19 +135,19 @@ instance IsAst TableRef where
           lateralableTableRef lateral =
             asum
               [ do
-                  a <- parser
-                  b <- optional (Parsers.space1 *> parser)
+                  a <- parser settings
+                  b <- optional (Parsers.space1 *> parser settings)
                   return (FuncTableRef lateral a b),
                 do
-                  select <- parser
-                  optAliasClause <- optional $ Parsers.space1 *> parser
+                  select <- parser settings
+                  optAliasClause <- optional $ Parsers.space1 *> parser settings
                   return (SelectTableRef lateral select optAliasClause)
               ]
           inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable <*> pure Nothing
           joinedTableWithAliasTableRef = do
             joinedTable <- Parser.wrapToHead (Parsers.inParens joinedTable)
             Parsers.space1
-            alias <- parser
+            alias <- parser settings
             return (JoinTableRef joinedTable (Just alias))
       trailingTableRef tableRef =
         JoinTableRef <$> trailingJoinedTable tableRef <*> pure Nothing
@@ -197,9 +197,9 @@ instance IsAst TableRef where
               jt <- joinTypedJoin
               Parser.endHead
               Parsers.space1
-              tr2 <- parser
+              tr2 <- parser settings
               Parsers.space1
-              jq <- parser
+              jq <- parser settings
               return (MethJoinedTable (QualJoinMeth jt jq) tr1 tr2),
             do
               Parsers.keyword "natural"
@@ -213,7 +213,7 @@ instance IsAst TableRef where
         where
           joinTypedJoin =
             Just
-              <$> (parser <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
+              <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
                 <|> Nothing
               <$ Parsers.keyword "join"
 

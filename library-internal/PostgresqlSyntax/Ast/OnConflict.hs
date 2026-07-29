@@ -22,17 +22,17 @@ data OnConflict = OnConflict (Maybe ConfExpr) OnConflictDo
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OnConflict where
-  toTextBuilder (OnConflict a b) = "ON CONFLICT" <> TextBuilders.suffixMaybe toTextBuilder a <> " DO " <> toTextBuilder b
-  parser = do
+  toTextBuilder settings (OnConflict a b) = "ON CONFLICT" <> TextBuilders.suffixMaybe (toTextBuilder settings) a <> " DO " <> toTextBuilder settings b
+  parser settings = do
     Parsers.keyword "on"
     Parsers.space1
     Parsers.keyword "conflict"
     Parsers.space1
     Parser.endHead
-    a <- optional (parser <* Parsers.space1)
+    a <- optional (parser settings <* Parsers.space1)
     Parsers.keyword "do"
     Parsers.space1
-    b <- parser
+    b <- parser settings
     return (OnConflict a b)
 
 instance Qc.Arbitrary OnConflict where

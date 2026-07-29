@@ -19,13 +19,13 @@ data AllOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AllOp where
-  toTextBuilder = \case
-    OpAllOp a -> toTextBuilder a
-    MathAllOp a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    OpAllOp a -> toTextBuilder settings a
+    MathAllOp a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ OpAllOp <$> parser,
-        MathAllOp <$> parser
+      [ OpAllOp <$> parser settings,
+        MathAllOp <$> parser settings
       ]
 
 instance Qc.Arbitrary AllOp where

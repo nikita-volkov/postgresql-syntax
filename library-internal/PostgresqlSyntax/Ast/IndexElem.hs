@@ -27,23 +27,23 @@ data IndexElem = IndexElem IndexElemDef (Maybe AnyName) (Maybe AnyName) (Maybe A
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IndexElem where
-  toTextBuilder (IndexElem a b c d e) =
-    toTextBuilder a
+  toTextBuilder settings (IndexElem a b c d e) =
+    toTextBuilder settings a
       <> TextBuilders.suffixMaybe collate b
-      <> TextBuilders.suffixMaybe toTextBuilder c
-      <> TextBuilders.suffixMaybe toTextBuilder d
-      <> TextBuilders.suffixMaybe toTextBuilder e
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) c
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) d
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) e
     where
-      collate = mappend "COLLATE " . toTextBuilder
-  parser =
+      collate = mappend "COLLATE " . toTextBuilder settings
+  parser settings =
     IndexElem
-      <$> (parser <* Parser.endHead)
+      <$> (parser settings <* Parser.endHead)
       <*> optional (Parsers.space1 *> collate)
       <*> optional (Parsers.space1 *> class_)
-      <*> optional (Parsers.space1 *> parser)
-      <*> optional (Parsers.space1 *> parser)
+      <*> optional (Parsers.space1 *> parser settings)
+      <*> optional (Parsers.space1 *> parser settings)
     where
-      collate = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser
+      collate = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser settings
 
       -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
       -- opt_nulls_order (index_elem_options inlines opt_qualified_name at
@@ -51,7 +51,7 @@ instance IsAst IndexElem where
       -- ColId, so of the words that can terminate it only the unreserved
       -- NULLS (kwlist.h:315) is a genuine hazard — ASC/DESC are reserved
       -- (kwlist.h:47,138) and were never candidates.
-      class_ = filteredParser ["nulls"]
+      class_ = filteredParser settings ["nulls"]
 
 instance Qc.Arbitrary IndexElem where
   shrink = Qc.genericShrink

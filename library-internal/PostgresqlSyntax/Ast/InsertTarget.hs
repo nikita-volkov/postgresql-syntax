@@ -19,11 +19,11 @@ data InsertTarget = InsertTarget QualifiedName (Maybe Ident)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertTarget where
-  toTextBuilder (InsertTarget a b) = toTextBuilder a <> foldMap (mappend " AS " . toTextBuilder) b
-  parser = do
-    a <- parser
+  toTextBuilder settings (InsertTarget a b) = toTextBuilder settings a <> foldMap (mappend " AS " . toTextBuilder settings) b
+  parser settings = do
+    a <- parser settings
     Parser.endHead
-    b <- optional (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colId)
+    b <- optional (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colId settings)
     return (InsertTarget a b)
 
 instance Qc.Arbitrary InsertTarget where

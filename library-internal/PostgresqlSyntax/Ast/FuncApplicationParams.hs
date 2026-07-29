@@ -29,22 +29,22 @@ data FuncApplicationParams
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncApplicationParams where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     NormalFuncApplicationParams a b c ->
       TextBuilders.optLexemes
         [ fmap TextBuilders.renderAllOrDistinct a,
-          Just (TextBuilders.commaNonEmpty toTextBuilder b),
-          fmap toTextBuilder c
+          Just (TextBuilders.commaNonEmpty (toTextBuilder settings) b),
+          fmap (toTextBuilder settings) c
         ]
     VariadicFuncApplicationParams a b c ->
       TextBuilders.optLexemes
-        [ fmap (flip mappend "," . TextBuilders.commaNonEmpty toTextBuilder) a,
+        [ fmap (flip mappend "," . TextBuilders.commaNonEmpty (toTextBuilder settings)) a,
           Just "VARIADIC",
-          Just (toTextBuilder b),
-          fmap toTextBuilder c
+          Just (toTextBuilder settings b),
+          fmap (toTextBuilder settings) c
         ]
     StarFuncApplicationParams -> "*"
-  parser =
+  parser settings =
     asum
       [ starFuncApplicationParams,
         listVariadicFuncApplicationParams,
@@ -54,16 +54,16 @@ instance IsAst FuncApplicationParams where
     where
       normalFuncApplicationParams = do
         optAllOrDistinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
-        argList <- Parsers.sep1 Parsers.commaSeparator parser
+        argList <- Parsers.sep1 Parsers.commaSeparator (parser settings)
         Parser.endHead
-        optSortClause <- optional (Parsers.space1 *> parser)
+        optSortClause <- optional (Parsers.space1 *> parser settings)
         return (NormalFuncApplicationParams optAllOrDistinct argList optSortClause)
       singleVariadicFuncApplicationParams = do
         Parsers.keyword "variadic"
         Parsers.space1
         Parser.endHead
-        arg <- parser
-        optSortClause <- optional (Parsers.space1 *> parser)
+        arg <- parser settings
+        optSortClause <- optional (Parsers.space1 *> parser settings)
         return (VariadicFuncApplicationParams Nothing arg optSortClause)
 
       -- @func_arg_list ',' VARIADIC func_arg_expr@: one or more
@@ -74,11 +74,11 @@ instance IsAst FuncApplicationParams where
       listVariadicFuncApplicationParams = do
         argList <- Parser.wrapToHead argListEndingInVariadic
         Parser.endHead
-        arg <- parser
-        optSortClause <- optional (Parsers.space1 *> parser)
+        arg <- parser settings
+        optSortClause <- optional (Parsers.space1 *> parser settings)
         return (VariadicFuncApplicationParams (Just argList) arg optSortClause)
       argListEndingInVariadic = do
-        a <- parser
+        a <- parser settings
         Parsers.commaSeparator
         asum
           [ pure (a :| []) <* (Parsers.keyword "variadic" *> Parsers.space1),

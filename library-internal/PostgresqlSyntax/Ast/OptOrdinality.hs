@@ -16,8 +16,8 @@ newtype OptOrdinality = OptOrdinality Bool
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OptOrdinality where
-  toTextBuilder (OptOrdinality a) = if a then "WITH ORDINALITY" else mempty
-  parser = OptOrdinality <$> Parsers.trueIfPresent (Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
+  toTextBuilder settings (OptOrdinality a) = if a then "WITH ORDINALITY" else mempty
+  parser settings = OptOrdinality <$> Parsers.trueIfPresent (Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
 
 instance Qc.Arbitrary OptOrdinality where
   shrink = Qc.genericShrink

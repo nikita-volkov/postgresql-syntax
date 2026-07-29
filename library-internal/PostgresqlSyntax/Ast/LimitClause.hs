@@ -34,28 +34,28 @@ data LimitClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst LimitClause where
-  toTextBuilder = \case
-    LimitLimitClause a b -> "LIMIT " <> toTextBuilder a <> foldMap (mappend ", " . toTextBuilder) b
+  toTextBuilder settings = \case
+    LimitLimitClause a b -> "LIMIT " <> toTextBuilder settings a <> foldMap (mappend ", " . toTextBuilder settings) b
     FetchOnlyLimitClause a b c ->
       TextBuilders.optLexemes
         [ Just "FETCH",
           Just (firstOrNext a),
-          fmap toTextBuilder b,
+          fmap (toTextBuilder settings) b,
           Just (rowOrRows c),
           Just "ONLY"
         ]
     where
       firstOrNext = bool "FIRST" "NEXT"
       rowOrRows = bool "ROW" "ROWS"
-  parser =
+  parser settings =
     ( do
         Parsers.keyword "limit"
         Parser.endHead
         Parsers.space1
-        a <- parser
+        a <- parser settings
         b <- optional $ do
           Parsers.commaSeparator
-          parser
+          parser settings
         return (LimitLimitClause a b)
     )
       <|> ( do
@@ -71,7 +71,7 @@ instance IsAst LimitClause where
                     Parsers.keyword "only"
                     return (FetchOnlyLimitClause a Nothing b),
                   do
-                    b <- parser
+                    b <- parser settings
                     Parsers.space1
                     c <- rowOrRows
                     Parsers.space1

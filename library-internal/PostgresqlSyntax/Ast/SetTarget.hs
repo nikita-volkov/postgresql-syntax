@@ -20,11 +20,11 @@ data SetTarget = SetTarget Ident (Maybe Indirection)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetTarget where
-  toTextBuilder (SetTarget a b) = toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
-  parser = do
-    a <- colId
+  toTextBuilder settings (SetTarget a b) = toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b
+  parser settings = do
+    a <- colId settings
     Parser.endHead
-    b <- optional (Parsers.space1 *> parser)
+    b <- optional (Parsers.space1 *> parser settings)
     return (SetTarget a b)
 
 instance Qc.Arbitrary SetTarget where

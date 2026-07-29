@@ -20,8 +20,8 @@ newtype ArrayBounds = ArrayBounds (NonEmpty (Maybe Iconst))
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ArrayBounds where
-  toTextBuilder (ArrayBounds a) = TextBuilders.spaceNonEmpty (TextBuilders.renderInBrackets . foldMap toTextBuilder) a
-  parser = ArrayBounds <$> Parsers.sep1 Parsers.space (Parsers.inBrackets (optional parser))
+  toTextBuilder settings (ArrayBounds a) = TextBuilders.spaceNonEmpty (TextBuilders.renderInBrackets . foldMap (toTextBuilder settings)) a
+  parser settings = ArrayBounds <$> Parsers.sep1 Parsers.space (Parsers.inBrackets (optional (parser settings)))
 
 instance Qc.Arbitrary ArrayBounds where
   shrink = Qc.genericShrink

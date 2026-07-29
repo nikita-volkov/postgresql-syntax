@@ -16,11 +16,11 @@ data TrimModifier = BothTrimModifier | LeadingTrimModifier | TrailingTrimModifie
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst TrimModifier where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     BothTrimModifier -> "BOTH"
     LeadingTrimModifier -> "LEADING"
     TrailingTrimModifier -> "TRAILING"
-  parser =
+  parser settings =
     BothTrimModifier
       <$ Parsers.keyword "both"
         <|> LeadingTrimModifier

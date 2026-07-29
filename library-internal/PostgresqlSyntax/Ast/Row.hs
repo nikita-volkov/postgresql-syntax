@@ -20,10 +20,10 @@ data Row
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Row where
-  toTextBuilder = \case
-    ExplicitRowRow a -> toTextBuilder a
-    ImplicitRowRow a -> toTextBuilder a
-  parser = ExplicitRowRow <$> parser <|> ImplicitRowRow <$> parser
+  toTextBuilder settings = \case
+    ExplicitRowRow a -> toTextBuilder settings a
+    ImplicitRowRow a -> toTextBuilder settings a
+  parser settings = ExplicitRowRow <$> parser settings <|> ImplicitRowRow <$> parser settings
 
 instance Qc.Arbitrary Row where
   shrink = Qc.genericShrink

@@ -19,8 +19,8 @@ newtype WhenClauseList = WhenClauseList (NonEmpty WhenClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WhenClauseList where
-  toTextBuilder (WhenClauseList a) = TextBuilders.spaceNonEmpty toTextBuilder a
-  parser = WhenClauseList <$> Parsers.sep1 Parsers.space1 parser
+  toTextBuilder settings (WhenClauseList a) = TextBuilders.spaceNonEmpty (toTextBuilder settings) a
+  parser settings = WhenClauseList <$> Parsers.sep1 Parsers.space1 (parser settings)
 
 instance Qc.Arbitrary WhenClauseList where
   shrink = Qc.genericShrink

@@ -18,15 +18,15 @@ data FrameExtent = SingularFrameExtent FrameBound | BetweenFrameExtent FrameBoun
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FrameExtent where
-  toTextBuilder = \case
-    SingularFrameExtent a -> toTextBuilder a
-    BetweenFrameExtent a b -> "BETWEEN " <> toTextBuilder a <> " AND " <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    SingularFrameExtent a -> toTextBuilder settings a
+    BetweenFrameExtent a b -> "BETWEEN " <> toTextBuilder settings a <> " AND " <> toTextBuilder settings b
+  parser settings =
     BetweenFrameExtent
-      <$> (Parsers.keyword "between" *> Parsers.space1 *> Parser.endHead *> parser <* Parsers.space1 <* Parsers.keyword "and" <* Parsers.space1)
-      <*> parser
+      <$> (Parsers.keyword "between" *> Parsers.space1 *> Parser.endHead *> parser settings <* Parsers.space1 <* Parsers.keyword "and" <* Parsers.space1)
+      <*> parser settings
         <|> SingularFrameExtent
-      <$> parser
+      <$> parser settings
 
 instance Qc.Arbitrary FrameExtent where
   shrink = Qc.genericShrink

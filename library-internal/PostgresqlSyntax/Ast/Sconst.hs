@@ -17,8 +17,8 @@ newtype Sconst = Sconst Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Sconst where
-  toTextBuilder (Sconst a) = "'" <> TextBuilder.text (Text.replace "'" "''" a) <> "'"
-  parser = Sconst <$> (Parsers.quotedString '\'' <|> Parsers.dollarQuotedSconst)
+  toTextBuilder settings (Sconst a) = "'" <> TextBuilder.text (Text.replace "'" "''" a) <> "'"
+  parser settings = Sconst <$> (Parsers.quotedString '\'' <|> Parsers.dollarQuotedSconst)
 
 instance Qc.Arbitrary Sconst where
   shrink (Sconst a) = Sconst <$> Shrinks.text a

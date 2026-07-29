@@ -18,10 +18,10 @@ spec = do
     -- reading wins and the column reading needs quoting.
     it "frame_bound" $ do
       let render :: FrameBound -> Text
-          render = toText
-      fmap render (parse @FrameBound "unbounded preceding") `shouldBe` Right "UNBOUNDED PRECEDING"
-      fmap render (parse @FrameBound "unbounded following") `shouldBe` Right "UNBOUNDED FOLLOWING"
-      fmap render (parse @FrameBound "current row") `shouldBe` Right "CURRENT ROW"
-      fmap render (parse @FrameBound "1 preceding") `shouldBe` Right "1 PRECEDING"
-      fmap render (parse @FrameBound "a following") `shouldBe` Right "a FOLLOWING"
-      fmap render (parse @FrameBound "\"unbounded\" preceding") `shouldBe` Right "\"unbounded\" PRECEDING"
+          render = toText mempty
+      fmap render (parse @FrameBound mempty "unbounded preceding") `shouldBe` Right "UNBOUNDED PRECEDING"
+      fmap render (parse @FrameBound mempty "unbounded following") `shouldBe` Right "UNBOUNDED FOLLOWING"
+      fmap render (parse @FrameBound mempty "current row") `shouldBe` Right "CURRENT ROW"
+      fmap render (parse @FrameBound mempty "1 preceding") `shouldBe` Right "1 PRECEDING"
+      fmap render (parse @FrameBound mempty "a following") `shouldBe` Right "a FOLLOWING"
+      fmap render (parse @FrameBound mempty "\"unbounded\" preceding") `shouldBe` Right "\"unbounded\" PRECEDING"

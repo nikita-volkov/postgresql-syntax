@@ -22,12 +22,12 @@ data JoinType
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst JoinType where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     FullJoinType a -> "FULL" <> if a then " OUTER" else ""
     LeftJoinType a -> "LEFT" <> if a then " OUTER" else ""
     RightJoinType a -> "RIGHT" <> if a then " OUTER" else ""
     InnerJoinType -> "INNER"
-  parser =
+  parser settings =
     asum
       [ do
           Parsers.keyword "full"

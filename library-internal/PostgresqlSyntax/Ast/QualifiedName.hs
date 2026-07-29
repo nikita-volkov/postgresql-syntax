@@ -24,15 +24,15 @@ data QualifiedName
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst QualifiedName where
-  toTextBuilder = \case
-    SimpleQualifiedName a -> toTextBuilder a
-    IndirectedQualifiedName a b -> toTextBuilder a <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    SimpleQualifiedName a -> toTextBuilder settings a
+    IndirectedQualifiedName a b -> toTextBuilder settings a <> toTextBuilder settings b
+  parser settings =
     IndirectedQualifiedName
-      <$> Parser.wrapToHead colId
-      <*> (Parsers.space *> parser)
+      <$> Parser.wrapToHead (colId settings)
+      <*> (Parsers.space *> parser settings)
         <|> SimpleQualifiedName
-      <$> colId
+      <$> colId settings
 
 instance Qc.Arbitrary QualifiedName where
   shrink = Qc.genericShrink

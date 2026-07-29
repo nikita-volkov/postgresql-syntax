@@ -7,6 +7,7 @@ import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -30,12 +31,12 @@ data AnyName = AnyName Ident (Maybe Attrs)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AnyName where
-  toTextBuilder (AnyName a b) = toTextBuilder a <> foldMap toTextBuilder b
-  parser = AnyName <$> (Parser.wrapToHead colIdLikeName <* Parser.endHead) <*> optional (Parsers.space *> parser)
+  toTextBuilder settings (AnyName a b) = toTextBuilder settings a <> foldMap (toTextBuilder settings) b
+  parser settings = AnyName <$> (Parser.wrapToHead colIdLikeName <* Parser.endHead) <*> optional (Parsers.space *> parser settings)
     where
       colIdLikeName =
         Parser.label "identifier" $
-          parser
+          parser settings
             <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyName where
@@ -46,5 +47,5 @@ instance Qc.Arbitrary AnyName where
 -- accepted as the leading identifier — needed by
 -- "PostgresqlSyntax.Ast.IndexElem"'s @opt_class@ position, mirroring the
 -- pre-extraction @filteredAnyName@.
-filteredParser :: [Text] -> Parser AnyName
-filteredParser excluded = AnyName <$> (Parser.wrapToHead (Parsers.filteredColIdLike UnquotedIdent parser excluded) <* Parser.endHead) <*> optional (Parsers.space *> parser)
+filteredParser :: Settings -> [Text] -> Parser AnyName
+filteredParser settings excluded = AnyName <$> (Parser.wrapToHead (Parsers.filteredColIdLike UnquotedIdent (parser settings) excluded) <* Parser.endHead) <*> optional (Parsers.space *> parser settings)

@@ -19,8 +19,8 @@ newtype Xconst = Xconst Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Xconst where
-  toTextBuilder (Xconst a) = "X'" <> TextBuilder.text a <> "'"
-  parser = Parser.label "hex literal" $ do
+  toTextBuilder settings (Xconst a) = "X'" <> TextBuilder.text a <> "'"
+  parser settings = Parser.label "hex literal" $ do
     Parsers.string' "x'"
     Parser.endHead
     a <- Parsers.takeWhile1P (Just "Hex digit") Predicate.hexDigit

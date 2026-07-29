@@ -18,10 +18,10 @@ newtype IntervalSecond = IntervalSecond (Maybe Int64)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IntervalSecond where
-  toTextBuilder (IntervalSecond a) = case a of
+  toTextBuilder settings (IntervalSecond a) = case a of
     Nothing -> "SECOND"
     Just a' -> "SECOND " <> TextBuilders.renderInParens (TextBuilder.int64Dec a')
-  parser = do
+  parser settings = do
     Parsers.keyword "second"
     a <- optional (Parsers.space *> Parsers.inParens Parsers.decimal)
     return (IntervalSecond a)

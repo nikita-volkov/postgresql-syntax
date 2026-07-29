@@ -36,17 +36,17 @@ data OptTempTableName
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OptTempTableName where
-  toTextBuilder = \case
-    TemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    TempOptTempTableName a b -> TextBuilders.optLexemes [Just "TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    LocalTemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "LOCAL TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    LocalTempOptTempTableName a b -> TextBuilders.optLexemes [Just "LOCAL TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    GlobalTemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "GLOBAL TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    GlobalTempOptTempTableName a b -> TextBuilders.optLexemes [Just "GLOBAL TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    UnloggedOptTempTableName a b -> TextBuilders.optLexemes [Just "UNLOGGED", bool Nothing (Just "TABLE") a, Just (toTextBuilder b)]
-    TableOptTempTableName a -> "TABLE " <> toTextBuilder a
-    QualifedOptTempTableName a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    TemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    TempOptTempTableName a b -> TextBuilders.optLexemes [Just "TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    LocalTemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "LOCAL TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    LocalTempOptTempTableName a b -> TextBuilders.optLexemes [Just "LOCAL TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    GlobalTemporaryOptTempTableName a b -> TextBuilders.optLexemes [Just "GLOBAL TEMPORARY", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    GlobalTempOptTempTableName a b -> TextBuilders.optLexemes [Just "GLOBAL TEMP", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    UnloggedOptTempTableName a b -> TextBuilders.optLexemes [Just "UNLOGGED", bool Nothing (Just "TABLE") a, Just (toTextBuilder settings b)]
+    TableOptTempTableName a -> "TABLE " <> toTextBuilder settings a
+    QualifedOptTempTableName a -> toTextBuilder settings a
+  parser settings =
     asum
       [ do
           a <-
@@ -60,14 +60,14 @@ instance IsAst OptTempTableName where
                 UnloggedOptTempTableName <$ Parsers.keyword "unlogged" <* Parsers.space1
               ]
           b <- option False (True <$ Parsers.keyword "table" <* Parsers.space1)
-          c <- parser
+          c <- parser settings
           return (a b c),
         do
           Parsers.keyword "table"
           Parsers.space1
           Parser.endHead
-          TableOptTempTableName <$> parser,
-        QualifedOptTempTableName <$> parser
+          TableOptTempTableName <$> parser settings,
+        QualifedOptTempTableName <$> parser settings
       ]
 
 instance Qc.Arbitrary OptTempTableName where

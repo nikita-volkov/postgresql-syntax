@@ -23,17 +23,17 @@ data TypenameArrayDimensions
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TypenameArrayDimensions where
-  toTextBuilder = \case
-    BoundsTypenameArrayDimensions a -> toTextBuilder a
-    ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (TextBuilders.renderInBrackets . toTextBuilder) a
-  parser =
+  toTextBuilder settings = \case
+    BoundsTypenameArrayDimensions a -> toTextBuilder settings a
+    ExplicitTypenameArrayDimensions a -> " ARRAY" <> foldMap (TextBuilders.renderInBrackets . toTextBuilder settings) a
+  parser settings =
     asum
       [ do
           Parsers.space1
           Parsers.keyword "array"
           Parser.endHead
-          ExplicitTypenameArrayDimensions <$> optional (Parsers.space *> Parsers.inBrackets parser),
-        BoundsTypenameArrayDimensions <$> (Parsers.space *> parser)
+          ExplicitTypenameArrayDimensions <$> optional (Parsers.space *> Parsers.inBrackets (parser settings)),
+        BoundsTypenameArrayDimensions <$> (Parsers.space *> parser settings)
       ]
 
 instance Qc.Arbitrary TypenameArrayDimensions where

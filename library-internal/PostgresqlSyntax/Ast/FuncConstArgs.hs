@@ -22,8 +22,8 @@ data FuncConstArgs = FuncConstArgs (NonEmpty FuncArgExpr) (Maybe SortClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncConstArgs where
-  toTextBuilder (FuncConstArgs a b) = TextBuilders.commaNonEmpty toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
-  parser = FuncConstArgs <$> Parsers.sep1 Parsers.commaSeparator parser <*> optional (Parsers.space1 *> parser)
+  toTextBuilder settings (FuncConstArgs a b) = TextBuilders.commaNonEmpty (toTextBuilder settings) a <> TextBuilders.suffixMaybe (toTextBuilder settings) b
+  parser settings = FuncConstArgs <$> Parsers.sep1 Parsers.commaSeparator (parser settings) <*> optional (Parsers.space1 *> parser settings)
 
 instance Qc.Arbitrary FuncConstArgs where
   shrink = Qc.genericShrink

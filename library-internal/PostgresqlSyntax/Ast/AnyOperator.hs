@@ -30,18 +30,18 @@ data AnyOperator
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AnyOperator where
-  toTextBuilder = \case
-    AllOpAnyOperator a -> toTextBuilder a
-    QualifiedAnyOperator a b -> toTextBuilder a <> "." <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    AllOpAnyOperator a -> toTextBuilder settings a
+    QualifiedAnyOperator a b -> toTextBuilder settings a <> "." <> toTextBuilder settings b
+  parser settings =
     asum
-      [ AllOpAnyOperator <$> parser,
-        QualifiedAnyOperator <$> colIdLikeName <*> (Parsers.space *> Parsers.char '.' *> Parsers.space *> parser)
+      [ AllOpAnyOperator <$> parser settings,
+        QualifiedAnyOperator <$> colIdLikeName <*> (Parsers.space *> Parsers.char '.' *> Parsers.space *> parser settings)
       ]
     where
       colIdLikeName =
         Parser.label "identifier" $
-          parser
+          parser settings
             <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AnyOperator where

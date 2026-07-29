@@ -20,13 +20,13 @@ data QualOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst QualOp where
-  toTextBuilder = \case
-    OpQualOp a -> toTextBuilder a
-    OperatorQualOp a -> "OPERATOR (" <> toTextBuilder a <> ")"
-  parser =
+  toTextBuilder settings = \case
+    OpQualOp a -> toTextBuilder settings a
+    OperatorQualOp a -> "OPERATOR (" <> toTextBuilder settings a <> ")"
+  parser settings =
     asum
-      [ OpQualOp <$> parser,
-        OperatorQualOp <$> Parsers.inParensWithClause (Parsers.keyword "operator") parser
+      [ OpQualOp <$> parser settings,
+        OperatorQualOp <$> Parsers.inParensWithClause (Parsers.keyword "operator") (parser settings)
       ]
 
 instance Qc.Arbitrary QualOp where

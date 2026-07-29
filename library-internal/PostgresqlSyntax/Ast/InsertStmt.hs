@@ -26,31 +26,31 @@ data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe O
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertStmt where
-  toTextBuilder (InsertStmt a b c d e) =
-    TextBuilders.prefixMaybe toTextBuilder a
+  toTextBuilder settings (InsertStmt a b c d e) =
+    TextBuilders.prefixMaybe (toTextBuilder settings) a
       <> "INSERT INTO "
-      <> toTextBuilder b
+      <> toTextBuilder settings b
       <> " "
-      <> toTextBuilder c
-      <> TextBuilders.suffixMaybe toTextBuilder d
+      <> toTextBuilder settings c
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) d
       <> TextBuilders.suffixMaybe returningClause e
     where
-      returningClause = mappend "RETURNING " . toTextBuilder
-  parser = do
-    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+      returningClause = mappend "RETURNING " . toTextBuilder settings
+  parser settings = do
+    a <- optional (Parser.wrapToHead (parser settings) <* Parsers.space1)
     Parsers.keyword "insert"
     Parsers.space1
     Parser.endHead
     Parsers.keyword "into"
     Parsers.space1
-    b <- parser
+    b <- parser settings
     Parsers.space1
-    c <- parser
-    d <- optional (Parsers.space1 *> parser)
+    c <- parser settings
+    d <- optional (Parsers.space1 *> parser settings)
     e <- optional (Parsers.space1 *> returningClause)
     return (InsertStmt a b c d e)
     where
-      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary InsertStmt where
   shrink = Qc.genericShrink

@@ -24,10 +24,10 @@ data WhereOrCurrentClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WhereOrCurrentClause where
-  toTextBuilder = \case
-    ExprWhereOrCurrentClause a -> "WHERE " <> toTextBuilder a
-    CursorWhereOrCurrentClause a -> "WHERE CURRENT OF " <> toTextBuilder a
-  parser = do
+  toTextBuilder settings = \case
+    ExprWhereOrCurrentClause a -> "WHERE " <> toTextBuilder settings a
+    CursorWhereOrCurrentClause a -> "WHERE CURRENT OF " <> toTextBuilder settings a
+  parser settings = do
     Parsers.keyword "where"
     Parsers.space1
     Parser.endHead
@@ -38,9 +38,9 @@ instance IsAst WhereOrCurrentClause where
           Parsers.keyword "of"
           Parsers.space1
           Parser.endHead
-          a <- colId
+          a <- colId settings
           return (CursorWhereOrCurrentClause a),
-        ExprWhereOrCurrentClause <$> parser
+        ExprWhereOrCurrentClause <$> parser settings
       ]
 
 instance Qc.Arbitrary WhereOrCurrentClause where

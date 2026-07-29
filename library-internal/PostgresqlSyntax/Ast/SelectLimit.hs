@@ -25,19 +25,19 @@ data SelectLimit
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectLimit where
-  toTextBuilder = \case
-    LimitOffsetSelectLimit a b -> TextBuilders.lexemes [toTextBuilder a, toTextBuilder b]
-    OffsetLimitSelectLimit a b -> TextBuilders.lexemes [toTextBuilder a, toTextBuilder b]
-    LimitSelectLimit a -> toTextBuilder a
-    OffsetSelectLimit a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    LimitOffsetSelectLimit a b -> TextBuilders.lexemes [toTextBuilder settings a, toTextBuilder settings b]
+    OffsetLimitSelectLimit a b -> TextBuilders.lexemes [toTextBuilder settings a, toTextBuilder settings b]
+    LimitSelectLimit a -> toTextBuilder settings a
+    OffsetSelectLimit a -> toTextBuilder settings a
+  parser settings =
     asum
       [ do
-          a <- parser
-          LimitOffsetSelectLimit a <$> (Parsers.space1 *> parser) <|> pure (LimitSelectLimit a),
+          a <- parser settings
+          LimitOffsetSelectLimit a <$> (Parsers.space1 *> parser settings) <|> pure (LimitSelectLimit a),
         do
-          a <- parser
-          OffsetLimitSelectLimit a <$> (Parsers.space1 *> parser) <|> pure (OffsetSelectLimit a)
+          a <- parser settings
+          OffsetLimitSelectLimit a <$> (Parsers.space1 *> parser settings) <|> pure (OffsetSelectLimit a)
       ]
 
 instance Qc.Arbitrary SelectLimit where

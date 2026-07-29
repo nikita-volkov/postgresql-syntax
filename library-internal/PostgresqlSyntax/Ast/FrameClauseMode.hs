@@ -18,11 +18,11 @@ data FrameClauseMode = RangeFrameClauseMode | RowsFrameClauseMode | GroupsFrameC
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FrameClauseMode where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     RangeFrameClauseMode -> "RANGE"
     RowsFrameClauseMode -> "ROWS"
     GroupsFrameClauseMode -> "GROUPS"
-  parser =
+  parser settings =
     asum
       [ RangeFrameClauseMode <$ Parsers.keyword "range",
         RowsFrameClauseMode <$ Parsers.keyword "rows",

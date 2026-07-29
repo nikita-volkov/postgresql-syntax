@@ -24,6 +24,7 @@ import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -61,20 +62,20 @@ data CExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst CExpr where
-  toTextBuilder = \case
-    ColumnrefCExpr a -> toTextBuilder a
-    AexprConstCExpr a -> toTextBuilder a
-    ParamCExpr a b -> "$" <> TextBuilder.intDec a <> foldMap toTextBuilder b
-    InParensCExpr a b -> TextBuilders.renderInParens (toTextBuilder a) <> foldMap toTextBuilder b
-    CaseCExpr a -> toTextBuilder a
-    FuncCExpr a -> toTextBuilder a
-    SelectWithParensCExpr a b -> toTextBuilder a <> foldMap toTextBuilder b
-    ExistsCExpr a -> "EXISTS " <> toTextBuilder a
-    ArrayCExpr a -> "ARRAY " <> either toTextBuilder toTextBuilder a
-    ExplicitRowCExpr a -> toTextBuilder a
-    ImplicitRowCExpr a -> toTextBuilder a
-    GroupingCExpr a -> "GROUPING " <> TextBuilders.renderInParens (toTextBuilder a)
-  parser = customizedParser colId
+  toTextBuilder settings = \case
+    ColumnrefCExpr a -> toTextBuilder settings a
+    AexprConstCExpr a -> toTextBuilder settings a
+    ParamCExpr a b -> "$" <> TextBuilder.intDec a <> foldMap (toTextBuilder settings) b
+    InParensCExpr a b -> TextBuilders.renderInParens (toTextBuilder settings a) <> foldMap (toTextBuilder settings) b
+    CaseCExpr a -> toTextBuilder settings a
+    FuncCExpr a -> toTextBuilder settings a
+    SelectWithParensCExpr a b -> toTextBuilder settings a <> foldMap (toTextBuilder settings) b
+    ExistsCExpr a -> "EXISTS " <> toTextBuilder settings a
+    ArrayCExpr a -> "ARRAY " <> either (toTextBuilder settings) (toTextBuilder settings) a
+    ExplicitRowCExpr a -> toTextBuilder settings a
+    ImplicitRowCExpr a -> toTextBuilder settings a
+    GroupingCExpr a -> "GROUPING " <> TextBuilders.renderInParens (toTextBuilder settings a)
+  parser settings = customizedParser settings (colId settings)
 
 -- |
 -- Parameterized over the @ColId@-like identifier parser used by the plain
@@ -85,36 +86,36 @@ instance IsAst CExpr where
 -- @select_with_parens@\/etc, exactly as the pre-extraction
 -- @customizedCExpr@\/@parenthesizedExprCExpr@ did — the filtering doesn't
 -- propagate past this one level.
-customizedParser :: Parser Ident -> Parser CExpr
-customizedParser colIdParser =
+customizedParser :: Settings -> Parser Ident -> Parser CExpr
+customizedParser settings colIdParser =
   asum
-    [ ParamCExpr <$> (Parsers.char '$' *> Parsers.decimal <* Parser.endHead) <*> optional (Parsers.space *> parser),
-      CaseCExpr <$> parser,
-      ExplicitRowCExpr <$> parser,
-      Parsers.inParensWithClause (Parsers.keyword "grouping") (GroupingCExpr . ExprList <$> Parsers.sep1 Parsers.commaSeparator parser),
-      Parsers.keyword "exists" *> Parsers.space *> (ExistsCExpr <$> parser),
+    [ ParamCExpr <$> (Parsers.char '$' *> Parsers.decimal <* Parser.endHead) <*> optional (Parsers.space *> parser settings),
+      CaseCExpr <$> parser settings,
+      ExplicitRowCExpr <$> parser settings,
+      Parsers.inParensWithClause (Parsers.keyword "grouping") (GroupingCExpr . ExprList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)),
+      Parsers.keyword "exists" *> Parsers.space *> (ExistsCExpr <$> parser settings),
       do
         Parsers.keyword "array"
         Parsers.space
         asum
-          [ ArrayCExpr . Right <$> parser,
-            ArrayCExpr . Left <$> parser
+          [ ArrayCExpr . Right <$> parser settings,
+            ArrayCExpr . Left <$> parser settings
           ],
       do
-        a <- Parser.wrapToHead parser
+        a <- Parser.wrapToHead (parser settings)
         Parser.endHead
-        b <- optional (Parsers.space *> parser)
+        b <- optional (Parsers.space *> parser settings)
         return (SelectWithParensCExpr a b),
       parenthesizedExprCExpr,
-      AexprConstCExpr <$> Parser.wrapToHead parser,
-      FuncCExpr <$> parser,
+      AexprConstCExpr <$> Parser.wrapToHead (parser settings),
+      FuncCExpr <$> parser settings,
       ColumnrefCExpr <$> customizedColumnref
     ]
   where
     customizedColumnref = do
       a <- Parser.wrapToHead colIdParser
       Parser.endHead
-      b <- optional (Parsers.space *> parser)
+      b <- optional (Parsers.space *> parser settings)
       return (Columnref a b)
 
     -- See 'PostgresqlSyntax.Ast.AExpr'\'s doc on the sibling parser this
@@ -124,14 +125,14 @@ customizedParser colIdParser =
     parenthesizedExprCExpr = do
       Parsers.char '('
       Parsers.space
-      a <- parser
+      a <- parser settings
       Parsers.space
       asum
         [ do
             Parsers.char ','
             Parser.endHead
             Parsers.space
-            b <- Parsers.sep1 Parsers.commaSeparator parser
+            b <- Parsers.sep1 Parsers.commaSeparator (parser settings)
             Parsers.space
             Parsers.char ')'
             return $ ImplicitRowCExpr $ case NonEmpty.consAndUnsnoc a b of
@@ -139,7 +140,7 @@ customizedParser colIdParser =
           do
             Parsers.char ')'
             Parser.endHead
-            b <- optional (Parsers.space *> parser)
+            b <- optional (Parsers.space *> parser settings)
             return (InParensCExpr a b)
         ]
 

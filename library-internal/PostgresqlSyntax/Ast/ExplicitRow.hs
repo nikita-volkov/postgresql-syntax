@@ -20,17 +20,17 @@ data ExplicitRow
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ExplicitRow where
-  toTextBuilder a =
+  toTextBuilder settings a =
     "ROW "
       <> TextBuilders.renderInParens
         ( case a of
             EmptyExplicitRow -> mempty
-            ExprListExplicitRow b -> toTextBuilder b
+            ExprListExplicitRow b -> toTextBuilder settings b
         )
-  parser =
+  parser settings =
     Parsers.keyword "row"
       *> Parsers.space
-      *> Parsers.inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional parser)
+      *> Parsers.inParens (maybe EmptyExplicitRow ExprListExplicitRow <$> optional (parser settings))
 
 instance Qc.Arbitrary ExplicitRow where
   shrink = Qc.genericShrink

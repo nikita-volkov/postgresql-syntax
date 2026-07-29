@@ -22,13 +22,13 @@ data JoinQual
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst JoinQual where
-  toTextBuilder = \case
-    UsingJoinQual a -> "USING (" <> TextBuilders.commaNonEmpty toTextBuilder a <> ")"
-    OnJoinQual a -> "ON " <> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    UsingJoinQual a -> "USING (" <> TextBuilders.commaNonEmpty (toTextBuilder settings) a <> ")"
+    OnJoinQual a -> "ON " <> toTextBuilder settings a
+  parser settings =
     asum
-      [ Parsers.keyword "using" *> Parsers.space1 *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator colId) <&> UsingJoinQual,
-        Parsers.keyword "on" *> Parsers.space1 *> parser <&> OnJoinQual
+      [ Parsers.keyword "using" *> Parsers.space1 *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator (colId settings)) <&> UsingJoinQual,
+        Parsers.keyword "on" *> Parsers.space1 *> parser settings <&> OnJoinQual
       ]
 
 instance Qc.Arbitrary JoinQual where
