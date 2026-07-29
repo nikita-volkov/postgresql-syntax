@@ -32,36 +32,36 @@ data UpdateStmt = UpdateStmt (Maybe WithClause) RelationExprOptAlias SetClauseLi
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst UpdateStmt where
-  toTextBuilder (UpdateStmt a b c d e f) =
-    TextBuilders.prefixMaybe toTextBuilder a
+  toTextBuilder settings (UpdateStmt a b c d e f) =
+    TextBuilders.prefixMaybe (toTextBuilder settings) a
       <> "UPDATE "
-      <> toTextBuilder b
+      <> toTextBuilder settings b
       <> " "
       <> "SET "
-      <> toTextBuilder c
+      <> toTextBuilder settings c
       <> TextBuilders.suffixMaybe fromClause d
-      <> TextBuilders.suffixMaybe toTextBuilder e
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) e
       <> TextBuilders.suffixMaybe returningClause f
     where
-      fromClause a' = "FROM " <> TextBuilders.commaNonEmpty toTextBuilder a'
-      returningClause = mappend "RETURNING " . toTextBuilder
-  parser = do
-    a <- optional (Parser.wrapToHead parser <* Parsers.space1)
+      fromClause a' = "FROM " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a'
+      returningClause = mappend "RETURNING " . toTextBuilder settings
+  parser settings = do
+    a <- optional (Parser.wrapToHead (parser settings) <* Parsers.space1)
     Parsers.keyword "update"
     Parsers.space1
     Parser.endHead
-    b <- RelationExprOptAlias.customizedParser ["set"]
+    b <- RelationExprOptAlias.customizedParser settings ["set"]
     Parsers.space1
     Parsers.keyword "set"
     Parsers.space1
-    c <- parser
+    c <- parser settings
     d <- optional (Parsers.space1 *> fromClause)
-    e <- optional (Parsers.space1 *> parser)
+    e <- optional (Parsers.space1 *> parser settings)
     f <- optional (Parsers.space1 *> returningClause)
     return (UpdateStmt a b c d e f)
     where
-      fromClause = Parsers.keyword "from" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator parser
-      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser
+      fromClause = Parsers.keyword "from" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator (parser settings)
+      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary UpdateStmt where
   shrink = Qc.genericShrink

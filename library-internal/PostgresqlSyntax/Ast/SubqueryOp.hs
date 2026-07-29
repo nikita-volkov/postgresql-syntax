@@ -28,18 +28,18 @@ data SubqueryOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SubqueryOp where
-  toTextBuilder = \case
-    AllSubqueryOp a -> toTextBuilder a
-    AnySubqueryOp a -> "OPERATOR " <> TextBuilders.renderInParens (toTextBuilder a)
+  toTextBuilder settings = \case
+    AllSubqueryOp a -> toTextBuilder settings a
+    AnySubqueryOp a -> "OPERATOR " <> TextBuilders.renderInParens (toTextBuilder settings a)
     LikeSubqueryOp a -> bool "" "NOT " a <> "LIKE"
     IlikeSubqueryOp a -> bool "" "NOT " a <> "ILIKE"
-  parser =
+  parser settings =
     asum
-      [ AnySubqueryOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parser.endHead *> Parsers.inParens parser),
+      [ AnySubqueryOp <$> (Parsers.keyword "operator" *> Parsers.space *> Parser.endHead *> Parsers.inParens (parser settings)),
         do
           a <- Parsers.trueIfPresent (Parsers.keyword "not" *> Parsers.space1)
           LikeSubqueryOp a <$ Parsers.keyword "like" <|> IlikeSubqueryOp a <$ Parsers.keyword "ilike",
-        AllSubqueryOp <$> parser
+        AllSubqueryOp <$> parser settings
       ]
 
 instance Qc.Arbitrary SubqueryOp where

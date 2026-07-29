@@ -18,10 +18,10 @@ data NullsOrder = FirstNullsOrder | LastNullsOrder
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst NullsOrder where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     FirstNullsOrder -> "NULLS FIRST"
     LastNullsOrder -> "NULLS LAST"
-  parser = Parsers.keyword "nulls" *> Parsers.space1 *> Parser.endHead *> (FirstNullsOrder <$ Parsers.keyword "first" <|> LastNullsOrder <$ Parsers.keyword "last")
+  parser settings = Parsers.keyword "nulls" *> Parsers.space1 *> Parser.endHead *> (FirstNullsOrder <$ Parsers.keyword "first" <|> LastNullsOrder <$ Parsers.keyword "last")
 
 instance Qc.Arbitrary NullsOrder where
   shrink = Qc.genericShrink

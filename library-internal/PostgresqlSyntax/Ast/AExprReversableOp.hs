@@ -48,18 +48,18 @@ data AExprReversableOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AExprReversableOp where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     NullAExprReversableOp -> "IS NULL"
     TrueAExprReversableOp -> "IS TRUE"
     FalseAExprReversableOp -> "IS FALSE"
     UnknownAExprReversableOp -> "IS UNKNOWN"
-    DistinctFromAExprReversableOp b -> "IS DISTINCT FROM " <> toTextBuilder b
-    OfAExprReversableOp b -> "IS OF " <> TextBuilders.renderInParens (toTextBuilder b)
-    BetweenAExprReversableOp b c d -> bool "BETWEEN " "BETWEEN ASYMMETRIC " b <> toTextBuilder c <> " AND " <> toTextBuilder d
-    BetweenSymmetricAExprReversableOp b c -> "BETWEEN SYMMETRIC " <> toTextBuilder b <> " AND " <> toTextBuilder c
-    InAExprReversableOp b -> "IN " <> toTextBuilder b
+    DistinctFromAExprReversableOp b -> "IS DISTINCT FROM " <> toTextBuilder settings b
+    OfAExprReversableOp b -> "IS OF " <> TextBuilders.renderInParens (toTextBuilder settings b)
+    BetweenAExprReversableOp b c d -> bool "BETWEEN " "BETWEEN ASYMMETRIC " b <> toTextBuilder settings c <> " AND " <> toTextBuilder settings d
+    BetweenSymmetricAExprReversableOp b c -> "BETWEEN SYMMETRIC " <> toTextBuilder settings b <> " AND " <> toTextBuilder settings c
+    InAExprReversableOp b -> "IN " <> toTextBuilder settings b
     DocumentAExprReversableOp -> "IS DOCUMENT"
-  parser =
+  parser settings =
     asum
       [ Parsers.keyword "is"
           *> Parsers.space1
@@ -69,8 +69,8 @@ instance IsAst AExprReversableOp where
               TrueAExprReversableOp <$ Parsers.keyword "true",
               FalseAExprReversableOp <$ Parsers.keyword "false",
               UnknownAExprReversableOp <$ Parsers.keyword "unknown",
-              DistinctFromAExprReversableOp <$> (Parsers.keyword "distinct" *> Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
-              OfAExprReversableOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+              DistinctFromAExprReversableOp <$> (Parsers.keyword "distinct" *> Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser settings),
+              OfAExprReversableOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens (parser settings)),
               DocumentAExprReversableOp <$ Parsers.keyword "document"
             ],
         do
@@ -83,13 +83,13 @@ instance IsAst AExprReversableOp where
                 BetweenAExprReversableOp True <$ (Parsers.keyword "asymmetric" *> Parsers.space1),
                 pure (BetweenAExprReversableOp False)
               ]
-          d <- parser
+          d <- parser settings
           Parsers.space1
           Parsers.keyword "and"
           Parsers.space1
-          e <- parser
+          e <- parser settings
           return (c d e),
-        InAExprReversableOp <$> (Parsers.keyword "in" *> Parsers.space *> parser)
+        InAExprReversableOp <$> (Parsers.keyword "in" *> Parsers.space *> parser settings)
       ]
 
 instance Qc.Arbitrary AExprReversableOp where

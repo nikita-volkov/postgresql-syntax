@@ -18,8 +18,8 @@ data PositionList = PositionList BExpr BExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst PositionList where
-  toTextBuilder (PositionList a b) = toTextBuilder a <> " IN " <> toTextBuilder b
-  parser = PositionList <$> parser <*> (Parsers.space1 *> Parsers.keyword "in" *> Parsers.space1 *> parser)
+  toTextBuilder settings (PositionList a b) = toTextBuilder settings a <> " IN " <> toTextBuilder settings b
+  parser settings = PositionList <$> parser settings <*> (Parsers.space1 *> Parsers.keyword "in" *> Parsers.space1 *> parser settings)
 
 instance Qc.Arbitrary PositionList where
   shrink = Qc.genericShrink

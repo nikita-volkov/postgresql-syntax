@@ -32,16 +32,16 @@ data ExtractArg
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ExtractArg where
-  toTextBuilder = \case
-    IdentExtractArg a -> toTextBuilder a
+  toTextBuilder settings = \case
+    IdentExtractArg a -> toTextBuilder settings a
     YearExtractArg -> "YEAR"
     MonthExtractArg -> "MONTH"
     DayExtractArg -> "DAY"
     HourExtractArg -> "HOUR"
     MinuteExtractArg -> "MINUTE"
     SecondExtractArg -> "SECOND"
-    SconstExtractArg a -> toTextBuilder a
-  parser =
+    SconstExtractArg a -> toTextBuilder settings a
+  parser settings =
     asum
       [ YearExtractArg <$ Parsers.keyword "year",
         MonthExtractArg <$ Parsers.keyword "month",
@@ -49,8 +49,8 @@ instance IsAst ExtractArg where
         HourExtractArg <$ Parsers.keyword "hour",
         MinuteExtractArg <$ Parsers.keyword "minute",
         SecondExtractArg <$ Parsers.keyword "second",
-        SconstExtractArg <$> parser,
-        IdentExtractArg <$> parser
+        SconstExtractArg <$> parser settings,
+        IdentExtractArg <$> parser settings
       ]
 
 instance Qc.Arbitrary ExtractArg where

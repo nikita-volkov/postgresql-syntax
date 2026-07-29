@@ -26,12 +26,12 @@ data OnConflictDo
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OnConflictDo where
-  toTextBuilder = \case
-    UpdateOnConflictDo a b -> "UPDATE SET " <> toTextBuilder a <> TextBuilders.suffixMaybe whereClause b
+  toTextBuilder settings = \case
+    UpdateOnConflictDo a b -> "UPDATE SET " <> toTextBuilder settings a <> TextBuilders.suffixMaybe whereClause b
     NothingOnConflictDo -> "NOTHING"
     where
-      whereClause a = "WHERE " <> toTextBuilder a
-  parser =
+      whereClause a = "WHERE " <> toTextBuilder settings a
+  parser settings =
     asum
       [ NothingOnConflictDo <$ Parsers.keyword "nothing",
         do
@@ -40,12 +40,12 @@ instance IsAst OnConflictDo where
           Parser.endHead
           Parsers.keyword "set"
           Parsers.space1
-          a <- parser
+          a <- parser settings
           b <- optional (Parsers.space1 *> whereClause)
           return (UpdateOnConflictDo a b)
       ]
     where
-      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser
+      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary OnConflictDo where
   shrink = Qc.genericShrink

@@ -19,8 +19,8 @@ newtype SetTargetList = SetTargetList (NonEmpty SetTarget)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetTargetList where
-  toTextBuilder (SetTargetList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = SetTargetList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (SetTargetList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = SetTargetList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary SetTargetList where
   shrink = Qc.genericShrink

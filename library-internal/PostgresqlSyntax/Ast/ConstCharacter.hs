@@ -24,8 +24,8 @@ data ConstCharacter = ConstCharacter Character (Maybe Int64)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ConstCharacter where
-  toTextBuilder (ConstCharacter a b) = toTextBuilder a <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) b
-  parser = ConstCharacter <$> (parser <* Parser.endHead) <*> optional (Parsers.space *> Parsers.inParens Parsers.decimal)
+  toTextBuilder settings (ConstCharacter a b) = toTextBuilder settings a <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) b
+  parser settings = ConstCharacter <$> (parser settings <* Parser.endHead) <*> optional (Parsers.space *> Parsers.inParens Parsers.decimal)
 
 instance Qc.Arbitrary ConstCharacter where
   shrink = Qc.genericShrink

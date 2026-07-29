@@ -20,6 +20,7 @@ import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -41,52 +42,52 @@ data SelectNoParens
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectNoParens where
-  toTextBuilder (SelectNoParens a b c d e) =
+  toTextBuilder settings (SelectNoParens a b c d e) =
     TextBuilders.optLexemes
-      [ fmap toTextBuilder a,
-        Just (toTextBuilder b),
-        fmap toTextBuilder c,
-        fmap toTextBuilder d,
-        fmap toTextBuilder e
+      [ fmap (toTextBuilder settings) a,
+        Just (toTextBuilder settings b),
+        fmap (toTextBuilder settings) c,
+        fmap (toTextBuilder settings) d,
+        fmap (toTextBuilder settings) e
       ]
-  parser = withSelectNoParens <|> simpleSelectNoParens
+  parser settings = withSelectNoParens <|> simpleSelectNoParens
     where
-      simpleSelectNoParens = sharedSelectNoParens Nothing
+      simpleSelectNoParens = sharedSelectNoParens settings Nothing
       withSelectNoParens = do
-        with <- Parser.wrapToHead parser
+        with <- Parser.wrapToHead (parser settings)
         Parsers.space1
-        sharedSelectNoParens (Just with)
+        sharedSelectNoParens settings (Just with)
 
-sharedSelectNoParens :: Maybe WithClause -> Parser SelectNoParens
-sharedSelectNoParens with = SimpleSelect.selectClauseBase >>= selectNoParensAfterClause with
+sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
+sharedSelectNoParens settings with = SimpleSelect.selectClauseBase settings >>= selectNoParensAfterClause settings with
 
 -- |
 -- 'PostgresqlSyntax.Ast.SelectNoParens.parser' restricted to the forms
 -- that do not begin with @(@ — see the boot-exposed signature's doc.
-unparenthesizedSelectNoParens :: Parser SelectNoParens
-unparenthesizedSelectNoParens =
+unparenthesizedSelectNoParens :: Settings -> Parser SelectNoParens
+unparenthesizedSelectNoParens settings =
   withSelectNoParens
-    <|> (SimpleSelect.baseSimpleSelect >>= selectNoParensAfterClause Nothing . SimpleSelectSelectClause)
+    <|> (SimpleSelect.baseSimpleSelect settings >>= selectNoParensAfterClause settings Nothing . SimpleSelectSelectClause)
   where
     withSelectNoParens = do
-      with <- Parser.wrapToHead parser
+      with <- Parser.wrapToHead (parser settings)
       Parsers.space1
-      sharedSelectNoParens (Just with)
+      sharedSelectNoParens settings (Just with)
 
-selectNoParensAfterClause :: Maybe WithClause -> SelectClause -> Parser SelectNoParens
-selectNoParensAfterClause with clauseBase = do
-  select <- SimpleSelect.extendSelectClause clauseBase
-  sort <- optional (Parsers.space1 *> parser)
+selectNoParensAfterClause :: Settings -> Maybe WithClause -> SelectClause -> Parser SelectNoParens
+selectNoParensAfterClause settings with clauseBase = do
+  select <- SimpleSelect.extendSelectClause settings clauseBase
+  sort <- optional (Parsers.space1 *> parser settings)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
   where
     limitFirst = do
-      limit <- Parsers.space1 *> parser
-      forLocking <- optional (Parsers.space1 *> parser)
+      limit <- Parsers.space1 *> parser settings
+      forLocking <- optional (Parsers.space1 *> parser settings)
       pure (Just limit, forLocking)
     forLockingFirst = do
-      forLocking <- Parsers.space1 *> parser
-      limit <- optional (Parsers.space1 *> parser)
+      forLocking <- Parsers.space1 *> parser settings
+      limit <- optional (Parsers.space1 *> parser settings)
       pure (limit, Just forLocking)
 
 -- |
@@ -97,9 +98,9 @@ selectNoParensAfterClause with clauseBase = do
 -- @SelectNoParens@ wrapping it (@Right@). Needed by
 -- "PostgresqlSyntax.Ast.SelectWithParens", which can't pattern-match this
 -- module's own 'SelectNoParens' constructor across the hub boundary.
-afterSelectWithParensClause :: SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
-afterSelectWithParensClause a = do
-  b <- selectNoParensAfterClause Nothing (WithParensSelectClause a)
+afterSelectWithParensClause :: Settings -> SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
+afterSelectWithParensClause settings a = do
+  b <- selectNoParensAfterClause settings Nothing (WithParensSelectClause a)
   return $ case trivialSelectWithParensWrapper b of
     Just c -> Left c
     Nothing -> Right b

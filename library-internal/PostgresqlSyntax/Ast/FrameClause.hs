@@ -23,16 +23,16 @@ data FrameClause = FrameClause FrameClauseMode FrameExtent (Maybe WindowExclusio
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FrameClause where
-  toTextBuilder (FrameClause a b c) =
+  toTextBuilder settings (FrameClause a b c) =
     TextBuilders.optLexemes
-      [ Just (toTextBuilder a),
-        Just (toTextBuilder b),
-        fmap toTextBuilder c
+      [ Just (toTextBuilder settings a),
+        Just (toTextBuilder settings b),
+        fmap (toTextBuilder settings) c
       ]
-  parser = do
-    a <- parser <* Parsers.space1 <* Parser.endHead
-    b <- parser
-    c <- optional (Parsers.space1 *> parser)
+  parser settings = do
+    a <- parser settings <* Parsers.space1 <* Parser.endHead
+    b <- parser settings
+    c <- optional (Parsers.space1 *> parser settings)
     return (FrameClause a b c)
 
 instance Qc.Arbitrary FrameClause where

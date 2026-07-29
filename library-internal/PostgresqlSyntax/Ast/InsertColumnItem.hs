@@ -20,11 +20,11 @@ data InsertColumnItem = InsertColumnItem Ident (Maybe Indirection)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertColumnItem where
-  toTextBuilder (InsertColumnItem a b) = toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
-  parser = do
-    a <- colId
+  toTextBuilder settings (InsertColumnItem a b) = toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b
+  parser settings = do
+    a <- colId settings
     Parser.endHead
-    b <- optional (Parsers.space1 *> parser)
+    b <- optional (Parsers.space1 *> parser settings)
     return (InsertColumnItem a b)
 
 instance Qc.Arbitrary InsertColumnItem where

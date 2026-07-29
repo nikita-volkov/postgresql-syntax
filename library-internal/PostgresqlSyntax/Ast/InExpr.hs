@@ -28,12 +28,12 @@ data InExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InExpr where
-  toTextBuilder = \case
-    SelectInExpr a -> toTextBuilder a
-    ExprListInExpr a -> TextBuilders.renderInParens (toTextBuilder a)
-  parser =
-    (ExprListInExpr <$> Parser.parse (Megaparsec.try (Parser.toParsec (Parsers.inParens parser))))
-      <|> (SelectInExpr <$> Parser.wrapToHead parser)
+  toTextBuilder settings = \case
+    SelectInExpr a -> toTextBuilder settings a
+    ExprListInExpr a -> TextBuilders.renderInParens (toTextBuilder settings a)
+  parser settings =
+    (ExprListInExpr <$> Parser.parse (Megaparsec.try (Parser.toParsec (Parsers.inParens (parser settings)))))
+      <|> (SelectInExpr <$> Parser.wrapToHead (parser settings))
 
 instance Qc.Arbitrary InExpr where
   shrink = fmap canonicalize . Qc.genericShrink

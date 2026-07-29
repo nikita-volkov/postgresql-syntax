@@ -19,13 +19,13 @@ data FuncExprWindowless
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncExprWindowless where
-  toTextBuilder = \case
-    ApplicationFuncExprWindowless a -> toTextBuilder a
-    CommonSubexprFuncExprWindowless a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    ApplicationFuncExprWindowless a -> toTextBuilder settings a
+    CommonSubexprFuncExprWindowless a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ CommonSubexprFuncExprWindowless <$> parser,
-        ApplicationFuncExprWindowless <$> parser
+      [ CommonSubexprFuncExprWindowless <$> parser settings,
+        ApplicationFuncExprWindowless <$> parser settings
       ]
 
 instance Qc.Arbitrary FuncExprWindowless where

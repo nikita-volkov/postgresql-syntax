@@ -22,21 +22,21 @@ data FuncTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncTable where
-  toTextBuilder = \case
-    FuncExprFuncTable a (OptOrdinality b) -> toTextBuilder a <> bool "" " WITH ORDINALITY" b
-    RowsFromFuncTable a (OptOrdinality b) -> "ROWS FROM (" <> toTextBuilder a <> ")" <> bool "" " WITH ORDINALITY" b
-  parser =
+  toTextBuilder settings = \case
+    FuncExprFuncTable a (OptOrdinality b) -> toTextBuilder settings a <> bool "" " WITH ORDINALITY" b
+    RowsFromFuncTable a (OptOrdinality b) -> "ROWS FROM (" <> toTextBuilder settings a <> ")" <> bool "" " WITH ORDINALITY" b
+  parser settings =
     asum
       [ do
           Parsers.keyword "rows"
           Parsers.space1
           Parsers.keyword "from"
           Parsers.space
-          a <- Parsers.inParens (Parser.endHead *> parser)
+          a <- Parsers.inParens (Parser.endHead *> parser settings)
           b <- OptOrdinality <$> Parsers.trueIfPresent (Parsers.space *> Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
           return (RowsFromFuncTable a b),
         do
-          a <- parser
+          a <- parser settings
           b <- OptOrdinality <$> Parsers.trueIfPresent (Parsers.space1 *> Parsers.keyword "with" *> Parsers.space1 *> Parsers.keyword "ordinality")
           return (FuncExprFuncTable a b)
       ]

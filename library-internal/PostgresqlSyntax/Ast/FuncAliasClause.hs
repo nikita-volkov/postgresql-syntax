@@ -27,12 +27,12 @@ data FuncAliasClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncAliasClause where
-  toTextBuilder = \case
-    AliasFuncAliasClause a -> toTextBuilder a
-    AsFuncAliasClause a -> "AS (" <> toTextBuilder a <> ")"
-    AsColIdFuncAliasClause a b -> "AS " <> toTextBuilder a <> " (" <> toTextBuilder b <> ")"
-    ColIdFuncAliasClause a b -> toTextBuilder a <> " (" <> toTextBuilder b <> ")"
-  parser =
+  toTextBuilder settings = \case
+    AliasFuncAliasClause a -> toTextBuilder settings a
+    AsFuncAliasClause a -> "AS (" <> toTextBuilder settings a <> ")"
+    AsColIdFuncAliasClause a b -> "AS " <> toTextBuilder settings a <> " (" <> toTextBuilder settings b <> ")"
+    ColIdFuncAliasClause a b -> toTextBuilder settings a <> " (" <> toTextBuilder settings b <> ")"
+  parser settings =
     asum
       [ do
           _ <- Parsers.keyword "as"
@@ -41,32 +41,32 @@ instance IsAst FuncAliasClause where
                 Parsers.space
                 Parsers.inParens $ do
                   Parser.endHead
-                  AsFuncAliasClause <$> parser,
+                  AsFuncAliasClause <$> parser settings,
               do
                 Parsers.space1
-                a <- colId
+                a <- colId settings
                 asum
                   [ do
                       Parsers.space
                       Parsers.inParens $ do
                         Parser.endHead
                         asum
-                          [ AsColIdFuncAliasClause a <$> Parser.wrapToHead parser,
-                            AliasFuncAliasClause . AliasClause True a . Just <$> parser
+                          [ AsColIdFuncAliasClause a <$> Parser.wrapToHead (parser settings),
+                            AliasFuncAliasClause . AliasClause True a . Just <$> parser settings
                           ],
                     pure (AliasFuncAliasClause (AliasClause True a Nothing))
                   ]
             ],
         do
-          a <- colId
+          a <- colId settings
           asum
             [ do
                 Parsers.space
                 Parsers.inParens $ do
                   Parser.endHead
                   asum
-                    [ ColIdFuncAliasClause a <$> Parser.wrapToHead parser,
-                      AliasFuncAliasClause . AliasClause False a . Just <$> parser
+                    [ ColIdFuncAliasClause a <$> Parser.wrapToHead (parser settings),
+                      AliasFuncAliasClause . AliasClause False a . Just <$> parser settings
                     ],
               pure (AliasFuncAliasClause (AliasClause False a Nothing))
             ]

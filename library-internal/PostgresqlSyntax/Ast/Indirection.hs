@@ -18,8 +18,8 @@ newtype Indirection = Indirection (NonEmpty IndirectionEl)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Indirection where
-  toTextBuilder (Indirection a) = foldMap toTextBuilder a
-  parser = Indirection <$> some parser
+  toTextBuilder settings (Indirection a) = foldMap (toTextBuilder settings) a
+  parser settings = Indirection <$> some (parser settings)
 
 instance Qc.Arbitrary Indirection where
   shrink = Qc.genericShrink

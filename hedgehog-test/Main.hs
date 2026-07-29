@@ -19,10 +19,10 @@ main =
                   $ property
                   $ do
                     ast <- forAll gen
-                    let sql = toText ast
+                    let sql = toText mempty ast
                      in do
                           footnote ("SQL: " <> Text.unpack sql)
-                          case parse sql of
+                          case parse mempty sql of
                             Left err -> do
                               footnote err
                               failure

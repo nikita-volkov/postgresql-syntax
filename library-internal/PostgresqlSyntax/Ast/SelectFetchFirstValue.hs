@@ -23,20 +23,20 @@ data SelectFetchFirstValue
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectFetchFirstValue where
-  toTextBuilder = \case
-    ExprSelectFetchFirstValue a -> toTextBuilder a
+  toTextBuilder settings = \case
+    ExprSelectFetchFirstValue a -> toTextBuilder settings a
     NumSelectFetchFirstValue a b -> bool "+" "-" a <> intOrFloat b
     where
       intOrFloat = either TextBuilder.int64Dec TextBuilder.doubleDec
-  parser =
+  parser settings =
     ExprSelectFetchFirstValue
-      <$> parser
+      <$> parser settings
         <|> NumSelectFetchFirstValue
       <$> (plusOrMinus <* Parser.endHead <* Parsers.space)
       <*> iconstOrFconst
     where
       plusOrMinus = False <$ Parsers.char '+' <|> True <$ Parsers.char '-'
-      iconstOrFconst = Right <$> (coerce <$> (parser :: Parser Fconst)) <|> Left <$> Parsers.decimal
+      iconstOrFconst = Right <$> (coerce <$> (parser settings :: Parser Fconst)) <|> Left <$> Parsers.decimal
 
 instance Qc.Arbitrary SelectFetchFirstValue where
   shrink = Qc.genericShrink

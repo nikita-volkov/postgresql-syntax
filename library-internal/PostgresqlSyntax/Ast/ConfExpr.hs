@@ -28,18 +28,18 @@ data ConfExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ConfExpr where
-  toTextBuilder = \case
-    WhereConfExpr a b -> TextBuilders.renderInParens (toTextBuilder a) <> TextBuilders.suffixMaybe whereClause b
-    ConstraintConfExpr a -> "ON CONSTRAINT " <> toTextBuilder a
+  toTextBuilder settings = \case
+    WhereConfExpr a b -> TextBuilders.renderInParens (toTextBuilder settings a) <> TextBuilders.suffixMaybe whereClause b
+    ConstraintConfExpr a -> "ON CONSTRAINT " <> toTextBuilder settings a
     where
-      whereClause a = "WHERE " <> toTextBuilder a
-  parser =
+      whereClause a = "WHERE " <> toTextBuilder settings a
+  parser settings =
     asum
-      [ WhereConfExpr <$> Parsers.inParens parser <*> optional (Parsers.space *> whereClause),
-        ConstraintConfExpr <$> (Parsers.keyword "on" *> Parsers.space1 *> Parsers.keyword "constraint" *> Parsers.space1 *> Parser.endHead *> colId)
+      [ WhereConfExpr <$> Parsers.inParens (parser settings) <*> optional (Parsers.space *> whereClause),
+        ConstraintConfExpr <$> (Parsers.keyword "on" *> Parsers.space1 *> Parsers.keyword "constraint" *> Parsers.space1 *> Parser.endHead *> colId settings)
       ]
     where
-      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser
+      whereClause = Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary ConfExpr where
   shrink = Qc.genericShrink

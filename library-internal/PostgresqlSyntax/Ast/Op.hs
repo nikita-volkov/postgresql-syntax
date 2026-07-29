@@ -19,8 +19,8 @@ newtype Op = Op Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Op where
-  toTextBuilder (Op a) = TextBuilder.text a
-  parser = do
+  toTextBuilder settings (Op a) = TextBuilder.text a
+  parser settings = do
     a <- Parsers.takeWhile1P Nothing Predicate.opChar
     case Validation.op a of
       Nothing -> return (Op a)

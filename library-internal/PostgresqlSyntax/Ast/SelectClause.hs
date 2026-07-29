@@ -28,12 +28,14 @@ data SelectClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectClause where
-  toTextBuilder = \case
-    SimpleSelectSelectClause a -> toTextBuilder a
-    WithParensSelectClause a -> toTextBuilder a
-  parser =
-    SimpleSelectSelectClause <$> parser
-      <|> WithParensSelectClause <$> parser
+  toTextBuilder settings = \case
+    SimpleSelectSelectClause a -> toTextBuilder settings a
+    WithParensSelectClause a -> toTextBuilder settings a
+  parser settings =
+    SimpleSelectSelectClause
+      <$> parser settings
+        <|> WithParensSelectClause
+      <$> parser settings
 
 instance Qc.Arbitrary SelectClause where
   shrink = Qc.genericShrink

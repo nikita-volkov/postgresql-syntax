@@ -23,16 +23,16 @@ data ArrayExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ArrayExpr where
-  toTextBuilder =
+  toTextBuilder settings =
     TextBuilders.renderInBrackets . \case
-      ExprListArrayExpr a -> toTextBuilder a
-      ArrayExprListArrayExpr a -> toTextBuilder a
+      ExprListArrayExpr a -> toTextBuilder settings a
+      ArrayExprListArrayExpr a -> toTextBuilder settings a
       EmptyArrayExpr -> mempty
-  parser =
+  parser settings =
     Parsers.inBrackets $
       asum
-        [ ArrayExprListArrayExpr <$> parser,
-          ExprListArrayExpr <$> parser,
+        [ ArrayExprListArrayExpr <$> parser settings,
+          ExprListArrayExpr <$> parser settings,
           pure EmptyArrayExpr
         ]
 

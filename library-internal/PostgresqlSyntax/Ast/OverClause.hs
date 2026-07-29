@@ -22,16 +22,16 @@ data OverClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OverClause where
-  toTextBuilder = \case
-    WindowOverClause a -> "OVER " <> toTextBuilder a
-    ColIdOverClause a -> "OVER " <> toTextBuilder a
-  parser = do
+  toTextBuilder settings = \case
+    WindowOverClause a -> "OVER " <> toTextBuilder settings a
+    ColIdOverClause a -> "OVER " <> toTextBuilder settings a
+  parser settings = do
     Parsers.keyword "over"
     Parsers.space1
     Parser.endHead
     asum
-      [ WindowOverClause <$> parser,
-        ColIdOverClause <$> colId
+      [ WindowOverClause <$> parser settings,
+        ColIdOverClause <$> colId settings
       ]
 
 instance Qc.Arbitrary OverClause where

@@ -20,14 +20,14 @@ data SelectLimitValue
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectLimitValue where
-  toTextBuilder = \case
-    ExprSelectLimitValue a -> toTextBuilder a
+  toTextBuilder settings = \case
+    ExprSelectLimitValue a -> toTextBuilder settings a
     AllSelectLimitValue -> "ALL"
-  parser =
+  parser settings =
     AllSelectLimitValue
       <$ Parsers.keyword "all"
         <|> ExprSelectLimitValue
-      <$> parser
+      <$> parser settings
 
 instance Qc.Arbitrary SelectLimitValue where
   shrink = Qc.genericShrink

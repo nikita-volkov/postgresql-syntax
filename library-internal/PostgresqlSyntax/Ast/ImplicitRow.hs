@@ -21,15 +21,15 @@ data ImplicitRow = ImplicitRow ExprList AExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ImplicitRow where
-  toTextBuilder (ImplicitRow a b) = TextBuilders.renderInParens (toTextBuilder a <> ", " <> toTextBuilder b)
+  toTextBuilder settings (ImplicitRow a b) = TextBuilders.renderInParens (toTextBuilder settings a <> ", " <> toTextBuilder settings b)
 
   -- Parses the shared @a_expr@ once and then decides, from what follows,
   -- whether it's the sole element of the leading 'ExprList' or the trailing
   -- @a_expr@ — see 'PostgresqlSyntax.Extras.NonEmpty.consAndUnsnoc'.
-  parser = Parsers.inParens $ do
-    a <- Parser.wrapToHead parser
+  parser settings = Parsers.inParens $ do
+    a <- Parser.wrapToHead (parser settings)
     Parsers.commaSeparator
-    b <- Parsers.sep1 Parsers.commaSeparator parser
+    b <- Parsers.sep1 Parsers.commaSeparator (parser settings)
     return $ case NonEmpty.consAndUnsnoc a b of
       (c, d) -> ImplicitRow (ExprList c) d
 

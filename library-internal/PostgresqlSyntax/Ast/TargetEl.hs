@@ -28,25 +28,25 @@ data TargetEl
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TargetEl where
-  toTextBuilder = \case
-    AliasedExprTargetEl a b -> toTextBuilder a <> " AS " <> toTextBuilder b
-    ImplicitlyAliasedExprTargetEl a b -> toTextBuilder a <> " " <> toTextBuilder b
-    ExprTargetEl a -> toTextBuilder a
+  toTextBuilder settings = \case
+    AliasedExprTargetEl a b -> toTextBuilder settings a <> " AS " <> toTextBuilder settings b
+    ImplicitlyAliasedExprTargetEl a b -> toTextBuilder settings a <> " " <> toTextBuilder settings b
+    ExprTargetEl a -> toTextBuilder settings a
     AsteriskTargetEl -> "*"
 
   -- >>> testParser targetEl "a.b as c"
   -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
-  parser =
+  parser settings =
     Parser.label "target" $
       asum
         [ do
-            expr <- parser
+            expr <- parser settings
             asum
               [ do
                   Parsers.space1
                   asum
                     [ AliasedExprTargetEl expr <$> (Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colLabel),
-                      ImplicitlyAliasedExprTargetEl expr <$> parser
+                      ImplicitlyAliasedExprTargetEl expr <$> parser settings
                     ],
                 pure (ExprTargetEl expr)
               ],
@@ -60,7 +60,7 @@ instance IsAst TargetEl where
       colLabel =
         Parser.label "column label" $
           Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
-            <|> parser
+            <|> parser settings
 
 instance Qc.Arbitrary TargetEl where
   shrink = Qc.genericShrink

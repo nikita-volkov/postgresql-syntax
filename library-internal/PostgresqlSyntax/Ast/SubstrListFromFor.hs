@@ -24,12 +24,12 @@ data SubstrListFromFor
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SubstrListFromFor where
-  toTextBuilder = \case
-    FromForSubstrListFromFor a b -> "FROM " <> toTextBuilder a <> " FOR " <> toTextBuilder b
-    ForFromSubstrListFromFor a b -> "FOR " <> toTextBuilder a <> " FROM " <> toTextBuilder b
-    FromSubstrListFromFor a -> "FROM " <> toTextBuilder a
-    ForSubstrListFromFor a -> "FOR " <> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    FromForSubstrListFromFor a b -> "FROM " <> toTextBuilder settings a <> " FOR " <> toTextBuilder settings b
+    ForFromSubstrListFromFor a b -> "FOR " <> toTextBuilder settings a <> " FROM " <> toTextBuilder settings b
+    FromSubstrListFromFor a -> "FROM " <> toTextBuilder settings a
+    ForSubstrListFromFor a -> "FOR " <> toTextBuilder settings a
+  parser settings =
     asum
       [ do
           a <- substrFrom
@@ -49,8 +49,8 @@ instance IsAst SubstrListFromFor where
             ]
       ]
     where
-      substrFrom = Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser
-      substrFor = Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser
+      substrFrom = Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser settings
+      substrFor = Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary SubstrListFromFor where
   shrink = Qc.genericShrink

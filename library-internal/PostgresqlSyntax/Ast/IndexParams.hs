@@ -19,8 +19,8 @@ newtype IndexParams = IndexParams (NonEmpty IndexElem)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IndexParams where
-  toTextBuilder (IndexParams a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = IndexParams <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (IndexParams a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = IndexParams <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary IndexParams where
   shrink = Qc.genericShrink

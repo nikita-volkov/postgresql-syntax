@@ -24,13 +24,13 @@ data ForLockingClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst ForLockingClause where
-  toTextBuilder = \case
-    ItemsForLockingClause a -> TextBuilders.spaceNonEmpty toTextBuilder a
+  toTextBuilder settings = \case
+    ItemsForLockingClause a -> TextBuilders.spaceNonEmpty (toTextBuilder settings) a
     ReadOnlyForLockingClause -> "FOR READ ONLY"
-  parser = readOnly <|> items
+  parser settings = readOnly <|> items
     where
       readOnly = ReadOnlyForLockingClause <$ Parsers.keyphrase "for read only"
-      items = ItemsForLockingClause <$> Parsers.sep1 Parsers.space1 parser
+      items = ItemsForLockingClause <$> Parsers.sep1 Parsers.space1 (parser settings)
 
 instance Qc.Arbitrary ForLockingClause where
   shrink = Qc.genericShrink

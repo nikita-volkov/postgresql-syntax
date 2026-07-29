@@ -15,6 +15,7 @@ import PostgresqlSyntax.IsAst hiding (parse, parseWithPosError, toText)
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (bit, expr, filter, fromList, head, many, option, some, sortBy, tail, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified TextBuilder
@@ -167,30 +168,30 @@ keyphrase a =
 -- 'IsAst' so any node module can instantiate them for its own node type(s)
 -- without this module depending on any of them.
 
-typecastExpr :: (IsAst typename) => a -> (a -> typename -> a) -> Parser a
-typecastExpr prefix constr = do
+typecastExpr :: (IsAst typename) => Settings -> a -> (a -> typename -> a) -> Parser a
+typecastExpr settings prefix constr = do
   space
   string "::"
   endHead
   space
-  type' <- parser
+  type' <- parser settings
   return (constr prefix type')
 
 plusedExpr expr = char '+' *> space *> expr
 
 minusedExpr expr = char '-' *> space *> expr
 
-qualOpExpr :: (IsAst qualOp) => Parser b -> (qualOp -> b -> a) -> Parser a
-qualOpExpr expr constr = constr <$> wrapToHead parser <*> (space *> expr)
+qualOpExpr :: (IsAst qualOp) => Settings -> Parser b -> (qualOp -> b -> a) -> Parser a
+qualOpExpr settings expr constr = constr <$> wrapToHead (parser settings) <*> (space *> expr)
 
-symbolicBinOpExpr :: (IsAst symbolicExprBinOp) => a -> Parser b -> (a -> symbolicExprBinOp -> b -> c) -> Parser c
-symbolicBinOpExpr a bParser constr = do
-  binOp <- label "binary operator" (space *> wrapToHead parser <* space)
+symbolicBinOpExpr :: (IsAst symbolicExprBinOp) => Settings -> a -> Parser b -> (a -> symbolicExprBinOp -> b -> c) -> Parser c
+symbolicBinOpExpr settings a bParser constr = do
+  binOp <- label "binary operator" (space *> wrapToHead (parser settings) <* space)
   b <- bParser
   return (constr a binOp b)
 
-iconstOrFconst :: (IsAst iconst, IsAst fconst) => Parser (Either iconst fconst)
-iconstOrFconst = Right <$> parser <|> Left <$> parser
+iconstOrFconst :: (IsAst iconst, IsAst fconst) => Settings -> Parser (Either iconst fconst)
+iconstOrFconst settings = Right <$> parser settings <|> Left <$> parser settings
 
 -- |
 -- Shared by 'PostgresqlSyntax.Ast.FuncApplicationParams' and

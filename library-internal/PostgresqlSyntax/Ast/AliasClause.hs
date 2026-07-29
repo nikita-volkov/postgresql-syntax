@@ -30,20 +30,20 @@ data AliasClause = AliasClause Bool Ident (Maybe NameList)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AliasClause where
-  toTextBuilder (AliasClause a b c) =
+  toTextBuilder settings (AliasClause a b c) =
     TextBuilders.optLexemes
       [ if a then Just "AS" else Nothing,
-        Just (toTextBuilder b),
-        fmap (TextBuilders.renderInParens . toTextBuilder) c
+        Just (toTextBuilder settings b),
+        fmap (TextBuilders.renderInParens . toTextBuilder settings) c
       ]
-  parser = do
+  parser settings = do
     (as, alias) <- (True,) <$> (Parsers.keyword "as" *> Parsers.space1 *> Parser.endHead *> colIdLikeName) <|> (False,) <$> colIdLikeName
-    columnAliases <- optional (Parsers.space1 *> Parsers.inParens parser)
+    columnAliases <- optional (Parsers.space1 *> Parsers.inParens (parser settings))
     return (AliasClause as alias columnAliases)
     where
       colIdLikeName =
         Parser.label "identifier" $
-          parser
+          parser settings
             <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary AliasClause where

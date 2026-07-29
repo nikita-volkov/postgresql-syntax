@@ -24,20 +24,20 @@ data RelationExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RelationExpr where
-  toTextBuilder = \case
-    SimpleRelationExpr a b -> toTextBuilder a <> bool "" " *" b
-    OnlyRelationExpr a b -> "ONLY " <> bool toTextBuilder (TextBuilders.renderInParens . toTextBuilder) b a
-  parser =
+  toTextBuilder settings = \case
+    SimpleRelationExpr a b -> toTextBuilder settings a <> bool "" " *" b
+    OnlyRelationExpr a b -> "ONLY " <> bool (toTextBuilder settings) (TextBuilders.renderInParens . toTextBuilder settings) b a
+  parser settings =
     Parser.label "relation expression" $
       asum
         [ do
             Parsers.keyword "only"
             Parsers.space1
-            name <- parser
+            name <- parser settings
             return (OnlyRelationExpr name False),
-          Parsers.inParensWithClause (Parsers.keyword "only") parser <&> \a -> OnlyRelationExpr a True,
+          Parsers.inParensWithClause (Parsers.keyword "only") (parser settings) <&> \a -> OnlyRelationExpr a True,
           do
-            name <- parser
+            name <- parser settings
             asterisk <-
               asum
                 [ True <$ (Parsers.space1 *> Parsers.char '*'),

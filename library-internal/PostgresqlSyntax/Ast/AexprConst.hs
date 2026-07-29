@@ -52,19 +52,19 @@ data AexprConst
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst AexprConst where
-  toTextBuilder = \case
-    IAexprConst a -> toTextBuilder a
-    FAexprConst a -> toTextBuilder a
-    SAexprConst a -> toTextBuilder a
-    BAexprConst a -> toTextBuilder a
-    XAexprConst a -> toTextBuilder a
-    FuncAexprConst a b c -> toTextBuilder a <> foldMap (TextBuilders.renderInParens . toTextBuilder) b <> " " <> toTextBuilder c
-    ConstTypenameAexprConst a b -> toTextBuilder a <> " " <> toTextBuilder b
-    StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder a <> TextBuilders.suffixMaybe toTextBuilder b
-    IntIntervalAexprConst a b -> "INTERVAL " <> TextBuilders.renderInParens (toTextBuilder a) <> " " <> toTextBuilder b
+  toTextBuilder settings = \case
+    IAexprConst a -> toTextBuilder settings a
+    FAexprConst a -> toTextBuilder settings a
+    SAexprConst a -> toTextBuilder settings a
+    BAexprConst a -> toTextBuilder settings a
+    XAexprConst a -> toTextBuilder settings a
+    FuncAexprConst a b c -> toTextBuilder settings a <> foldMap (TextBuilders.renderInParens . toTextBuilder settings) b <> " " <> toTextBuilder settings c
+    ConstTypenameAexprConst a b -> toTextBuilder settings a <> " " <> toTextBuilder settings b
+    StringIntervalAexprConst a b -> "INTERVAL " <> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b
+    IntIntervalAexprConst a b -> "INTERVAL " <> TextBuilders.renderInParens (toTextBuilder settings a) <> " " <> toTextBuilder settings b
     BoolAexprConst a -> if a then "TRUE" else "FALSE"
     NullAexprConst -> "NULL"
-  parser =
+  parser settings =
     asum
       [ do
           Parsers.keyword "interval"
@@ -73,39 +73,39 @@ instance IsAst AexprConst where
           a <-
             asum
               [ do
-                  a <- parser
+                  a <- parser settings
                   Parser.endHead
-                  b <- optional (Parsers.space1 *> parser)
+                  b <- optional (Parsers.space1 *> parser settings)
                   return (StringIntervalAexprConst a b),
                 do
-                  a <- Parsers.inParens parser
+                  a <- Parsers.inParens (parser settings)
                   Parsers.space1
                   Parser.endHead
-                  b <- parser
+                  b <- parser settings
                   return (IntIntervalAexprConst a b)
               ]
           return a,
         do
-          a <- parser
+          a <- parser settings
           Parsers.space1
           Parser.endHead
-          b <- parser
+          b <- parser settings
           return (ConstTypenameAexprConst a b),
         BoolAexprConst True <$ Parsers.keyword "true",
         BoolAexprConst False <$ Parsers.keyword "false",
         NullAexprConst <$ Parsers.keyword "null" <* Parser.parse (Megaparsec.notFollowedBy MegaparsecChar.alphaNumChar),
-        either IAexprConst FAexprConst <$> (Right <$> parser <|> Left <$> parser),
-        SAexprConst <$> parser,
-        BAexprConst <$> parser,
-        XAexprConst <$> parser,
+        either IAexprConst FAexprConst <$> (Right <$> parser settings <|> Left <$> parser settings),
+        SAexprConst <$> parser settings,
+        BAexprConst <$> parser settings,
+        XAexprConst <$> parser settings,
         Parser.wrapToHead $ do
-          a <- parser
+          a <- parser settings
           Parsers.space
-          b <- Parsers.inParens parser
+          b <- Parsers.inParens (parser settings)
           Parsers.space1
-          d <- parser
+          d <- parser settings
           return (FuncAexprConst a (Just b) d),
-        FuncAexprConst <$> (Parser.wrapToHead parser <* Parsers.space1) <*> pure Nothing <*> parser
+        FuncAexprConst <$> (Parser.wrapToHead (parser settings) <* Parsers.space1) <*> pure Nothing <*> parser settings
       ]
 
 instance Qc.Arbitrary AexprConst where

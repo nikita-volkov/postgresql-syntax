@@ -46,7 +46,7 @@ data Numeric
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Numeric where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     IntNumeric -> "INT"
     IntegerNumeric -> "INTEGER"
     SmallintNumeric -> "SMALLINT"
@@ -54,11 +54,11 @@ instance IsAst Numeric where
     RealNumeric -> "REAL"
     FloatNumeric a -> "FLOAT" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
     DoublePrecisionNumeric -> "DOUBLE PRECISION"
-    DecimalNumeric a -> "DECIMAL" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
-    DecNumeric a -> "DEC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
-    NumericNumeric a -> "NUMERIC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder) a
+    DecimalNumeric a -> "DECIMAL" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder settings) a
+    DecNumeric a -> "DEC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder settings) a
+    NumericNumeric a -> "NUMERIC" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . toTextBuilder settings) a
     BooleanNumeric -> "BOOLEAN"
-  parser =
+  parser settings =
     asum
       [ IntegerNumeric <$ Parsers.keyword "integer",
         IntNumeric <$ Parsers.keyword "int",
@@ -67,9 +67,9 @@ instance IsAst Numeric where
         RealNumeric <$ Parsers.keyword "real",
         FloatNumeric <$> (Parsers.keyword "float" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens Parsers.decimal)),
         DoublePrecisionNumeric <$ Parsers.keyphrase "double precision",
-        DecimalNumeric <$> (Parsers.keyword "decimal" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
-        DecNumeric <$> (Parsers.keyword "dec" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
-        NumericNumeric <$> (Parsers.keyword "numeric" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens parser)),
+        DecimalNumeric <$> (Parsers.keyword "decimal" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens (parser settings))),
+        DecNumeric <$> (Parsers.keyword "dec" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens (parser settings))),
+        NumericNumeric <$> (Parsers.keyword "numeric" *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens (parser settings))),
         BooleanNumeric <$ Parsers.keyword "boolean"
       ]
 

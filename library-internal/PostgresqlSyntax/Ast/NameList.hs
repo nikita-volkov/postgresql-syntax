@@ -30,12 +30,12 @@ newtype NameList = NameList (NonEmpty Ident)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst NameList where
-  toTextBuilder (NameList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = NameList <$> Parsers.sep1 Parsers.commaSeparator colIdLikeName
+  toTextBuilder settings (NameList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = NameList <$> Parsers.sep1 Parsers.commaSeparator colIdLikeName
     where
       colIdLikeName =
         Parser.label "identifier" $
-          parser
+          parser settings
             <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
 
 instance Qc.Arbitrary NameList where

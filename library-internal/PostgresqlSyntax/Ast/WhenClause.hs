@@ -18,16 +18,16 @@ data WhenClause = WhenClause AExpr AExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WhenClause where
-  toTextBuilder (WhenClause a b) = "WHEN " <> toTextBuilder a <> " THEN " <> toTextBuilder b
-  parser = do
+  toTextBuilder settings (WhenClause a b) = "WHEN " <> toTextBuilder settings a <> " THEN " <> toTextBuilder settings b
+  parser settings = do
     Parsers.keyword "when"
     Parsers.space1
     Parser.endHead
-    a <- parser
+    a <- parser settings
     Parsers.space1
     Parsers.keyword "then"
     Parsers.space1
-    b <- parser
+    b <- parser settings
     return (WhenClause a b)
 
 instance Qc.Arbitrary WhenClause where

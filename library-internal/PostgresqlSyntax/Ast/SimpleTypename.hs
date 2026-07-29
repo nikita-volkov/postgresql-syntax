@@ -38,27 +38,27 @@ data SimpleTypename
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SimpleTypename where
-  toTextBuilder = \case
-    GenericTypeSimpleTypename a -> toTextBuilder a
-    NumericSimpleTypename a -> toTextBuilder a
-    BitSimpleTypename a -> toTextBuilder a
-    CharacterSimpleTypename a -> toTextBuilder a
-    ConstDatetimeSimpleTypename a -> toTextBuilder a
-    ConstIntervalSimpleTypename a -> "INTERVAL" <> either (TextBuilders.suffixMaybe toTextBuilder) (mappend " " . TextBuilders.renderInParens . toTextBuilder) a
-  parser =
+  toTextBuilder settings = \case
+    GenericTypeSimpleTypename a -> toTextBuilder settings a
+    NumericSimpleTypename a -> toTextBuilder settings a
+    BitSimpleTypename a -> toTextBuilder settings a
+    CharacterSimpleTypename a -> toTextBuilder settings a
+    ConstDatetimeSimpleTypename a -> toTextBuilder settings a
+    ConstIntervalSimpleTypename a -> "INTERVAL" <> either (TextBuilders.suffixMaybe (toTextBuilder settings)) (mappend " " . TextBuilders.renderInParens . toTextBuilder settings) a
+  parser settings =
     asum
       [ do
           Parsers.keyword "interval"
           Parser.endHead
           asum
-            [ ConstIntervalSimpleTypename <$> Right <$> (Parsers.space *> Parsers.inParens parser),
-              ConstIntervalSimpleTypename <$> Left <$> optional (Parsers.space *> parser)
+            [ ConstIntervalSimpleTypename <$> Right <$> (Parsers.space *> Parsers.inParens (parser settings)),
+              ConstIntervalSimpleTypename <$> Left <$> optional (Parsers.space *> parser settings)
             ],
-        ConstDatetimeSimpleTypename <$> parser,
-        NumericSimpleTypename <$> parser,
-        BitSimpleTypename <$> parser,
-        CharacterSimpleTypename <$> parser,
-        GenericTypeSimpleTypename <$> parser
+        ConstDatetimeSimpleTypename <$> parser settings,
+        NumericSimpleTypename <$> parser settings,
+        BitSimpleTypename <$> parser settings,
+        CharacterSimpleTypename <$> parser settings,
+        GenericTypeSimpleTypename <$> parser settings
       ]
 
 instance Qc.Arbitrary SimpleTypename where

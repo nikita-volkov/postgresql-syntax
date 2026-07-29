@@ -57,13 +57,13 @@ data BExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst BExpr where
-  toTextBuilder = \case
-    CExprBExpr a -> toTextBuilder a
-    TypecastBExpr a b -> renderOperand a <> " :: " <> toTextBuilder b
-    PlusBExpr a -> "+ " <> toTextBuilder a
-    MinusBExpr a -> "- " <> toTextBuilder a
-    SymbolicBinOpBExpr a b c -> renderOperand a <> " " <> toTextBuilder b <> " " <> toTextBuilder c
-    QualOpBExpr a b -> toTextBuilder a <> " " <> toTextBuilder b
+  toTextBuilder settings = \case
+    CExprBExpr a -> toTextBuilder settings a
+    TypecastBExpr a b -> renderOperand a <> " :: " <> toTextBuilder settings b
+    PlusBExpr a -> "+ " <> toTextBuilder settings a
+    MinusBExpr a -> "- " <> toTextBuilder settings a
+    SymbolicBinOpBExpr a b c -> renderOperand a <> " " <> toTextBuilder settings b <> " " <> toTextBuilder settings c
+    QualOpBExpr a b -> toTextBuilder settings a <> " " <> toTextBuilder settings b
     IsOpBExpr a b c -> renderOperand a <> " " <> renderBExprIsOp b c
     where
       -- See 'PostgresqlSyntax.Ast.AExpr'\'s @renderOperand@ for the
@@ -77,27 +77,27 @@ instance IsAst BExpr where
       -- 'Qc.Arbitrary' instance below never generates an operand needing
       -- this fallback).
       renderOperand a
-        | isBoundedBExprOperand a = toTextBuilder a
-        | otherwise = TextBuilders.renderInParens (toTextBuilder a)
+        | isBoundedBExprOperand a = toTextBuilder settings a
+        | otherwise = TextBuilders.renderInParens (toTextBuilder settings a)
       renderBExprIsOp a =
         mappend (bool "IS " "IS NOT " a) . \case
-          DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder b
-          OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder b)
+          DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder settings b
+          OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder settings b)
           DocumentBExprIsOp -> "DOCUMENT"
-  parser = suffixRec base suffix
+  parser settings = suffixRec base suffix
     where
       bExpr = suffixRec base suffix
       base =
         asum
-          [ Parsers.qualOpExpr bExpr QualOpBExpr,
+          [ Parsers.qualOpExpr settings bExpr QualOpBExpr,
             PlusBExpr <$> Parsers.plusedExpr bExpr,
             MinusBExpr <$> Parsers.minusedExpr bExpr,
-            CExprBExpr <$> parser
+            CExprBExpr <$> parser settings
           ]
       suffix a =
         asum
-          [ Parsers.typecastExpr a TypecastBExpr,
-            Parsers.symbolicBinOpExpr a bExpr SymbolicBinOpBExpr,
+          [ Parsers.typecastExpr settings a TypecastBExpr,
+            Parsers.symbolicBinOpExpr settings a bExpr SymbolicBinOpBExpr,
             do
               Parsers.space1
               Parsers.keyword "is"
@@ -107,7 +107,7 @@ instance IsAst BExpr where
               c <-
                 asum
                   [ DistinctFromBExprIsOp <$> (Parsers.keyphrase "distinct from" *> Parsers.space1 *> Parser.endHead *> bExpr),
-                    OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+                    OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens (parser settings)),
                     DocumentBExprIsOp <$ Parsers.keyword "document"
                   ]
               return (IsOpBExpr a b c)

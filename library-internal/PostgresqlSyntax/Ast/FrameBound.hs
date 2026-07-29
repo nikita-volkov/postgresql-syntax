@@ -26,13 +26,13 @@ data FrameBound
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FrameBound where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     UnboundedPrecedingFrameBound -> "UNBOUNDED PRECEDING"
     UnboundedFollowingFrameBound -> "UNBOUNDED FOLLOWING"
     CurrentRowFrameBound -> "CURRENT ROW"
-    PrecedingFrameBound a -> toTextBuilder a <> " PRECEDING"
-    FollowingFrameBound a -> toTextBuilder a <> " FOLLOWING"
-  parser =
+    PrecedingFrameBound a -> toTextBuilder settings a <> " PRECEDING"
+    FollowingFrameBound a -> toTextBuilder settings a <> " FOLLOWING"
+  parser settings =
     UnboundedPrecedingFrameBound
       <$ Parsers.keyphrase "unbounded preceding"
         <|> UnboundedFollowingFrameBound
@@ -40,7 +40,7 @@ instance IsAst FrameBound where
         <|> CurrentRowFrameBound
       <$ Parsers.keyphrase "current row"
         <|> do
-          a <- parser :: Parser AExpr
+          a <- parser settings :: Parser AExpr
           Parsers.space1
           PrecedingFrameBound a <$ Parsers.keyword "preceding" <|> FollowingFrameBound a <$ Parsers.keyword "following"
 

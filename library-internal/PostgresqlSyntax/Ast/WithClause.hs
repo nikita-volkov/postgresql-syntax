@@ -22,14 +22,14 @@ data WithClause = WithClause Bool (NonEmpty CommonTableExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WithClause where
-  toTextBuilder (WithClause a b) =
-    "WITH " <> bool "" "RECURSIVE " a <> TextBuilders.commaNonEmpty toTextBuilder b
-  parser = Parser.label "with clause" $ do
+  toTextBuilder settings (WithClause a b) =
+    "WITH " <> bool "" "RECURSIVE " a <> TextBuilders.commaNonEmpty (toTextBuilder settings) b
+  parser settings = Parser.label "with clause" $ do
     Parsers.keyword "with"
     Parsers.space1
     Parser.endHead
     recursive <- option False (True <$ Parsers.keyword "recursive" <* Parsers.space1)
-    cteList <- Parsers.sep1 Parsers.commaSeparator parser
+    cteList <- Parsers.sep1 Parsers.commaSeparator (parser settings)
     return (WithClause recursive cteList)
 
 instance Qc.Arbitrary WithClause where

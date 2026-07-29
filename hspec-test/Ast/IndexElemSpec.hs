@@ -17,8 +17,8 @@ spec = do
     -- directly ambiguous with the unreserved NULLS that follows it.
     it "index_elem" $ do
       let render :: IndexElem -> Text
-          render = toText
-      fmap render (parse @IndexElem "a") `shouldBe` Right "a"
-      fmap render (parse @IndexElem "a nulls first") `shouldBe` Right "a NULLS FIRST"
-      fmap render (parse @IndexElem "a text_ops nulls first") `shouldBe` Right "a text_ops NULLS FIRST"
-      fmap render (parse @IndexElem "a collate \"C\" text_ops desc") `shouldBe` Right "a COLLATE \"C\" text_ops DESC"
+          render = toText mempty
+      fmap render (parse @IndexElem mempty "a") `shouldBe` Right "a"
+      fmap render (parse @IndexElem mempty "a nulls first") `shouldBe` Right "a NULLS FIRST"
+      fmap render (parse @IndexElem mempty "a text_ops nulls first") `shouldBe` Right "a text_ops NULLS FIRST"
+      fmap render (parse @IndexElem mempty "a collate \"C\" text_ops desc") `shouldBe` Right "a COLLATE \"C\" text_ops DESC"

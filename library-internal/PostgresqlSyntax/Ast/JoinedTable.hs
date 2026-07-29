@@ -31,18 +31,18 @@ data JoinedTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst JoinedTable where
-  toTextBuilder = \case
-    InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder a)
-    MethJoinedTable a b c -> toTextBuilder b <> " " <> toTextBuilder a <> " " <> toTextBuilder c
-  parser =
+  toTextBuilder settings = \case
+    InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
+    MethJoinedTable a b c -> toTextBuilder settings b <> " " <> toTextBuilder settings a <> " " <> toTextBuilder settings c
+  parser settings =
     InParensJoinedTable
-      <$> Parsers.inParens parser
+      <$> Parsers.inParens (parser settings)
         <|> ( do
-                b <- parser
+                b <- parser settings
                 Parsers.space1
-                a <- parser
+                a <- parser settings
                 Parsers.space1
-                c <- parser
+                c <- parser settings
                 return (MethJoinedTable a b c)
             )
 

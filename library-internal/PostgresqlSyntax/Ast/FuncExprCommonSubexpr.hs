@@ -94,8 +94,8 @@ data FuncExprCommonSubexpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncExprCommonSubexpr where
-  toTextBuilder = \case
-    CollationForFuncExprCommonSubexpr a -> "COLLATION FOR (" <> toTextBuilder a <> ")"
+  toTextBuilder settings = \case
+    CollationForFuncExprCommonSubexpr a -> "COLLATION FOR (" <> toTextBuilder settings a <> ")"
     CurrentDateFuncExprCommonSubexpr -> "CURRENT_DATE"
     CurrentTimeFuncExprCommonSubexpr a -> "CURRENT_TIME" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
     CurrentTimestampFuncExprCommonSubexpr a -> "CURRENT_TIMESTAMP" <> TextBuilders.suffixMaybe (TextBuilders.renderInParens . TextBuilder.int64Dec) a
@@ -107,20 +107,20 @@ instance IsAst FuncExprCommonSubexpr where
     UserFuncExprCommonSubexpr -> "USER"
     CurrentCatalogFuncExprCommonSubexpr -> "CURRENT_CATALOG"
     CurrentSchemaFuncExprCommonSubexpr -> "CURRENT_SCHEMA"
-    CastFuncExprCommonSubexpr a b -> "CAST (" <> toTextBuilder a <> " AS " <> toTextBuilder b <> ")"
-    ExtractFuncExprCommonSubexpr a -> "EXTRACT (" <> foldMap toTextBuilder a <> ")"
-    OverlayFuncExprCommonSubexpr a -> "OVERLAY (" <> toTextBuilder a <> ")"
-    PositionFuncExprCommonSubexpr a -> "POSITION (" <> foldMap toTextBuilder a <> ")"
-    SubstringFuncExprCommonSubexpr a -> "SUBSTRING (" <> foldMap toTextBuilder a <> ")"
-    TreatFuncExprCommonSubexpr a b -> "TREAT (" <> toTextBuilder a <> " AS " <> toTextBuilder b <> ")"
-    TrimFuncExprCommonSubexpr a b -> "TRIM (" <> TextBuilders.prefixMaybe toTextBuilder a <> toTextBuilder b <> ")"
-    NullIfFuncExprCommonSubexpr a b -> "NULLIF (" <> toTextBuilder a <> ", " <> toTextBuilder b <> ")"
-    CoalesceFuncExprCommonSubexpr a -> "COALESCE (" <> toTextBuilder a <> ")"
-    GreatestFuncExprCommonSubexpr a -> "GREATEST (" <> toTextBuilder a <> ")"
-    LeastFuncExprCommonSubexpr a -> "LEAST (" <> toTextBuilder a <> ")"
-  parser =
+    CastFuncExprCommonSubexpr a b -> "CAST (" <> toTextBuilder settings a <> " AS " <> toTextBuilder settings b <> ")"
+    ExtractFuncExprCommonSubexpr a -> "EXTRACT (" <> foldMap (toTextBuilder settings) a <> ")"
+    OverlayFuncExprCommonSubexpr a -> "OVERLAY (" <> toTextBuilder settings a <> ")"
+    PositionFuncExprCommonSubexpr a -> "POSITION (" <> foldMap (toTextBuilder settings) a <> ")"
+    SubstringFuncExprCommonSubexpr a -> "SUBSTRING (" <> foldMap (toTextBuilder settings) a <> ")"
+    TreatFuncExprCommonSubexpr a b -> "TREAT (" <> toTextBuilder settings a <> " AS " <> toTextBuilder settings b <> ")"
+    TrimFuncExprCommonSubexpr a b -> "TRIM (" <> TextBuilders.prefixMaybe (toTextBuilder settings) a <> toTextBuilder settings b <> ")"
+    NullIfFuncExprCommonSubexpr a b -> "NULLIF (" <> toTextBuilder settings a <> ", " <> toTextBuilder settings b <> ")"
+    CoalesceFuncExprCommonSubexpr a -> "COALESCE (" <> toTextBuilder settings a <> ")"
+    GreatestFuncExprCommonSubexpr a -> "GREATEST (" <> toTextBuilder settings a <> ")"
+    LeastFuncExprCommonSubexpr a -> "LEAST (" <> toTextBuilder settings a <> ")"
+  parser settings =
     asum
-      [ CollationForFuncExprCommonSubexpr <$> Parsers.inParensWithClause (Parsers.keyphrase "collation for") parser,
+      [ CollationForFuncExprCommonSubexpr <$> Parsers.inParensWithClause (Parsers.keyphrase "collation for") (parser settings),
         CurrentDateFuncExprCommonSubexpr <$ Parsers.keyword "current_date",
         CurrentTimestampFuncExprCommonSubexpr <$> labeledIconst "current_timestamp",
         CurrentTimeFuncExprCommonSubexpr <$> labeledIconst "current_time",
@@ -132,17 +132,17 @@ instance IsAst FuncExprCommonSubexpr where
         UserFuncExprCommonSubexpr <$ Parsers.keyword "user",
         CurrentCatalogFuncExprCommonSubexpr <$ Parsers.keyword "current_catalog",
         CurrentSchemaFuncExprCommonSubexpr <$ Parsers.keyword "current_schema",
-        Parsers.inParensWithClause (Parsers.keyword "cast") (CastFuncExprCommonSubexpr <$> parser <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser)),
-        Parsers.inParensWithClause (Parsers.keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional parser),
-        Parsers.inParensWithClause (Parsers.keyword "overlay") (OverlayFuncExprCommonSubexpr <$> parser),
-        Parsers.inParensWithClause (Parsers.keyword "position") (PositionFuncExprCommonSubexpr <$> optional parser),
-        Parsers.inParensWithClause (Parsers.keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional parser),
-        Parsers.inParensWithClause (Parsers.keyword "treat") (TreatFuncExprCommonSubexpr <$> parser <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser)),
-        Parsers.inParensWithClause (Parsers.keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser <* Parsers.space1) <*> parser),
-        Parsers.inParensWithClause (Parsers.keyword "nullif") (NullIfFuncExprCommonSubexpr <$> parser <*> (Parsers.commaSeparator *> parser)),
-        Parsers.inParensWithClause (Parsers.keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> parser),
-        Parsers.inParensWithClause (Parsers.keyword "greatest") (GreatestFuncExprCommonSubexpr <$> parser),
-        Parsers.inParensWithClause (Parsers.keyword "least") (LeastFuncExprCommonSubexpr <$> parser)
+        Parsers.inParensWithClause (Parsers.keyword "cast") (CastFuncExprCommonSubexpr <$> parser settings <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "extract") (ExtractFuncExprCommonSubexpr <$> optional (parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "overlay") (OverlayFuncExprCommonSubexpr <$> parser settings),
+        Parsers.inParensWithClause (Parsers.keyword "position") (PositionFuncExprCommonSubexpr <$> optional (parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "substring") (SubstringFuncExprCommonSubexpr <$> optional (parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "treat") (TreatFuncExprCommonSubexpr <$> parser settings <*> (Parsers.space1 *> Parsers.keyword "as" *> Parsers.space1 *> parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "trim") (TrimFuncExprCommonSubexpr <$> optional (parser settings <* Parsers.space1) <*> parser settings),
+        Parsers.inParensWithClause (Parsers.keyword "nullif") (NullIfFuncExprCommonSubexpr <$> parser settings <*> (Parsers.commaSeparator *> parser settings)),
+        Parsers.inParensWithClause (Parsers.keyword "coalesce") (CoalesceFuncExprCommonSubexpr <$> parser settings),
+        Parsers.inParensWithClause (Parsers.keyword "greatest") (GreatestFuncExprCommonSubexpr <$> parser settings),
+        Parsers.inParensWithClause (Parsers.keyword "least") (LeastFuncExprCommonSubexpr <$> parser settings)
       ]
     where
       labeledIconst lbl = Parsers.keyword lbl *> Parser.endHead *> optional (Parsers.space *> Parsers.inParens Parsers.decimal)

@@ -17,10 +17,10 @@ data AscDesc = AscAscDesc | DescAscDesc
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst AscDesc where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     AscAscDesc -> "ASC"
     DescAscDesc -> "DESC"
-  parser = Parsers.keyword "asc" $> AscAscDesc <|> Parsers.keyword "desc" $> DescAscDesc
+  parser settings = Parsers.keyword "asc" $> AscAscDesc <|> Parsers.keyword "desc" $> DescAscDesc
 
 instance Qc.Arbitrary AscDesc where
   shrink = Qc.genericShrink

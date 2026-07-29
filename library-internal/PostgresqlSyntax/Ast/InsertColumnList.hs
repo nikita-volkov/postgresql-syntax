@@ -19,8 +19,8 @@ newtype InsertColumnList = InsertColumnList (NonEmpty InsertColumnItem)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertColumnList where
-  toTextBuilder (InsertColumnList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = InsertColumnList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (InsertColumnList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = InsertColumnList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary InsertColumnList where
   shrink = Qc.genericShrink

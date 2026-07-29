@@ -23,17 +23,17 @@ data TableFuncElement = TableFuncElement Ident Typename (Maybe AnyName)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TableFuncElement where
-  toTextBuilder (TableFuncElement a b c) = toTextBuilder a <> " " <> toTextBuilder b <> TextBuilders.suffixMaybe collateClause c
+  toTextBuilder settings (TableFuncElement a b c) = toTextBuilder settings a <> " " <> toTextBuilder settings b <> TextBuilders.suffixMaybe collateClause c
     where
-      collateClause a' = "COLLATE " <> toTextBuilder a'
-  parser = do
-    a <- Parser.wrapToHead colId
+      collateClause a' = "COLLATE " <> toTextBuilder settings a'
+  parser settings = do
+    a <- Parser.wrapToHead (colId settings)
     Parsers.space1
-    b <- parser
+    b <- parser settings
     c <- optional (Parsers.space1 *> collateClause)
     return (TableFuncElement a b c)
     where
-      collateClause = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser
+      collateClause = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary TableFuncElement where
   shrink = Qc.genericShrink

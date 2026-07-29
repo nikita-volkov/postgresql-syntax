@@ -43,35 +43,35 @@ data Interval
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Interval where
-  toTextBuilder = \case
+  toTextBuilder settings = \case
     YearInterval -> "YEAR"
     MonthInterval -> "MONTH"
     DayInterval -> "DAY"
     HourInterval -> "HOUR"
     MinuteInterval -> "MINUTE"
-    SecondInterval a -> toTextBuilder a
+    SecondInterval a -> toTextBuilder settings a
     YearToMonthInterval -> "YEAR TO MONTH"
     DayToHourInterval -> "DAY TO HOUR"
     DayToMinuteInterval -> "DAY TO MINUTE"
-    DayToSecondInterval a -> "DAY TO " <> toTextBuilder a
+    DayToSecondInterval a -> "DAY TO " <> toTextBuilder settings a
     HourToMinuteInterval -> "HOUR TO MINUTE"
-    HourToSecondInterval a -> "HOUR TO " <> toTextBuilder a
-    MinuteToSecondInterval a -> "MINUTE TO " <> toTextBuilder a
-  parser =
+    HourToSecondInterval a -> "HOUR TO " <> toTextBuilder settings a
+    MinuteToSecondInterval a -> "MINUTE TO " <> toTextBuilder settings a
+  parser settings =
     asum
       [ YearToMonthInterval <$ Parsers.keyphrase "year to month",
         DayToHourInterval <$ Parsers.keyphrase "day to hour",
         DayToMinuteInterval <$ Parsers.keyphrase "day to minute",
-        DayToSecondInterval <$> (Parsers.keyphrase "day to" *> Parsers.space1 *> Parser.endHead *> parser),
+        DayToSecondInterval <$> (Parsers.keyphrase "day to" *> Parsers.space1 *> Parser.endHead *> parser settings),
         HourToMinuteInterval <$ Parsers.keyphrase "hour to minute",
-        HourToSecondInterval <$> (Parsers.keyphrase "hour to" *> Parsers.space1 *> Parser.endHead *> parser),
-        MinuteToSecondInterval <$> (Parsers.keyphrase "minute to" *> Parsers.space1 *> Parser.endHead *> parser),
+        HourToSecondInterval <$> (Parsers.keyphrase "hour to" *> Parsers.space1 *> Parser.endHead *> parser settings),
+        MinuteToSecondInterval <$> (Parsers.keyphrase "minute to" *> Parsers.space1 *> Parser.endHead *> parser settings),
         YearInterval <$ Parsers.keyword "year",
         MonthInterval <$ Parsers.keyword "month",
         DayInterval <$ Parsers.keyword "day",
         HourInterval <$ Parsers.keyword "hour",
         MinuteInterval <$ Parsers.keyword "minute",
-        SecondInterval <$> parser
+        SecondInterval <$> parser settings
       ]
 
 instance Qc.Arbitrary Interval where

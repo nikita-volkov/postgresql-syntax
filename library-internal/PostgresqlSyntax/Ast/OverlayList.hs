@@ -26,28 +26,28 @@ data OverlayList = OverlayList AExpr AExpr AExpr (Maybe AExpr)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OverlayList where
-  toTextBuilder (OverlayList a b c d) =
-    toTextBuilder a
+  toTextBuilder settings (OverlayList a b c d) =
+    toTextBuilder settings a
       <> " PLACING "
-      <> toTextBuilder b
+      <> toTextBuilder settings b
       <> " FROM "
-      <> toTextBuilder c
-      <> TextBuilders.suffixMaybe (mappend "FOR " . toTextBuilder) d
+      <> toTextBuilder settings c
+      <> TextBuilders.suffixMaybe (mappend "FOR " . toTextBuilder settings) d
     where
       suffixMaybe f = foldMap (mappend " " . f)
-  parser = do
-    a <- parser
+  parser settings = do
+    a <- parser settings
     Parsers.space1
     Parsers.keyword "placing"
     Parsers.space1
     Parser.endHead
-    b <- parser
+    b <- parser settings
     Parsers.space1
     Parsers.keyword "from"
     Parsers.space1
     Parser.endHead
-    c <- parser
-    d <- optional (Parsers.space1 *> Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser)
+    c <- parser settings
+    d <- optional (Parsers.space1 *> Parsers.keyword "for" *> Parsers.space1 *> Parser.endHead *> parser settings)
     return (OverlayList a b c d)
 
 instance Qc.Arbitrary OverlayList where

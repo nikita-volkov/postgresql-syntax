@@ -16,8 +16,8 @@ newtype OptVarying = OptVarying Bool
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OptVarying where
-  toTextBuilder (OptVarying a) = if a then "VARYING" else mempty
-  parser = OptVarying <$> (True <$ Parsers.space1 <* Parsers.keyword "varying" <|> pure False)
+  toTextBuilder settings (OptVarying a) = if a then "VARYING" else mempty
+  parser settings = OptVarying <$> (True <$ Parsers.space1 <* Parsers.keyword "varying" <|> pure False)
 
 instance Qc.Arbitrary OptVarying where
   shrink = Qc.genericShrink

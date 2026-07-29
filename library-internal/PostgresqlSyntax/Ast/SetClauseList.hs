@@ -19,8 +19,8 @@ newtype SetClauseList = SetClauseList (NonEmpty SetClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetClauseList where
-  toTextBuilder (SetClauseList a) = TextBuilders.commaNonEmpty toTextBuilder a
-  parser = SetClauseList <$> Parsers.sep1 Parsers.commaSeparator parser
+  toTextBuilder settings (SetClauseList a) = TextBuilders.commaNonEmpty (toTextBuilder settings) a
+  parser settings = SetClauseList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
 
 instance Qc.Arbitrary SetClauseList where
   shrink = Qc.genericShrink

@@ -38,12 +38,12 @@ data IndirectionEl
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IndirectionEl where
-  toTextBuilder = \case
-    AttrNameIndirectionEl a -> "." <> toTextBuilder a
+  toTextBuilder settings = \case
+    AttrNameIndirectionEl a -> "." <> toTextBuilder settings a
     AllIndirectionEl -> ".*"
-    ExprIndirectionEl a -> TextBuilders.renderInBrackets (toTextBuilder a)
-    SliceIndirectionEl a b -> TextBuilders.renderInBrackets (foldMap toTextBuilder a <> ":" <> foldMap toTextBuilder b)
-  parser =
+    ExprIndirectionEl a -> TextBuilders.renderInBrackets (toTextBuilder settings a)
+    SliceIndirectionEl a b -> TextBuilders.renderInBrackets (foldMap (toTextBuilder settings) a <> ":" <> foldMap (toTextBuilder settings) b)
+  parser settings =
     asum
       [ do
           Parsers.char '.'
@@ -60,16 +60,16 @@ instance IsAst IndirectionEl where
                   Parsers.char ':'
                   Parser.endHead
                   Parsers.space
-                  b <- optional parser
+                  b <- optional (parser settings)
                   return (SliceIndirectionEl Nothing b),
                 do
-                  a <- parser
+                  a <- parser settings
                   asum
                     [ do
                         Parsers.space
                         Parsers.char ':'
                         Parsers.space
-                        b <- optional parser
+                        b <- optional (parser settings)
                         return (SliceIndirectionEl (Just a) b),
                       return (ExprIndirectionEl a)
                     ]
@@ -82,7 +82,7 @@ instance IsAst IndirectionEl where
       colLabelLikeName =
         Parser.label "column label" $
           Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
-            <|> parser
+            <|> parser settings
 
 instance Qc.Arbitrary IndirectionEl where
   shrink = Qc.genericShrink

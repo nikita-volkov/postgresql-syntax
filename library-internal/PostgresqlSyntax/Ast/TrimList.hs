@@ -24,15 +24,15 @@ data TrimList
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TrimList where
-  toTextBuilder = \case
-    ExprFromExprListTrimList a b -> toTextBuilder a <> " FROM " <> toTextBuilder b
-    FromExprListTrimList a -> "FROM " <> toTextBuilder a
-    ExprListTrimList a -> toTextBuilder a
-  parser =
+  toTextBuilder settings = \case
+    ExprFromExprListTrimList a b -> toTextBuilder settings a <> " FROM " <> toTextBuilder settings b
+    FromExprListTrimList a -> "FROM " <> toTextBuilder settings a
+    ExprListTrimList a -> toTextBuilder settings a
+  parser settings =
     asum
-      [ ExprFromExprListTrimList <$> Parser.wrapToHead parser <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
-        FromExprListTrimList <$> (Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser),
-        ExprListTrimList <$> parser
+      [ ExprFromExprListTrimList <$> Parser.wrapToHead (parser settings) <*> (Parsers.space1 *> Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser settings),
+        FromExprListTrimList <$> (Parsers.keyword "from" *> Parsers.space1 *> Parser.endHead *> parser settings),
+        ExprListTrimList <$> parser settings
       ]
 
 instance Qc.Arbitrary TrimList where

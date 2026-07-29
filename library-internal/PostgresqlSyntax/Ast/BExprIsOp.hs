@@ -33,14 +33,14 @@ data BExprIsOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst BExprIsOp where
-  toTextBuilder = \case
-    DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder b
-    OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder b)
+  toTextBuilder settings = \case
+    DistinctFromBExprIsOp b -> "DISTINCT FROM " <> toTextBuilder settings b
+    OfBExprIsOp b -> "OF " <> TextBuilders.renderInParens (toTextBuilder settings b)
     DocumentBExprIsOp -> "DOCUMENT"
-  parser =
+  parser settings =
     asum
-      [ DistinctFromBExprIsOp <$> (Parsers.keyphrase "distinct from" *> Parsers.space1 *> Parser.endHead *> parser),
-        OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens parser),
+      [ DistinctFromBExprIsOp <$> (Parsers.keyphrase "distinct from" *> Parsers.space1 *> Parser.endHead *> parser settings),
+        OfBExprIsOp <$> (Parsers.keyword "of" *> Parsers.space1 *> Parser.endHead *> Parsers.inParens (parser settings)),
         DocumentBExprIsOp <$ Parsers.keyword "document"
       ]
 

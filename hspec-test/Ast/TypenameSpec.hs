@@ -2,6 +2,7 @@ module Ast.TypenameSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.Typename
+import PostgresqlSyntax.Settings (nullabilityMarkers)
 import Prelude
 import Test.Hspec
 
@@ -10,10 +11,8 @@ spec = do
   itSatisfiesIsAst @Typename
   itSatisfiesArbitrary @Typename
   describe "Parsers" $ do
-    itParses @Typename "int4[]"
+    itParses @Typename "int4"
     itParses @Typename "int4[][]"
-    itParses @Typename "int4?[]"
-    itParses @Typename "int4?[]?"
     itParses @Typename "aa array"
     itParses @Typename "DOUBLE PRECISION"
     itParses @Typename "bool"
@@ -36,3 +35,12 @@ spec = do
     itParses @Typename "inet"
     itParses @Typename "json"
     itParses @Typename "jsonb"
+  describe "extended" $ do
+    itParsesWith @Typename (nullabilityMarkers True) "text?"
+    itParsesWith @Typename (nullabilityMarkers True) "text[]?"
+    itParsesWith @Typename (nullabilityMarkers True) "text?[]?"
+    itParsesWith @Typename (nullabilityMarkers True) "text?[]"
+    itRejectsWith @Typename mempty "text?"
+    itRejectsWith @Typename mempty "text[]?"
+    itRejectsWith @Typename mempty "text?[]?"
+    itRejectsWith @Typename mempty "text?[]"

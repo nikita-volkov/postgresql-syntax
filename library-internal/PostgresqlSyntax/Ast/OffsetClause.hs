@@ -27,18 +27,18 @@ data OffsetClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst OffsetClause where
-  toTextBuilder = \case
-    ExprOffsetClause a -> "OFFSET " <> toTextBuilder a
-    FetchFirstOffsetClause a b -> "OFFSET " <> toTextBuilder a <> " " <> rowOrRows b
+  toTextBuilder settings = \case
+    ExprOffsetClause a -> "OFFSET " <> toTextBuilder settings a
+    FetchFirstOffsetClause a b -> "OFFSET " <> toTextBuilder settings a <> " " <> rowOrRows b
     where
       rowOrRows = bool "ROW" "ROWS"
-  parser = do
+  parser settings = do
     Parsers.keyword "offset"
     Parser.endHead
     Parsers.space1
     asum
-      [ FetchFirstOffsetClause <$> Parser.wrapToHead parser <*> (Parsers.space1 *> rowOrRows),
-        ExprOffsetClause <$> parser
+      [ FetchFirstOffsetClause <$> Parser.wrapToHead (parser settings) <*> (Parsers.space1 *> rowOrRows),
+        ExprOffsetClause <$> parser settings
       ]
     where
       rowOrRows =

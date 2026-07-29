@@ -37,19 +37,19 @@ data GroupByItem
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst GroupByItem where
-  toTextBuilder = \case
-    ExprGroupByItem a -> toTextBuilder a
+  toTextBuilder settings = \case
+    ExprGroupByItem a -> toTextBuilder settings a
     EmptyGroupingSetGroupByItem -> "()"
-    RollupGroupByItem a -> "ROLLUP (" <> toTextBuilder a <> ")"
-    CubeGroupByItem a -> "CUBE (" <> toTextBuilder a <> ")"
-    GroupingSetsGroupByItem a -> "GROUPING SETS (" <> TextBuilders.commaNonEmpty toTextBuilder a <> ")"
-  parser =
+    RollupGroupByItem a -> "ROLLUP (" <> toTextBuilder settings a <> ")"
+    CubeGroupByItem a -> "CUBE (" <> toTextBuilder settings a <> ")"
+    GroupingSetsGroupByItem a -> "GROUPING SETS (" <> TextBuilders.commaNonEmpty (toTextBuilder settings) a <> ")"
+  parser settings =
     asum
       [ EmptyGroupingSetGroupByItem <$ (Parsers.char '(' *> Parsers.space *> Parsers.char ')'),
-        RollupGroupByItem . ExprList <$> (Parsers.keyword "rollup" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
-        CubeGroupByItem . ExprList <$> (Parsers.keyword "cube" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
-        GroupingSetsGroupByItem <$> (Parsers.keyphrase "grouping sets" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator parser)),
-        ExprGroupByItem <$> parser
+        RollupGroupByItem . ExprList <$> (Parsers.keyword "rollup" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator (parser settings))),
+        CubeGroupByItem . ExprList <$> (Parsers.keyword "cube" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator (parser settings))),
+        GroupingSetsGroupByItem <$> (Parsers.keyphrase "grouping sets" *> Parser.endHead *> Parsers.space *> Parsers.inParens (Parsers.sep1 Parsers.commaSeparator (parser settings))),
+        ExprGroupByItem <$> parser settings
       ]
 
 instance Qc.Arbitrary GroupByItem where

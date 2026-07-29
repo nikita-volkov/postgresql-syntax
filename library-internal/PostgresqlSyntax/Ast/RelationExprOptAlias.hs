@@ -10,6 +10,7 @@ import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -24,10 +25,10 @@ data RelationExprOptAlias = RelationExprOptAlias RelationExpr (Maybe (Bool, Iden
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst RelationExprOptAlias where
-  toTextBuilder (RelationExprOptAlias a b) = toTextBuilder a <> TextBuilders.suffixMaybe optAlias b
+  toTextBuilder settings (RelationExprOptAlias a b) = toTextBuilder settings a <> TextBuilders.suffixMaybe optAlias b
     where
-      optAlias (c, d) = bool "" "AS " c <> toTextBuilder d
-  parser = customizedParser []
+      optAlias (c, d) = bool "" "AS " c <> toTextBuilder settings d
+  parser settings = customizedParser settings []
 
 -- |
 -- Parameterized over the alias identifier's excluded reserved words —
@@ -35,13 +36,13 @@ instance IsAst RelationExprOptAlias where
 -- @USING@\/@WHERE@\/@RETURNING@ from being swallowed as a bare (unaliased)
 -- alias. Mirrors the pre-extraction @relationExprOptAlias@ taking a
 -- @reservedKeywords@ argument.
-customizedParser :: [Text] -> Parser RelationExprOptAlias
-customizedParser reservedKeywords = do
-  a <- parser
+customizedParser :: Settings -> [Text] -> Parser RelationExprOptAlias
+customizedParser settings reservedKeywords = do
+  a <- parser settings
   b <- optional $ do
     Parsers.space1
     b <- Parsers.trueIfPresent (Parsers.keyword "as" *> Parsers.space1)
-    c <- Parsers.filteredColIdLike UnquotedIdent parser reservedKeywords
+    c <- Parsers.filteredColIdLike UnquotedIdent (parser settings) reservedKeywords
     return (b, c)
   return (RelationExprOptAlias a b)
 

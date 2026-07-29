@@ -27,11 +27,11 @@ data FuncArgExpr
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst FuncArgExpr where
-  toTextBuilder = \case
-    ExprFuncArgExpr a -> toTextBuilder a
-    ColonEqualsFuncArgExpr a b -> toTextBuilder a <> " := " <> toTextBuilder b
-    EqualsGreaterFuncArgExpr a b -> toTextBuilder a <> " => " <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    ExprFuncArgExpr a -> toTextBuilder settings a
+    ColonEqualsFuncArgExpr a b -> toTextBuilder settings a <> " := " <> toTextBuilder settings b
+    EqualsGreaterFuncArgExpr a b -> toTextBuilder settings a <> " => " <> toTextBuilder settings b
+  parser settings =
     asum
       [ do
           a <- Parser.wrapToHead typeFunctionName
@@ -40,15 +40,15 @@ instance IsAst FuncArgExpr where
             [ do
                 Parsers.string ":="
                 Parser.endHead
-                b <- Parsers.space *> parser
+                b <- Parsers.space *> parser settings
                 return (ColonEqualsFuncArgExpr a b),
               do
                 Parsers.string "=>"
                 Parser.endHead
-                b <- Parsers.space *> parser
+                b <- Parsers.space *> parser settings
                 return (EqualsGreaterFuncArgExpr a b)
             ],
-        ExprFuncArgExpr <$> parser
+        ExprFuncArgExpr <$> parser settings
       ]
     where
       -- Duplicated from "PostgresqlSyntax.Parsing"'s @typeFunctionName@
@@ -58,7 +58,7 @@ instance IsAst FuncArgExpr where
       -- precedent.
       typeFunctionName =
         Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
-          <|> parser
+          <|> parser settings
 
 instance Qc.Arbitrary FuncArgExpr where
   shrink = Qc.genericShrink

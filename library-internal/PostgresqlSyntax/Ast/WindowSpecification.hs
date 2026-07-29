@@ -35,39 +35,39 @@ data WindowSpecification = WindowSpecification (Maybe Ident) (Maybe ExprList) (M
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WindowSpecification where
-  toTextBuilder (WindowSpecification a b c d) =
+  toTextBuilder settings (WindowSpecification a b c d) =
     TextBuilders.renderInParens $
       TextBuilders.optLexemes
-        [ fmap toTextBuilder a,
-          fmap (mappend "PARTITION BY " . toTextBuilder) b,
-          fmap toTextBuilder c,
-          fmap toTextBuilder d
+        [ fmap (toTextBuilder settings) a,
+          fmap (mappend "PARTITION BY " . toTextBuilder settings) b,
+          fmap (toTextBuilder settings) c,
+          fmap (toTextBuilder settings) d
         ]
-  parser =
+  parser settings =
     Parsers.inParens $
       asum
         [ do
-            a <- parser
+            a <- parser settings
             return (WindowSpecification Nothing Nothing Nothing (Just a)),
           do
-            a <- parser
-            b <- optional (Parsers.space1 *> parser)
+            a <- parser settings
+            b <- optional (Parsers.space1 *> parser settings)
             return (WindowSpecification Nothing Nothing (Just a) b),
           do
             a <- partitionByClause
-            b <- optional (Parsers.space1 *> parser)
-            c <- optional (Parsers.space1 *> parser)
+            b <- optional (Parsers.space1 *> parser settings)
+            c <- optional (Parsers.space1 *> parser settings)
             return (WindowSpecification Nothing (Just a) b c),
           do
-            a <- colId
+            a <- colId settings
             b <- optional (Parsers.space1 *> partitionByClause)
-            c <- optional (Parsers.space1 *> parser)
-            d <- optional (Parsers.space1 *> parser)
+            c <- optional (Parsers.space1 *> parser settings)
+            d <- optional (Parsers.space1 *> parser settings)
             return (WindowSpecification (Just a) b c d),
           pure (WindowSpecification Nothing Nothing Nothing Nothing)
         ]
     where
-      partitionByClause = Parsers.keyphrase "partition by" *> Parsers.space1 *> Parser.endHead *> (ExprList <$> Parsers.sep1 Parsers.commaSeparator parser)
+      partitionByClause = Parsers.keyphrase "partition by" *> Parsers.space1 *> Parser.endHead *> (ExprList <$> Parsers.sep1 Parsers.commaSeparator (parser settings))
 
 instance Qc.Arbitrary WindowSpecification where
   shrink = Qc.genericShrink

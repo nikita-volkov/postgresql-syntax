@@ -23,24 +23,24 @@ data SetClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SetClause where
-  toTextBuilder = \case
-    TargetSetClause a b -> toTextBuilder a <> " = " <> toTextBuilder b
-    TargetListSetClause a b -> TextBuilders.renderInParens (toTextBuilder a) <> " = " <> toTextBuilder b
-  parser =
+  toTextBuilder settings = \case
+    TargetSetClause a b -> toTextBuilder settings a <> " = " <> toTextBuilder settings b
+    TargetListSetClause a b -> TextBuilders.renderInParens (toTextBuilder settings a) <> " = " <> toTextBuilder settings b
+  parser settings =
     asum
       [ do
-          a <- Parsers.inParens parser
+          a <- Parsers.inParens (parser settings)
           Parsers.space
           Parsers.char '='
           Parsers.space
-          b <- parser
+          b <- parser settings
           return (TargetListSetClause a b),
         do
-          a <- parser
+          a <- parser settings
           Parsers.space
           Parsers.char '='
           Parsers.space
-          b <- parser
+          b <- parser settings
           return (TargetSetClause a b)
       ]
 
