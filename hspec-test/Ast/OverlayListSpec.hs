@@ -1,8 +1,11 @@
 module Ast.OverlayListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OverlayList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @OverlayList
+spec = do
+  itSatisfiesIsAst @OverlayList
+  itSatisfiesArbitrary @OverlayList

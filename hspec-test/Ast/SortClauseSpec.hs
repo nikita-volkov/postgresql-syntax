@@ -1,8 +1,11 @@
 module Ast.SortClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SortClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SortClause
+spec = do
+  itSatisfiesIsAst @SortClause
+  itSatisfiesArbitrary @SortClause

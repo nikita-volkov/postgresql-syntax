@@ -1,8 +1,11 @@
 module Ast.OnConflictSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OnConflict
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @OnConflict
+spec = do
+  itSatisfiesIsAst @OnConflict
+  itSatisfiesArbitrary @OnConflict

@@ -1,8 +1,11 @@
 module Ast.SimpleSelectSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SimpleSelect
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SimpleSelect
+spec = do
+  itSatisfiesIsAst @SimpleSelect
+  itSatisfiesArbitrary @SimpleSelect

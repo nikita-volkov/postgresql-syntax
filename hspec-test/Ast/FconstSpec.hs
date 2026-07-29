@@ -1,8 +1,11 @@
 module Ast.FconstSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Fconst
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Fconst
+spec = do
+  itSatisfiesIsAst @Fconst
+  itSatisfiesArbitrary @Fconst

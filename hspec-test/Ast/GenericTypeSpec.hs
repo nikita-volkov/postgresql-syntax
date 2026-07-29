@@ -1,8 +1,11 @@
 module Ast.GenericTypeSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.GenericType
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @GenericType
+spec = do
+  itSatisfiesIsAst @GenericType
+  itSatisfiesArbitrary @GenericType

@@ -1,8 +1,11 @@
 module Ast.BExprSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.BExpr
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @BExpr
+spec = do
+  itSatisfiesIsAst @BExpr
+  itSatisfiesArbitrary @BExpr

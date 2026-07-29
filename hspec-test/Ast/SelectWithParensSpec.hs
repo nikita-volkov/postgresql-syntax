@@ -1,6 +1,6 @@
 module Ast.SelectWithParensSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectNoParens
 import PostgresqlSyntax.Ast.SelectWithParens
 import PostgresqlSyntax.IsAst
@@ -9,7 +9,8 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @SelectWithParens
+  itSatisfiesIsAst @SelectWithParens
+  itSatisfiesArbitrary @SelectWithParens
   describe "Nesting depth" $ do
     -- The parenthesised sub-select has two possible representations.
     it "redundant parens around a sub-select are canonicalised"

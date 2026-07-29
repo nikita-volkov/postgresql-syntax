@@ -1,8 +1,11 @@
 module Ast.ConstCharacterSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ConstCharacter
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ConstCharacter
+spec = do
+  itSatisfiesIsAst @ConstCharacter
+  itSatisfiesArbitrary @ConstCharacter

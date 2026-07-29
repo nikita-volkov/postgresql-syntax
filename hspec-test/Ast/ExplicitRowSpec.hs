@@ -1,8 +1,11 @@
 module Ast.ExplicitRowSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ExplicitRow
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ExplicitRow
+spec = do
+  itSatisfiesIsAst @ExplicitRow
+  itSatisfiesArbitrary @ExplicitRow

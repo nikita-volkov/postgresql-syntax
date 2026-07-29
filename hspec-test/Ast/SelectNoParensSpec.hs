@@ -1,8 +1,11 @@
 module Ast.SelectNoParensSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectNoParens
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SelectNoParens
+spec = do
+  itSatisfiesIsAst @SelectNoParens
+  itSatisfiesArbitrary @SelectNoParens

@@ -1,8 +1,11 @@
 module Ast.IndexElemDefSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.IndexElemDef
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @IndexElemDef
+spec = do
+  itSatisfiesIsAst @IndexElemDef
+  itSatisfiesArbitrary @IndexElemDef

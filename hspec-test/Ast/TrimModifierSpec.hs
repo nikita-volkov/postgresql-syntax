@@ -1,8 +1,11 @@
 module Ast.TrimModifierSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TrimModifier
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TrimModifier
+spec = do
+  itSatisfiesIsAst @TrimModifier
+  itSatisfiesArbitrary @TrimModifier

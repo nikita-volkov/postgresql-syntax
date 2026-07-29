@@ -1,8 +1,11 @@
 module Ast.OffsetClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OffsetClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @OffsetClause
+spec = do
+  itSatisfiesIsAst @OffsetClause
+  itSatisfiesArbitrary @OffsetClause

@@ -1,8 +1,11 @@
 module Ast.ArrayExprSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ArrayExpr
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ArrayExpr
+spec = do
+  itSatisfiesIsAst @ArrayExpr
+  itSatisfiesArbitrary @ArrayExpr

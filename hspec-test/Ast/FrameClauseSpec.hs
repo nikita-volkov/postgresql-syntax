@@ -1,8 +1,11 @@
 module Ast.FrameClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FrameClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @FrameClause
+spec = do
+  itSatisfiesIsAst @FrameClause
+  itSatisfiesArbitrary @FrameClause

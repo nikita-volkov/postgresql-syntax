@@ -1,8 +1,11 @@
 module Ast.WindowDefinitionSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.WindowDefinition
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @WindowDefinition
+spec = do
+  itSatisfiesIsAst @WindowDefinition
+  itSatisfiesArbitrary @WindowDefinition

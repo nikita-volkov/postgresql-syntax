@@ -1,8 +1,11 @@
 module Ast.ColumnrefSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Columnref
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Columnref
+spec = do
+  itSatisfiesIsAst @Columnref
+  itSatisfiesArbitrary @Columnref

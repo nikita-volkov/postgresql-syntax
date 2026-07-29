@@ -1,8 +1,11 @@
 module Ast.FuncExprWindowlessSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncExprWindowless
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @FuncExprWindowless
+spec = do
+  itSatisfiesIsAst @FuncExprWindowless
+  itSatisfiesArbitrary @FuncExprWindowless

@@ -1,8 +1,11 @@
 module Ast.TargetElSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TargetEl
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TargetEl
+spec = do
+  itSatisfiesIsAst @TargetEl
+  itSatisfiesArbitrary @TargetEl

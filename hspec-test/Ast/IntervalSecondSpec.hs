@@ -1,8 +1,11 @@
 module Ast.IntervalSecondSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.IntervalSecond
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @IntervalSecond
+spec = do
+  itSatisfiesIsAst @IntervalSecond
+  itSatisfiesArbitrary @IntervalSecond

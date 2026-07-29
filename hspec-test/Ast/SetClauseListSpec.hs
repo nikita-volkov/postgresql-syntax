@@ -1,8 +1,11 @@
 module Ast.SetClauseListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SetClauseList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SetClauseList
+spec = do
+  itSatisfiesIsAst @SetClauseList
+  itSatisfiesArbitrary @SetClauseList

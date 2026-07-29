@@ -1,6 +1,6 @@
 module Ast.IndexElemSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.IndexElem
 import PostgresqlSyntax.IsAst
 import Prelude
@@ -8,7 +8,8 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @IndexElem
+  itSatisfiesIsAst @IndexElem
+  itSatisfiesArbitrary @IndexElem
   describe "Postgres grammar conformance" $ do
     -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
     -- opt_nulls_order. index_elem_options' operator-class name

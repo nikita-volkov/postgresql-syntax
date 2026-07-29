@@ -1,8 +1,11 @@
 module Ast.ConstDatetimeSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ConstDatetime
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ConstDatetime
+spec = do
+  itSatisfiesIsAst @ConstDatetime
+  itSatisfiesArbitrary @ConstDatetime

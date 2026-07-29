@@ -1,8 +1,11 @@
 module Ast.NameListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.NameList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @NameList
+spec = do
+  itSatisfiesIsAst @NameList
+  itSatisfiesArbitrary @NameList

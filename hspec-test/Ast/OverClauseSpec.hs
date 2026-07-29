@@ -1,8 +1,11 @@
 module Ast.OverClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OverClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @OverClause
+spec = do
+  itSatisfiesIsAst @OverClause
+  itSatisfiesArbitrary @OverClause

@@ -1,8 +1,11 @@
 module Ast.SelectStmtSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectStmt
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SelectStmt
+spec = do
+  itSatisfiesIsAst @SelectStmt
+  itSatisfiesArbitrary @SelectStmt

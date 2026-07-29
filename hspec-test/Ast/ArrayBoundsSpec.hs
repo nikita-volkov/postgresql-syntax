@@ -1,8 +1,11 @@
 module Ast.ArrayBoundsSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ArrayBounds
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ArrayBounds
+spec = do
+  itSatisfiesIsAst @ArrayBounds
+  itSatisfiesArbitrary @ArrayBounds

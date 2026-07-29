@@ -1,8 +1,11 @@
 module Ast.SelectLimitValueSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectLimitValue
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SelectLimitValue
+spec = do
+  itSatisfiesIsAst @SelectLimitValue
+  itSatisfiesArbitrary @SelectLimitValue

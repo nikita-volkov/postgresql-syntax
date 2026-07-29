@@ -1,8 +1,11 @@
 module Ast.BitSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Bit
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Bit
+spec = do
+  itSatisfiesIsAst @Bit
+  itSatisfiesArbitrary @Bit

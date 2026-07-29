@@ -1,8 +1,11 @@
 module Ast.MathOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.MathOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @MathOp
+spec = do
+  itSatisfiesIsAst @MathOp
+  itSatisfiesArbitrary @MathOp

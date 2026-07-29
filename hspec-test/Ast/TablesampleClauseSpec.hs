@@ -1,8 +1,11 @@
 module Ast.TablesampleClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TablesampleClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TablesampleClause
+spec = do
+  itSatisfiesIsAst @TablesampleClause
+  itSatisfiesArbitrary @TablesampleClause

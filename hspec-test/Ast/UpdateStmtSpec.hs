@@ -1,8 +1,11 @@
 module Ast.UpdateStmtSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.UpdateStmt
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @UpdateStmt
+spec = do
+  itSatisfiesIsAst @UpdateStmt
+  itSatisfiesArbitrary @UpdateStmt

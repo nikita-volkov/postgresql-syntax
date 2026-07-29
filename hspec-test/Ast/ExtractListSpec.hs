@@ -1,8 +1,11 @@
 module Ast.ExtractListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ExtractList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ExtractList
+spec = do
+  itSatisfiesIsAst @ExtractList
+  itSatisfiesArbitrary @ExtractList

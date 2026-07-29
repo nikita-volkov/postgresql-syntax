@@ -1,8 +1,11 @@
 module Ast.InsertRestSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.InsertRest
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @InsertRest
+spec = do
+  itSatisfiesIsAst @InsertRest
+  itSatisfiesArbitrary @InsertRest

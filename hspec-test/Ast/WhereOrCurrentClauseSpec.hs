@@ -1,8 +1,11 @@
 module Ast.WhereOrCurrentClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @WhereOrCurrentClause
+spec = do
+  itSatisfiesIsAst @WhereOrCurrentClause
+  itSatisfiesArbitrary @WhereOrCurrentClause

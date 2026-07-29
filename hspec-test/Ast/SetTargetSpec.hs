@@ -1,8 +1,11 @@
 module Ast.SetTargetSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SetTarget
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SetTarget
+spec = do
+  itSatisfiesIsAst @SetTarget
+  itSatisfiesArbitrary @SetTarget

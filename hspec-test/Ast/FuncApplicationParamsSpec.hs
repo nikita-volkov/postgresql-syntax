@@ -1,8 +1,11 @@
 module Ast.FuncApplicationParamsSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncApplicationParams
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @FuncApplicationParams
+spec = do
+  itSatisfiesIsAst @FuncApplicationParams
+  itSatisfiesArbitrary @FuncApplicationParams

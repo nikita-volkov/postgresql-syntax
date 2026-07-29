@@ -1,8 +1,11 @@
 module Ast.JoinedTableSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.JoinedTable
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @JoinedTable
+spec = do
+  itSatisfiesIsAst @JoinedTable
+  itSatisfiesArbitrary @JoinedTable

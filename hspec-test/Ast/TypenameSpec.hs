@@ -1,41 +1,38 @@
 module Ast.TypenameSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Typename
 import Prelude
 import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @Typename
+  itSatisfiesIsAst @Typename
+  itSatisfiesArbitrary @Typename
   describe "Parsers" $ do
-    it "typename"
-      $ forM_
-        [ "int4[]",
-          "int4[][]",
-          "int4?[]",
-          "int4?[]?",
-          "aa array",
-          "DOUBLE PRECISION",
-          "bool",
-          "int2",
-          "int4",
-          "int8",
-          "float4",
-          "float8",
-          "numeric",
-          "char",
-          "text",
-          "bytea",
-          "date",
-          "timestamp",
-          "timestamptz",
-          "time",
-          "timetz",
-          "interval",
-          "uuid",
-          "inet",
-          "json",
-          "jsonb"
-        ]
-        (parsesTo @Typename)
+    itParses @Typename "int4[]"
+    itParses @Typename "int4[][]"
+    itParses @Typename "int4?[]"
+    itParses @Typename "int4?[]?"
+    itParses @Typename "aa array"
+    itParses @Typename "DOUBLE PRECISION"
+    itParses @Typename "bool"
+    itParses @Typename "int2"
+    itParses @Typename "int4"
+    itParses @Typename "int8"
+    itParses @Typename "float4"
+    itParses @Typename "float8"
+    itParses @Typename "numeric"
+    itParses @Typename "char"
+    itParses @Typename "text"
+    itParses @Typename "bytea"
+    itParses @Typename "date"
+    itParses @Typename "timestamp"
+    itParses @Typename "timestamptz"
+    itParses @Typename "time"
+    itParses @Typename "timetz"
+    itParses @Typename "interval"
+    itParses @Typename "uuid"
+    itParses @Typename "inet"
+    itParses @Typename "json"
+    itParses @Typename "jsonb"

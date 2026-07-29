@@ -1,8 +1,11 @@
 module Ast.ConfExprSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ConfExpr
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ConfExpr
+spec = do
+  itSatisfiesIsAst @ConfExpr
+  itSatisfiesArbitrary @ConfExpr

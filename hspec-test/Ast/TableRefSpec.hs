@@ -1,8 +1,11 @@
 module Ast.TableRefSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TableRef
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TableRef
+spec = do
+  itSatisfiesIsAst @TableRef
+  itSatisfiesArbitrary @TableRef

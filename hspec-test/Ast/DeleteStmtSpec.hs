@@ -1,8 +1,11 @@
 module Ast.DeleteStmtSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.DeleteStmt
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @DeleteStmt
+spec = do
+  itSatisfiesIsAst @DeleteStmt
+  itSatisfiesArbitrary @DeleteStmt

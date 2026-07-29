@@ -1,8 +1,11 @@
 module Ast.QualAllOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.QualAllOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @QualAllOp
+spec = do
+  itSatisfiesIsAst @QualAllOp
+  itSatisfiesArbitrary @QualAllOp

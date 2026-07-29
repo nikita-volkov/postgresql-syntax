@@ -1,8 +1,8 @@
 module Ast.OptVaryingSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OptVarying
 import Test.Hspec
 
 spec :: Spec
-spec = onlyArbitrarySpec @OptVarying
+spec = itSatisfiesArbitrary @OptVarying

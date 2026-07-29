@@ -1,8 +1,11 @@
 module Ast.InsertColumnListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.InsertColumnList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @InsertColumnList
+spec = do
+  itSatisfiesIsAst @InsertColumnList
+  itSatisfiesArbitrary @InsertColumnList

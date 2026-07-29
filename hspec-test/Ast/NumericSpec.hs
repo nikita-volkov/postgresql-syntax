@@ -1,8 +1,11 @@
 module Ast.NumericSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Numeric
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Numeric
+spec = do
+  itSatisfiesIsAst @Numeric
+  itSatisfiesArbitrary @Numeric

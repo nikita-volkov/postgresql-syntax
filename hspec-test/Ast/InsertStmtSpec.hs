@@ -1,8 +1,11 @@
 module Ast.InsertStmtSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.InsertStmt
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @InsertStmt
+spec = do
+  itSatisfiesIsAst @InsertStmt
+  itSatisfiesArbitrary @InsertStmt

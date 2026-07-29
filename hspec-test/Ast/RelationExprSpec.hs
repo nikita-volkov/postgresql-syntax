@@ -1,8 +1,11 @@
 module Ast.RelationExprSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.RelationExpr
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @RelationExpr
+spec = do
+  itSatisfiesIsAst @RelationExpr
+  itSatisfiesArbitrary @RelationExpr

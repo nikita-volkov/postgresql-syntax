@@ -1,8 +1,11 @@
 module Ast.WhenClauseListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.WhenClauseList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @WhenClauseList
+spec = do
+  itSatisfiesIsAst @WhenClauseList
+  itSatisfiesArbitrary @WhenClauseList

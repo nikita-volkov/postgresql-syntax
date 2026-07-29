@@ -390,7 +390,8 @@ test-suite hspec-test
     Ast.WindowSpecificationSpec
     Ast.WithClauseSpec
     Ast.XconstSpec
-    Helpers
+    Helpers.Expectations
+    Helpers.Specs
     Spec
 
   ghc-options:

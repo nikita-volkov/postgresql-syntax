@@ -1,8 +1,11 @@
 module Ast.AscDescSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.AscDesc
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @AscDesc
+spec = do
+  itSatisfiesIsAst @AscDesc
+  itSatisfiesArbitrary @AscDesc

@@ -1,8 +1,11 @@
 module Ast.OptTempTableNameSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.OptTempTableName
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @OptTempTableName
+spec = do
+  itSatisfiesIsAst @OptTempTableName
+  itSatisfiesArbitrary @OptTempTableName

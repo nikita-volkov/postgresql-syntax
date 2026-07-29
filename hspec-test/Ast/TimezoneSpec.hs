@@ -1,8 +1,11 @@
 module Ast.TimezoneSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Timezone
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Timezone
+spec = do
+  itSatisfiesIsAst @Timezone
+  itSatisfiesArbitrary @Timezone

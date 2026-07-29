@@ -1,8 +1,11 @@
 module Ast.IndirectionElSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.IndirectionEl
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @IndirectionEl
+spec = do
+  itSatisfiesIsAst @IndirectionEl
+  itSatisfiesArbitrary @IndirectionEl

@@ -1,8 +1,11 @@
 module Ast.LimitClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.LimitClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @LimitClause
+spec = do
+  itSatisfiesIsAst @LimitClause
+  itSatisfiesArbitrary @LimitClause

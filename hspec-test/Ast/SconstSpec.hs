@@ -1,18 +1,15 @@
 module Ast.SconstSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Sconst
 import Prelude
 import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @Sconst
+  itSatisfiesIsAst @Sconst
+  itSatisfiesArbitrary @Sconst
   describe "Parsers" $ do
-    it "sconst"
-      $ forM_
-        [ "'it''s good'",
-          "$$it's good$$",
-          "$x$it's good$x$"
-        ]
-        (parsesTo @Sconst)
+    itParses @Sconst "'it''s good'"
+    itParses @Sconst "$$it's good$$"
+    itParses @Sconst "$x$it's good$x$"

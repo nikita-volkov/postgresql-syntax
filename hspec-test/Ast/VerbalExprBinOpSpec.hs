@@ -1,8 +1,11 @@
 module Ast.VerbalExprBinOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.VerbalExprBinOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @VerbalExprBinOp
+spec = do
+  itSatisfiesIsAst @VerbalExprBinOp
+  itSatisfiesArbitrary @VerbalExprBinOp

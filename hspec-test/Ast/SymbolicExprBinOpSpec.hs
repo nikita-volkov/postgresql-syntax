@@ -1,8 +1,11 @@
 module Ast.SymbolicExprBinOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SymbolicExprBinOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SymbolicExprBinOp
+spec = do
+  itSatisfiesIsAst @SymbolicExprBinOp
+  itSatisfiesArbitrary @SymbolicExprBinOp

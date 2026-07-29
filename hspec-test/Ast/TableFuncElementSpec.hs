@@ -1,8 +1,11 @@
 module Ast.TableFuncElementSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TableFuncElement
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TableFuncElement
+spec = do
+  itSatisfiesIsAst @TableFuncElement
+  itSatisfiesArbitrary @TableFuncElement

@@ -1,8 +1,11 @@
 module Ast.FuncNameSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncName
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @FuncName
+spec = do
+  itSatisfiesIsAst @FuncName
+  itSatisfiesArbitrary @FuncName

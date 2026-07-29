@@ -1,6 +1,6 @@
 module Ast.FrameBoundSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FrameBound
 import PostgresqlSyntax.IsAst
 import Prelude
@@ -8,7 +8,8 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @FrameBound
+  itSatisfiesIsAst @FrameBound
+  itSatisfiesArbitrary @FrameBound
   describe "Postgres grammar conformance" $ do
     -- gram.y:17567 frame_bound. UNBOUNDED is an unreserved keyword, so
     -- @UNBOUNDED PRECEDING@ is ambiguous with @a_expr PRECEDING@ where

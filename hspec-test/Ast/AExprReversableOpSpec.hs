@@ -1,8 +1,11 @@
 module Ast.AExprReversableOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.AExprReversableOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @AExprReversableOp
+spec = do
+  itSatisfiesIsAst @AExprReversableOp
+  itSatisfiesArbitrary @AExprReversableOp

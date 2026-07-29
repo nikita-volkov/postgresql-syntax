@@ -1,6 +1,6 @@
 module Ast.SortBySpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SortBy
 import PostgresqlSyntax.IsAst
 import Prelude
@@ -8,7 +8,8 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  fullSpec @SortBy
+  itSatisfiesIsAst @SortBy
+  itSatisfiesArbitrary @SortBy
   describe "Postgres grammar conformance" $ do
     -- gram.y:8596 opt_nulls_order and gram.y:14056 sortby. NULLS is
     -- unreserved (kwlist.h:315), so it is simultaneously a legal ColId and

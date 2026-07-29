@@ -1,8 +1,11 @@
 module Ast.XconstSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Xconst
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Xconst
+spec = do
+  itSatisfiesIsAst @Xconst
+  itSatisfiesArbitrary @Xconst

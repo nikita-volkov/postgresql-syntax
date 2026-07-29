@@ -1,8 +1,11 @@
 module Ast.AliasClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.AliasClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @AliasClause
+spec = do
+  itSatisfiesIsAst @AliasClause
+  itSatisfiesArbitrary @AliasClause

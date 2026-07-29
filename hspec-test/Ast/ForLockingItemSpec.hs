@@ -1,8 +1,11 @@
 module Ast.ForLockingItemSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ForLockingItem
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ForLockingItem
+spec = do
+  itSatisfiesIsAst @ForLockingItem
+  itSatisfiesArbitrary @ForLockingItem

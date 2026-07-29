@@ -1,8 +1,11 @@
 module Ast.GroupByItemSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.GroupByItem
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @GroupByItem
+spec = do
+  itSatisfiesIsAst @GroupByItem
+  itSatisfiesArbitrary @GroupByItem

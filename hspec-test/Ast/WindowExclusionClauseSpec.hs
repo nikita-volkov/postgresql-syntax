@@ -1,8 +1,11 @@
 module Ast.WindowExclusionClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.WindowExclusionClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @WindowExclusionClause
+spec = do
+  itSatisfiesIsAst @WindowExclusionClause
+  itSatisfiesArbitrary @WindowExclusionClause

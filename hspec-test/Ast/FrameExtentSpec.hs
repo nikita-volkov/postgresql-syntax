@@ -1,8 +1,11 @@
 module Ast.FrameExtentSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.FrameExtent
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @FrameExtent
+spec = do
+  itSatisfiesIsAst @FrameExtent
+  itSatisfiesArbitrary @FrameExtent

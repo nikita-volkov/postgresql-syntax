@@ -1,8 +1,11 @@
 module Ast.JoinTypeSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.JoinType
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @JoinType
+spec = do
+  itSatisfiesIsAst @JoinType
+  itSatisfiesArbitrary @JoinType

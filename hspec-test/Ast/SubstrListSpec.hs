@@ -1,8 +1,11 @@
 module Ast.SubstrListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SubstrList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SubstrList
+spec = do
+  itSatisfiesIsAst @SubstrList
+  itSatisfiesArbitrary @SubstrList

@@ -1,8 +1,11 @@
 module Ast.AnyOperatorSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.AnyOperator
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @AnyOperator
+spec = do
+  itSatisfiesIsAst @AnyOperator
+  itSatisfiesArbitrary @AnyOperator

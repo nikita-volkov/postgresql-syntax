@@ -1,8 +1,11 @@
 module Ast.InsertTargetSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.InsertTarget
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @InsertTarget
+spec = do
+  itSatisfiesIsAst @InsertTarget
+  itSatisfiesArbitrary @InsertTarget

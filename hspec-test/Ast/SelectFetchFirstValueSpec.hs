@@ -1,8 +1,11 @@
 module Ast.SelectFetchFirstValueSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SelectFetchFirstValue
+spec = do
+  itSatisfiesIsAst @SelectFetchFirstValue
+  itSatisfiesArbitrary @SelectFetchFirstValue

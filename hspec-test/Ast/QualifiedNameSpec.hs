@@ -1,8 +1,11 @@
 module Ast.QualifiedNameSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.QualifiedName
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @QualifiedName
+spec = do
+  itSatisfiesIsAst @QualifiedName
+  itSatisfiesArbitrary @QualifiedName

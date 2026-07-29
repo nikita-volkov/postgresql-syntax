@@ -1,8 +1,11 @@
 module Ast.SubqueryOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SubqueryOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SubqueryOp
+spec = do
+  itSatisfiesIsAst @SubqueryOp
+  itSatisfiesArbitrary @SubqueryOp

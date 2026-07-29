@@ -1,8 +1,11 @@
 module Ast.ExtractArgSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ExtractArg
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ExtractArg
+spec = do
+  itSatisfiesIsAst @ExtractArg
+  itSatisfiesArbitrary @ExtractArg

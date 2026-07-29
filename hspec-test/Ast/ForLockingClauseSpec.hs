@@ -1,8 +1,11 @@
 module Ast.ForLockingClauseSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ForLockingClause
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ForLockingClause
+spec = do
+  itSatisfiesIsAst @ForLockingClause
+  itSatisfiesArbitrary @ForLockingClause

@@ -1,8 +1,11 @@
 module Ast.ForLockingStrengthSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.ForLockingStrength
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @ForLockingStrength
+spec = do
+  itSatisfiesIsAst @ForLockingStrength
+  itSatisfiesArbitrary @ForLockingStrength

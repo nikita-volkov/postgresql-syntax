@@ -1,8 +1,11 @@
 module Ast.TypeListSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.TypeList
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @TypeList
+spec = do
+  itSatisfiesIsAst @TypeList
+  itSatisfiesArbitrary @TypeList

@@ -1,8 +1,11 @@
 module Ast.RowSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Row
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Row
+spec = do
+  itSatisfiesIsAst @Row
+  itSatisfiesArbitrary @Row

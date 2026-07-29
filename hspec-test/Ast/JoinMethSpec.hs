@@ -1,8 +1,11 @@
 module Ast.JoinMethSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.JoinMeth
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @JoinMeth
+spec = do
+  itSatisfiesIsAst @JoinMeth
+  itSatisfiesArbitrary @JoinMeth

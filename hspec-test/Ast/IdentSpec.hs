@@ -1,8 +1,11 @@
 module Ast.IdentSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.Ident
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @Ident
+spec = do
+  itSatisfiesIsAst @Ident
+  itSatisfiesArbitrary @Ident

@@ -1,8 +1,11 @@
 module Ast.SelectBinOpSpec (spec) where
 
-import Helpers
+import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectBinOp
+import Prelude
 import Test.Hspec
 
 spec :: Spec
-spec = fullSpec @SelectBinOp
+spec = do
+  itSatisfiesIsAst @SelectBinOp
+  itSatisfiesArbitrary @SelectBinOp
