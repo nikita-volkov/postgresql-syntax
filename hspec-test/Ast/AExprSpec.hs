@@ -10,6 +10,14 @@ import Test.Hspec
 spec :: Spec
 spec = do
   fullSpec @AExpr
+  describe "Postgres grammar conformance" $ do
+    -- gram.y:15985,15987 have only @a_expr qual_Op a_expr@ and
+    -- @qual_Op a_expr@ — the postfix @a_expr qual_Op@ form was removed
+    -- from Postgres in v14.
+    it "rejects postfix operators" $ do
+      rejects @AExpr "1 +#"
+      rejects @AExpr "1 OPERATOR(pg_catalog.+#)"
+      rejects @AExpr "a +#"
   describe "Nesting depth" $ do
     it "redundant parens, depth 50"
       $ parsesWithin @AExpr 5 (Text.replicate 50 "(" <> "a + b" <> Text.replicate 50 ")")

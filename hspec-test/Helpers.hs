@@ -13,6 +13,7 @@ module Helpers
 
     -- * Example-based parse helpers
     parsesTo,
+    rejects,
     reportsError,
     parsesWithin,
   )
@@ -110,6 +111,16 @@ parsesTo input =
   case parse @a input of
     Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
     Right _ -> pure ()
+
+-- | Asserts that the input is *not* accepted. Used to pin grammar
+-- constructs that Postgres itself rejects.
+rejects :: forall a. (HasCallStack, IsAst a, Show a) => Text -> Expectation
+rejects input =
+  case parse @a input of
+    Left _ -> pure ()
+    Right a ->
+      expectationFailure
+        ("expected a parse failure\ninput: " <> Text.unpack input <> "\nparsed: " <> show a)
 
 reportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectation
 reportsError input expected =

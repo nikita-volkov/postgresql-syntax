@@ -1,7 +1,6 @@
 module PostgresqlSyntax.Ast.FrameBound where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
@@ -41,7 +40,7 @@ instance IsAst FrameBound where
         <|> CurrentRowFrameBound
       <$ Parsers.keyphrase "current row"
         <|> do
-          a <- AExpr.filteredParser ["preceding", "following"]
+          a <- parser :: Parser AExpr
           Parsers.space1
           PrecedingFrameBound a <$ Parsers.keyword "preceding" <|> FollowingFrameBound a <$ Parsers.keyword "following"
 

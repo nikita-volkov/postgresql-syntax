@@ -45,11 +45,13 @@ instance IsAst IndexElem where
     where
       collate = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser
 
-      -- Duplicated 'PostgresqlSyntax.Ast.AnyName.filteredParser' call,
-      -- mirroring the pre-extraction @class_ = filteredAnyName ["asc",
-      -- "desc", "nulls"]@ — excludes the words that terminate this
-      -- position.
-      class_ = filteredParser ["asc", "desc", "nulls"]
+      -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
+      -- opt_nulls_order (index_elem_options inlines opt_qualified_name at
+      -- gram.y:8525 for the operator-class name). That name is a bare
+      -- ColId, so of the words that can terminate it only the unreserved
+      -- NULLS (kwlist.h:315) is a genuine hazard — ASC/DESC are reserved
+      -- (kwlist.h:47,138) and were never candidates.
+      class_ = filteredParser ["nulls"]
 
 instance Qc.Arbitrary IndexElem where
   shrink = Qc.genericShrink
