@@ -107,19 +107,19 @@ spec = do
 
 -- * Example-based parse helpers
 
-parsesTo :: forall a. (IsAst a) => Text -> Expectation
+parsesTo :: forall a. (HasCallStack, IsAst a) => Text -> Expectation
 parsesTo input =
   case parse @a input of
     Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
     Right _ -> pure ()
 
-reportsError :: forall a. (IsAst a) => Text -> String -> Expectation
+reportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectation
 reportsError input expected =
   case parseWithPosError @a input of
     Left err -> show (NonEmpty.head err) `shouldBe` expected
     Right _ -> expectationFailure "expected a parse error, but it succeeded"
 
-parsesWithin :: forall a. (IsAst a) => Int -> Text -> Expectation
+parsesWithin :: forall a. (HasCallStack, IsAst a) => Int -> Text -> Expectation
 parsesWithin seconds input = do
   result <-
     timeout (seconds * 1000000)
