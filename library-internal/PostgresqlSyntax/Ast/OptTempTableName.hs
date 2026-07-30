@@ -1,6 +1,5 @@
 module PostgresqlSyntax.Ast.OptTempTableName where
 
-import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.QualifiedName
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
