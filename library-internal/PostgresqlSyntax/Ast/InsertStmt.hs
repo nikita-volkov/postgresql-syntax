@@ -4,7 +4,7 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.InsertRest
 import PostgresqlSyntax.Ast.InsertTarget
 import PostgresqlSyntax.Ast.OnConflict
-import PostgresqlSyntax.Ast.TargetList
+import PostgresqlSyntax.Ast.ReturningClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
@@ -21,8 +21,7 @@ import qualified Test.QuickCheck as Qc
 --       opt_on_conflict returning_clause
 -- @
 --
--- @returning_clause@ is a bare alias to 'PostgresqlSyntax.Ast.TargetList'.
-data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe OnConflict) (Maybe TargetList)
+data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe OnConflict) (Maybe ReturningClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst InsertStmt where
@@ -33,9 +32,7 @@ instance IsAst InsertStmt where
       <> " "
       <> toTextBuilder settings c
       <> TextBuilders.suffixMaybe (toTextBuilder settings) d
-      <> TextBuilders.suffixMaybe returningClause e
-    where
-      returningClause = mappend "RETURNING " . toTextBuilder settings
+      <> TextBuilders.suffixMaybe (toTextBuilder settings) e
   parser settings = do
     a <- optional (Parser.wrapToHead (parser settings) <* Parsers.space1)
     Parsers.keyword "insert"
@@ -47,10 +44,8 @@ instance IsAst InsertStmt where
     Parsers.space1
     c <- parser settings
     d <- optional (Parsers.space1 *> parser settings)
-    e <- optional (Parsers.space1 *> returningClause)
+    e <- optional (Parsers.space1 *> parser settings)
     return (InsertStmt a b c d e)
-    where
-      returningClause = Parsers.keyword "returning" *> Parsers.space1 *> Parser.endHead *> parser settings
 
 instance Qc.Arbitrary InsertStmt where
   shrink = Qc.genericShrink

@@ -102,6 +102,8 @@ library internal
     PostgresqlSyntax.Ast.FrameClause
     PostgresqlSyntax.Ast.FrameClauseMode
     PostgresqlSyntax.Ast.FrameExtent
+    PostgresqlSyntax.Ast.FromClause
+    PostgresqlSyntax.Ast.FromList
     PostgresqlSyntax.Ast.FuncAliasClause
     PostgresqlSyntax.Ast.FuncApplication
     PostgresqlSyntax.Ast.FuncApplicationParams
@@ -114,6 +116,8 @@ library internal
     PostgresqlSyntax.Ast.FuncTable
     PostgresqlSyntax.Ast.GenericType
     PostgresqlSyntax.Ast.GroupByItem
+    PostgresqlSyntax.Ast.GroupClause
+    PostgresqlSyntax.Ast.HavingClause
     PostgresqlSyntax.Ast.Iconst
     PostgresqlSyntax.Ast.Ident
     PostgresqlSyntax.Ast.ImplicitRow
@@ -130,6 +134,7 @@ library internal
     PostgresqlSyntax.Ast.InsertTarget
     PostgresqlSyntax.Ast.Interval
     PostgresqlSyntax.Ast.IntervalSecond
+    PostgresqlSyntax.Ast.IntoClause
     PostgresqlSyntax.Ast.JoinedTable
     PostgresqlSyntax.Ast.JoinMeth
     PostgresqlSyntax.Ast.JoinQual
@@ -156,6 +161,7 @@ library internal
     PostgresqlSyntax.Ast.QualOp
     PostgresqlSyntax.Ast.RelationExpr
     PostgresqlSyntax.Ast.RelationExprOptAlias
+    PostgresqlSyntax.Ast.ReturningClause
     PostgresqlSyntax.Ast.Row
     PostgresqlSyntax.Ast.RowsfromItem
     PostgresqlSyntax.Ast.RowsfromList
@@ -195,10 +201,14 @@ library internal
     PostgresqlSyntax.Ast.Typename
     PostgresqlSyntax.Ast.TypenameArrayDimensions
     PostgresqlSyntax.Ast.UpdateStmt
+    PostgresqlSyntax.Ast.UsingClause
+    PostgresqlSyntax.Ast.ValuesClause
     PostgresqlSyntax.Ast.VerbalExprBinOp
     PostgresqlSyntax.Ast.WhenClause
     PostgresqlSyntax.Ast.WhenClauseList
+    PostgresqlSyntax.Ast.WhereClause
     PostgresqlSyntax.Ast.WhereOrCurrentClause
+    PostgresqlSyntax.Ast.WindowClause
     PostgresqlSyntax.Ast.WindowDefinition
     PostgresqlSyntax.Ast.WindowExclusionClause
     PostgresqlSyntax.Ast.WindowSpecification
@@ -287,6 +297,8 @@ test-suite hspec-test
     Ast.FrameClauseModeSpec
     Ast.FrameClauseSpec
     Ast.FrameExtentSpec
+    Ast.FromClauseSpec
+    Ast.FromListSpec
     Ast.FuncAliasClauseSpec
     Ast.FuncApplicationParamsSpec
     Ast.FuncApplicationSpec
@@ -299,6 +311,8 @@ test-suite hspec-test
     Ast.FuncTableSpec
     Ast.GenericTypeSpec
     Ast.GroupByItemSpec
+    Ast.GroupClauseSpec
+    Ast.HavingClauseSpec
     Ast.IconstSpec
     Ast.IdentSpec
     Ast.ImplicitRowSpec
@@ -315,6 +329,7 @@ test-suite hspec-test
     Ast.InsertTargetSpec
     Ast.IntervalSecondSpec
     Ast.IntervalSpec
+    Ast.IntoClauseSpec
     Ast.JoinedTableSpec
     Ast.JoinMethSpec
     Ast.JoinQualSpec
@@ -341,6 +356,7 @@ test-suite hspec-test
     Ast.QualOpSpec
     Ast.RelationExprOptAliasSpec
     Ast.RelationExprSpec
+    Ast.ReturningClauseSpec
     Ast.RowsfromItemSpec
     Ast.RowsfromListSpec
     Ast.RowSpec
@@ -380,10 +396,14 @@ test-suite hspec-test
     Ast.TypenameArrayDimensionsSpec
     Ast.TypenameSpec
     Ast.UpdateStmtSpec
+    Ast.UsingClauseSpec
+    Ast.ValuesClauseSpec
     Ast.VerbalExprBinOpSpec
     Ast.WhenClauseListSpec
     Ast.WhenClauseSpec
+    Ast.WhereClauseSpec
     Ast.WhereOrCurrentClauseSpec
+    Ast.WindowClauseSpec
     Ast.WindowDefinitionSpec
     Ast.WindowExclusionClauseSpec
     Ast.WindowSpecificationSpec

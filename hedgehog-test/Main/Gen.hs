@@ -56,17 +56,17 @@ onConflict = OnConflict <$> maybe confExpr <*> onConflictDo
 
 onConflictDo =
   choice
-    [ UpdateOnConflictDo <$> setClauseList <*> maybe whereClause,
+    [ UpdateOnConflictDo <$> setClauseList <*> maybe aExpr,
       pure NothingOnConflictDo
     ]
 
 confExpr =
   choice
-    [ WhereConfExpr <$> indexParams <*> maybe whereClause,
+    [ WhereConfExpr <$> indexParams <*> maybe aExpr,
       ConstraintConfExpr <$> name
     ]
 
-returningClause = targetList
+returningClause = ReturningClause <$> targetList
 
 -- * Update
 
@@ -88,7 +88,7 @@ setTargetList = SetTargetList <$> nonEmpty (Range.exponential 1 10) setTarget
 
 deleteStmt = DeleteStmt <$> maybe withClause <*> relationExprOptAlias <*> maybe usingClause <*> maybe whereOrCurrentClause <*> maybe returningClause
 
-usingClause = fromList
+usingClause = UsingClause <$> fromList
 
 -- * Select
 
@@ -203,7 +203,7 @@ commonTableExpr = CommonTableExpr <$> name <*> maybe (nonEmpty (Range.exponentia
 
 -- * Into Clause
 
-intoClause = optTempTableName
+intoClause = IntoClause <$> optTempTableName
 
 optTempTableName =
   choice
@@ -220,9 +220,9 @@ optTempTableName =
 
 -- * From Clause
 
-fromList = nonEmpty (Range.exponential 1 8) tableRef
+fromList = FromList <$> nonEmpty (Range.exponential 1 8) tableRef
 
-fromClause = fromList
+fromClause = FromClause <$> fromList
 
 tableRef = choice [relationExprTableRef, selectTableRef, joinTableRef]
 
@@ -305,7 +305,7 @@ joinQual =
 
 -- * Group Clause
 
-groupClause = nonEmpty (Range.exponential 1 8) groupByItem
+groupClause = GroupClause <$> nonEmpty (Range.exponential 1 8) groupByItem
 
 groupByItem =
   choice
@@ -318,11 +318,11 @@ groupByItem =
 
 -- * Having Clause
 
-havingClause = aExpr
+havingClause = HavingClause <$> aExpr
 
 -- * Where Clause
 
-whereClause = aExpr
+whereClause = WhereClause <$> aExpr
 
 whereOrCurrentClause =
   choice
@@ -332,7 +332,7 @@ whereOrCurrentClause =
 
 -- * Window Clause
 
-windowClause = nonEmpty (Range.exponential 1 8) windowDefinition
+windowClause = WindowClause <$> nonEmpty (Range.exponential 1 8) windowDefinition
 
 windowDefinition = WindowDefinition <$> name <*> windowSpecification
 
@@ -361,7 +361,7 @@ windowExclusionClause = element [CurrentRowWindowExclusionClause, GroupWindowExc
 
 -- * Values Clause
 
-valuesClause = nonEmpty (Range.exponential 1 8) exprList
+valuesClause = ValuesClause <$> nonEmpty (Range.exponential 1 8) exprList
 
 -- * Sort Clause
 

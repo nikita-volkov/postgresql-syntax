@@ -20,8 +20,9 @@ import qualified Test.QuickCheck as Qc
 --   | EMPTY
 -- @
 --
--- @where_clause@\/@name@ are bare aliases to 'PostgresqlSyntax.Ast.AExpr'\/
--- 'PostgresqlSyntax.Ast.Ident'.
+-- @where_clause@ is inlined here as a bare 'PostgresqlSyntax.Ast.AExpr'
+-- rather than going through 'PostgresqlSyntax.Ast.WhereClause'.
+-- @name@ is a bare alias to 'PostgresqlSyntax.Ast.Ident'.
 data ConfExpr
   = WhereConfExpr IndexParams (Maybe AExpr)
   | ConstraintConfExpr Ident

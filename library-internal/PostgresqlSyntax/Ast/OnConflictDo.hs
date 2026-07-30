@@ -19,7 +19,8 @@ import qualified Test.QuickCheck as Qc
 --   | EMPTY
 -- @
 --
--- @where_clause@ is a bare alias to 'PostgresqlSyntax.Ast.AExpr'.
+-- @where_clause@ is inlined here as a bare 'PostgresqlSyntax.Ast.AExpr'
+-- rather than going through 'PostgresqlSyntax.Ast.WhereClause'.
 data OnConflictDo
   = UpdateOnConflictDo SetClauseList (Maybe AExpr)
   | NothingOnConflictDo

@@ -7,16 +7,17 @@ module PostgresqlSyntax.Ast.SimpleSelect
 where
 
 import qualified HeadedMegaparsec as Parser
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import PostgresqlSyntax.Ast.ExprList
-import PostgresqlSyntax.Ast.GroupByItem
-import PostgresqlSyntax.Ast.OptTempTableName
+import PostgresqlSyntax.Ast.FromClause
+import PostgresqlSyntax.Ast.GroupClause
+import PostgresqlSyntax.Ast.HavingClause
+import PostgresqlSyntax.Ast.IntoClause
 import PostgresqlSyntax.Ast.RelationExpr
 import PostgresqlSyntax.Ast.SelectBinOp
 import PostgresqlSyntax.Ast.SelectClause
-import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
-import PostgresqlSyntax.Ast.WindowDefinition
+import PostgresqlSyntax.Ast.ValuesClause
+import PostgresqlSyntax.Ast.WhereClause
+import PostgresqlSyntax.Ast.WindowClause
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
@@ -48,8 +49,8 @@ import qualified Text.Megaparsec as Megaparsec
 -- "PostgresqlSyntax.Ast.SelectNoParens", which shares it — see
 -- 'PostgresqlSyntax.Ast.SelectClause'\'s module documentation for why.
 data SimpleSelect
-  = NormalSimpleSelect (Maybe Targeting) (Maybe OptTempTableName) (Maybe (NonEmpty TableRef)) (Maybe AExpr) (Maybe (NonEmpty GroupByItem)) (Maybe AExpr) (Maybe (NonEmpty WindowDefinition))
-  | ValuesSimpleSelect (NonEmpty ExprList)
+  = NormalSimpleSelect (Maybe Targeting) (Maybe IntoClause) (Maybe FromClause) (Maybe WhereClause) (Maybe GroupClause) (Maybe HavingClause) (Maybe WindowClause)
+  | ValuesSimpleSelect ValuesClause
   | TableSimpleSelect RelationExpr
   | BinSimpleSelect SelectBinOp SelectClause (Maybe Bool) SelectClause
   deriving (Show, Generic, Eq, Ord, Data)
@@ -60,24 +61,16 @@ instance IsAst SimpleSelect where
       TextBuilders.optLexemes
         [ Just "SELECT",
           fmap (toTextBuilder settings) a,
-          fmap intoClause b,
-          fmap fromClause c,
-          fmap whereClause d,
-          fmap groupClause e,
-          fmap havingClause f,
-          fmap windowClause g
+          fmap (toTextBuilder settings) b,
+          fmap (toTextBuilder settings) c,
+          fmap (toTextBuilder settings) d,
+          fmap (toTextBuilder settings) e,
+          fmap (toTextBuilder settings) f,
+          fmap (toTextBuilder settings) g
         ]
-    ValuesSimpleSelect a -> valuesClause a
+    ValuesSimpleSelect a -> toTextBuilder settings a
     TableSimpleSelect a -> "TABLE " <> toTextBuilder settings a
     BinSimpleSelect a b c d -> toTextBuilder settings b <> " " <> toTextBuilder settings a <> foldMap (mappend " " . TextBuilders.renderAllOrDistinct) c <> " " <> toTextBuilder settings d
-    where
-      intoClause a = "INTO " <> toTextBuilder settings a
-      fromClause a = "FROM " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a
-      whereClause a = "WHERE " <> toTextBuilder settings a
-      groupClause a = "GROUP BY " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a
-      havingClause a = "HAVING " <> toTextBuilder settings a
-      windowClause a = "WINDOW " <> TextBuilders.commaNonEmpty (toTextBuilder settings) a
-      valuesClause a = "VALUES " <> TextBuilders.commaNonEmpty (TextBuilders.renderInParens . toTextBuilder settings) a
   parser settings = do
     a <- baseSimpleSelect settings <|> Parser.parse (Megaparsec.try (Parser.toParsec withParensHead))
     extendMany suffix a
@@ -105,32 +98,20 @@ baseSimpleSelect settings =
         Parsers.notFollowedBy $ Parsers.satisfy isAlphaNum
         Parser.endHead
         targeting <- optional (Parsers.space1 *> parser settings)
-        intoClause <- optional (Parsers.space1 *> Parsers.keyword "into" *> Parser.endHead *> Parsers.space1 *> parser settings)
-        fromClause <- optional (Parsers.space1 *> Parsers.keyword "from" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator (parser settings))
-        whereClause <- optional (Parsers.space1 *> Parsers.keyword "where" *> Parsers.space1 *> Parser.endHead *> parser settings)
-        groupClause <- optional (Parsers.space1 *> Parsers.keyphrase "group by" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator (parser settings))
-        havingClause <- optional (Parsers.space1 *> Parsers.keyword "having" *> Parser.endHead *> Parsers.space1 *> parser settings)
-        windowClause <- optional (Parsers.space1 *> Parsers.keyword "window" *> Parser.endHead *> Parsers.space1 *> Parsers.sep1 Parsers.commaSeparator (parser settings))
+        intoClause <- optional (Parsers.space1 *> parser settings)
+        fromClause <- optional (Parsers.space1 *> parser settings)
+        whereClause <- optional (Parsers.space1 *> parser settings)
+        groupClause <- optional (Parsers.space1 *> parser settings)
+        havingClause <- optional (Parsers.space1 *> parser settings)
+        windowClause <- optional (Parsers.space1 *> parser settings)
         return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
       do
         Parsers.keyword "table"
         Parsers.space1
         Parser.endHead
         TableSimpleSelect <$> parser settings,
-      ValuesSimpleSelect <$> valuesClause
+      ValuesSimpleSelect <$> parser settings
     ]
-  where
-    valuesClause = do
-      Parsers.keyword "values"
-      Parsers.space
-      Parsers.sep1 Parsers.commaSeparator $ do
-        Parsers.char '('
-        Parser.endHead
-        Parsers.space
-        a <- ExprList <$> Parsers.sep1 Parsers.commaSeparator (parser settings)
-        Parsers.space
-        Parsers.char ')'
-        return a
 
 selectClauseBase :: Settings -> Parser SelectClause
 selectClauseBase settings =
@@ -164,11 +145,11 @@ instance Qc.Arbitrary SimpleSelect where
                       <$> Qc.arbitrary
                       <*> Qc.arbitrary
                       <*> Qc.arbitrary
-                      <*> Gens.downscale Qc.arbitrary
+                      <*> Gens.terminatingMaybe Qc.arbitrary
                       <*> Qc.arbitrary
-                      <*> Gens.downscale Qc.arbitrary
+                      <*> Gens.terminatingMaybe Qc.arbitrary
                       <*> Qc.arbitrary,
-                    ValuesSimpleSelect <$> Gens.nonEmptyUpTo 7 Qc.arbitrary,
+                    ValuesSimpleSelect <$> Qc.arbitrary,
                     TableSimpleSelect <$> Qc.arbitrary,
                     BinSimpleSelect <$> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary <*> Qc.arbitrary
                   ]

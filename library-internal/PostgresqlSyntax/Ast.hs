@@ -44,6 +44,8 @@ module PostgresqlSyntax.Ast
     FrameClause (..),
     FrameClauseMode (..),
     FrameExtent (..),
+    FromClause (..),
+    FromList (..),
     FuncAliasClause (..),
     FuncApplication (..),
     FuncApplicationParams (..),
@@ -56,6 +58,8 @@ module PostgresqlSyntax.Ast
     FuncTable (..),
     GenericType (..),
     GroupByItem (..),
+    GroupClause (..),
+    HavingClause (..),
     Iconst (..),
     Ident (..),
     ImplicitRow (..),
@@ -72,6 +76,7 @@ module PostgresqlSyntax.Ast
     InsertTarget (..),
     Interval (..),
     IntervalSecond (..),
+    IntoClause (..),
     JoinMeth (..),
     JoinQual (..),
     JoinType (..),
@@ -98,6 +103,7 @@ module PostgresqlSyntax.Ast
     QualifiedName (..),
     RelationExpr (..),
     RelationExprOptAlias (..),
+    ReturningClause (..),
     Row (..),
     RowsfromItem (..),
     RowsfromList (..),
@@ -137,10 +143,14 @@ module PostgresqlSyntax.Ast
     Typename (..),
     TypenameArrayDimensions (..),
     UpdateStmt (..),
+    UsingClause (..),
+    ValuesClause (..),
     VerbalExprBinOp (..),
     WhenClause (..),
     WhenClauseList (..),
+    WhereClause (..),
     WhereOrCurrentClause (..),
+    WindowClause (..),
     WindowDefinition (..),
     WindowExclusionClause (..),
     WindowSpecification (..),
@@ -148,18 +158,11 @@ module PostgresqlSyntax.Ast
     Xconst (..),
 
     -- * Bare aliases
-    ReturningClause,
-    UsingClause,
-    FromList,
-    FromClause,
-    IntoClause,
-    HavingClause,
     ExistingWindowName,
     PartitionClause,
     RepeatableClause,
     ColDefList,
     CollateClause,
-    WhereClause,
     WithinGroupClause,
     FilterClause,
     OverlayPlacing,
@@ -177,9 +180,6 @@ module PostgresqlSyntax.Ast
     Collate,
     Class,
     TypeFunctionName,
-    GroupClause,
-    ValuesClause,
-    WindowClause,
   )
 where
 
@@ -222,6 +222,8 @@ import PostgresqlSyntax.Ast.FrameBound
 import PostgresqlSyntax.Ast.FrameClause
 import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.FrameExtent
+import PostgresqlSyntax.Ast.FromClause
+import PostgresqlSyntax.Ast.FromList
 import PostgresqlSyntax.Ast.FuncAliasClause
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncApplicationParams
@@ -234,6 +236,8 @@ import PostgresqlSyntax.Ast.FuncName
 import PostgresqlSyntax.Ast.FuncTable
 import PostgresqlSyntax.Ast.GenericType
 import PostgresqlSyntax.Ast.GroupByItem
+import PostgresqlSyntax.Ast.GroupClause
+import PostgresqlSyntax.Ast.HavingClause
 import PostgresqlSyntax.Ast.Iconst
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
@@ -250,6 +254,7 @@ import PostgresqlSyntax.Ast.InsertStmt
 import PostgresqlSyntax.Ast.InsertTarget
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.IntervalSecond
+import PostgresqlSyntax.Ast.IntoClause
 import PostgresqlSyntax.Ast.JoinMeth
 import PostgresqlSyntax.Ast.JoinQual
 import PostgresqlSyntax.Ast.JoinType
@@ -276,6 +281,7 @@ import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.QualifiedName
 import PostgresqlSyntax.Ast.RelationExpr
 import PostgresqlSyntax.Ast.RelationExprOptAlias
+import PostgresqlSyntax.Ast.ReturningClause
 import PostgresqlSyntax.Ast.Row
 import PostgresqlSyntax.Ast.RowsfromItem
 import PostgresqlSyntax.Ast.RowsfromList
@@ -315,10 +321,14 @@ import PostgresqlSyntax.Ast.TypeList
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Ast.TypenameArrayDimensions
 import PostgresqlSyntax.Ast.UpdateStmt
+import PostgresqlSyntax.Ast.UsingClause
+import PostgresqlSyntax.Ast.ValuesClause
 import PostgresqlSyntax.Ast.VerbalExprBinOp
 import PostgresqlSyntax.Ast.WhenClause
 import PostgresqlSyntax.Ast.WhenClauseList
+import PostgresqlSyntax.Ast.WhereClause
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
+import PostgresqlSyntax.Ast.WindowClause
 import PostgresqlSyntax.Ast.WindowDefinition
 import PostgresqlSyntax.Ast.WindowExclusionClause
 import PostgresqlSyntax.Ast.WindowSpecification
@@ -327,18 +337,6 @@ import PostgresqlSyntax.Ast.Xconst
 import PostgresqlSyntax.Prelude
 
 -- * Bare aliases
-
-type ReturningClause = TargetList
-
-type UsingClause = FromList
-
-type FromList = NonEmpty TableRef
-
-type FromClause = NonEmpty TableRef
-
-type IntoClause = OptTempTableName
-
-type HavingClause = AExpr
 
 type ExistingWindowName = ColId
 
@@ -349,8 +347,6 @@ type RepeatableClause = AExpr
 type ColDefList = TableFuncElementList
 
 type CollateClause = AnyName
-
-type WhereClause = AExpr
 
 type WithinGroupClause = SortClause
 
@@ -385,9 +381,3 @@ type Collate = AnyName
 type Class = AnyName
 
 type TypeFunctionName = Ident
-
-type GroupClause = NonEmpty GroupByItem
-
-type ValuesClause = NonEmpty ExprList
-
-type WindowClause = NonEmpty WindowDefinition
