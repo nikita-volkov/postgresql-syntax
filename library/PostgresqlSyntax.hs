@@ -11,11 +11,16 @@
 -- 'Semigroup'\/'Monoid') control optional parsing\/rendering behavior; pass
 -- 'mempty' for standard Postgres syntax.
 module PostgresqlSyntax
-  ( -- * Settings
-    module PostgresqlSyntax.Settings,
+  ( -- * Parsing and rendering
+    IsAst.IsAst (..),
+    IsAst.toText,
+    IsAst.parse,
+    IsAst.parseWithPosError,
+    IsAst.parseWithSourcePosError,
 
-    -- * Parsing and rendering
-    module PostgresqlSyntax.IsAst,
+    -- * Settings
+    Settings.Settings,
+    Settings.nullabilityMarkers,
 
     -- * AST
     module PostgresqlSyntax.Ast,
@@ -23,5 +28,5 @@ module PostgresqlSyntax
 where
 
 import PostgresqlSyntax.Ast
-import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Settings (Settings, nullabilityMarkers)
+import qualified PostgresqlSyntax.IsAst as IsAst
+import qualified PostgresqlSyntax.Settings as Settings
