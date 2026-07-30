@@ -20,7 +20,6 @@ import qualified Test.QuickCheck as Qc
 --   | opt_with_clause INSERT INTO insert_target insert_rest
 --       opt_on_conflict returning_clause
 -- @
---
 data InsertStmt = InsertStmt (Maybe WithClause) InsertTarget InsertRest (Maybe OnConflict) (Maybe ReturningClause)
   deriving (Show, Generic, Eq, Ord, Data)
 
