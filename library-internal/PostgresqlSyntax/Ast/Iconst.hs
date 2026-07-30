@@ -1,0 +1,27 @@
+module PostgresqlSyntax.Ast.Iconst where
+
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
+
+-- |
+-- ==== References
+-- @
+-- Iconst
+-- @
+newtype Iconst = Iconst Int64
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst Iconst where
+  toTextBuilder _settings (Iconst a) = TextBuilder.int64Dec a
+  parser _settings = Iconst <$> Parsers.decimal
+
+instance Qc.Arbitrary Iconst where
+  shrink = Qc.genericShrink
+  arbitrary = Iconst <$> Qc.sized (\n -> Qc.choose (0, cap n))
+    where
+      cap n
+        | n >= 62 = maxBound
+        | otherwise = 2 ^ n

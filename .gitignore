@@ -21,9 +21,10 @@
 !/bench/
 !/hedgehog-test/
 !/library/
+!/library-internal/
 !/nesting-bench/
 !/references/
-!/tasty-test/
+!/hspec-test/
 !/docs/
 
 # Ignore noise:

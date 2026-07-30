@@ -11,7 +11,7 @@ import qualified Hedgehog.Range as Range
 import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Validation as Validation
-import Prelude hiding (bit, bool, filter, fromList, maybe, sortBy)
+import Prelude hiding (Op, bit, bool, filter, fromList, maybe, sortBy)
 
 -- * Generic
 
@@ -48,7 +48,7 @@ insertRest =
 
 overrideKind = enumBounded
 
-insertColumnList = nonEmpty (Range.exponential 1 7) insertColumnItem
+insertColumnList = InsertColumnList <$> nonEmpty (Range.exponential 1 7) insertColumnItem
 
 insertColumnItem = InsertColumnItem <$> colId <*> maybe indirection
 
@@ -72,7 +72,7 @@ returningClause = targetList
 
 updateStmt = UpdateStmt <$> maybe withClause <*> relationExprOptAlias <*> setClauseList <*> maybe fromClause <*> maybe whereOrCurrentClause <*> maybe returningClause
 
-setClauseList = nonEmpty (Range.exponential 1 10) setClause
+setClauseList = SetClauseList <$> nonEmpty (Range.exponential 1 10) setClause
 
 setClause =
   choice
@@ -82,7 +82,7 @@ setClause =
 
 setTarget = SetTarget <$> colId <*> maybe indirection
 
-setTargetList = nonEmpty (Range.exponential 1 10) setTarget
+setTargetList = SetTargetList <$> nonEmpty (Range.exponential 1 10) setTarget
 
 -- * Delete
 
@@ -92,13 +92,13 @@ usingClause = fromList
 
 -- * Select
 
-selectStmt = Left <$> selectNoParens
+selectStmt = NoParensSelectStmt <$> selectNoParens
 
 -- ** selectNoParens
 
 selectNoParens =
   frequency
-    [ (90, SelectNoParens <$> maybe withClause <*> (Left <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
+    [ (90, SelectNoParens <$> maybe withClause <*> (SimpleSelectSelectClause <$> simpleSelect) <*> maybe sortClause <*> maybe selectLimit <*> maybe forLockingClause),
       (10, clausePlusSurroundingsSelectNoParens)
     ]
 
@@ -124,7 +124,7 @@ clausePlusSurroundingsSelectNoParens = do
   return (SelectNoParens with clause sort limit forLocking)
 
 terminalSelectNoParens =
-  SelectNoParens <$> pure Nothing <*> (Left <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
+  SelectNoParens <$> pure Nothing <*> (SimpleSelectSelectClause <$> terminalSimpleSelect) <*> pure Nothing <*> pure Nothing <*> pure Nothing
 
 -- ** selectWithParens
 
@@ -143,11 +143,11 @@ terminalSelectWithParens = NoParensSelectWithParens <$> terminalSelectNoParens
 
 selectClause =
   choice
-    [ Left <$> simpleSelect,
-      Right <$> small selectWithParens
+    [ SimpleSelectSelectClause <$> simpleSelect,
+      WithParensSelectClause <$> small selectWithParens
     ]
 
-nonTrailingSelectClause = Left <$> nonTrailingSimpleSelect
+nonTrailingSelectClause = SimpleSelectSelectClause <$> nonTrailingSimpleSelect
 
 -- ** simpleSelect
 
@@ -178,10 +178,10 @@ targeting =
   choice
     [ NormalTargeting <$> targetList,
       AllTargeting <$> maybe targetList,
-      DistinctTargeting <$> maybe (nonEmpty (Range.exponential 1 8) aExpr) <*> targetList
+      DistinctTargeting <$> maybe exprList <*> targetList
     ]
 
-targetList = nonEmpty (Range.exponential 1 8) targetEl
+targetList = TargetList <$> nonEmpty (Range.exponential 1 8) targetEl
 
 targetEl =
   choice
@@ -254,19 +254,19 @@ funcTable =
 
 rowsfromItem = RowsfromItem <$> funcExprWindowless <*> maybe colDefList
 
-rowsfromList = nonEmpty (Range.exponential 1 8) rowsfromItem
+rowsfromList = RowsfromList <$> nonEmpty (Range.exponential 1 8) rowsfromItem
 
 colDefList = tableFuncElementList
 
-optOrdinality = bool
+optOrdinality = OptOrdinality <$> bool
 
-tableFuncElementList = nonEmpty (Range.exponential 1 7) tableFuncElement
+tableFuncElementList = TableFuncElementList <$> nonEmpty (Range.exponential 1 7) tableFuncElement
 
 tableFuncElement = TableFuncElement <$> colId <*> typename <*> maybe collateClause
 
 collateClause = anyName
 
-aliasClause = AliasClause <$> bool <*> name <*> maybe (nonEmpty (Range.exponential 1 8) name)
+aliasClause = AliasClause <$> bool <*> name <*> maybe (NameList <$> nonEmpty (Range.exponential 1 8) name)
 
 funcAliasClause =
   choice
@@ -311,8 +311,8 @@ groupByItem =
   choice
     [ ExprGroupByItem <$> aExpr,
       pure EmptyGroupingSetGroupByItem,
-      RollupGroupByItem <$> nonEmpty (Range.exponential 1 8) aExpr,
-      CubeGroupByItem <$> nonEmpty (Range.exponential 1 8) aExpr,
+      RollupGroupByItem <$> exprList,
+      CubeGroupByItem <$> exprList,
       GroupingSetsGroupByItem <$> nonEmpty (Range.exponential 1 3) groupByItem
     ]
 
@@ -336,7 +336,7 @@ windowClause = nonEmpty (Range.exponential 1 8) windowDefinition
 
 windowDefinition = WindowDefinition <$> name <*> windowSpecification
 
-windowSpecification = WindowSpecification <$> maybe name <*> maybe (nonEmpty (Range.exponential 1 8) nonSuffixOpAExpr) <*> maybe sortClause <*> maybe frameClause
+windowSpecification = WindowSpecification <$> maybe name <*> maybe exprList <*> maybe sortClause <*> maybe frameClause
 
 frameClause = FrameClause <$> frameClauseMode <*> frameExtent <*> maybe windowExclusionClause
 
@@ -361,11 +361,11 @@ windowExclusionClause = element [CurrentRowWindowExclusionClause, GroupWindowExc
 
 -- * Values Clause
 
-valuesClause = nonEmpty (Range.exponential 1 8) (nonEmpty (Range.exponential 1 8) aExpr)
+valuesClause = nonEmpty (Range.exponential 1 8) exprList
 
 -- * Sort Clause
 
-sortClause = nonEmpty (Range.exponential 1 8) sortBy
+sortClause = SortClause <$> nonEmpty (Range.exponential 1 8) sortBy
 
 sortBy =
   choice
@@ -431,7 +431,7 @@ forLockingStrength =
 
 -- * Expressions
 
-exprList = nonEmpty (Range.exponential 1 7) aExpr
+exprList = ExprList <$> nonEmpty (Range.exponential 1 7) aExpr
 
 aExpr =
   recursive
@@ -446,7 +446,6 @@ aExpr =
       MinusAExpr <$> aExpr,
       SymbolicBinOpAExpr <$> prefixAExpr <*> symbolicExprBinOp <*> aExpr,
       PrefixQualOpAExpr <$> qualOp <*> aExpr,
-      SuffixQualOpAExpr <$> prefixAExpr <*> qualOp,
       AndAExpr <$> prefixAExpr <*> aExpr,
       OrAExpr <$> prefixAExpr <*> aExpr,
       NotAExpr <$> aExpr,
@@ -497,7 +496,6 @@ nonSelectAExpr =
       MinusAExpr <$> aExpr,
       SymbolicBinOpAExpr <$> prefixAExpr <*> symbolicExprBinOp <*> aExpr,
       PrefixQualOpAExpr <$> qualOp <*> aExpr,
-      SuffixQualOpAExpr <$> prefixAExpr <*> qualOp,
       AndAExpr <$> prefixAExpr <*> aExpr,
       OrAExpr <$> prefixAExpr <*> aExpr,
       NotAExpr <$> aExpr,
@@ -548,7 +546,7 @@ cExpr =
 
 caseExpr = CaseExpr <$> maybe aExpr <*> whenClauseList <*> maybe aExpr
 
-whenClauseList = nonEmpty (Range.exponential 1 7) whenClause
+whenClauseList = WhenClauseList <$> nonEmpty (Range.exponential 1 7) whenClause
 
 whenClause = WhenClause <$> small aExpr <*> small aExpr
 
@@ -566,7 +564,7 @@ arrayExpr =
         pure EmptyArrayExpr
       ]
 
-arrayExprList = nonEmpty (Range.exponential 1 4) arrayExpr
+arrayExprList = ArrayExprList <$> nonEmpty (Range.exponential 1 4) arrayExpr
 
 row =
   choice
@@ -574,7 +572,7 @@ row =
       ImplicitRowRow <$> implicitRow
     ]
 
-explicitRow = maybe exprList
+explicitRow = choice [pure EmptyExplicitRow, ExprListExplicitRow <$> exprList]
 
 implicitRow = ImplicitRow <$> exprList <*> aExpr
 
@@ -618,10 +616,10 @@ funcExprCommonSubexpr =
   choice
     [ CollationForFuncExprCommonSubexpr <$> aExpr,
       pure CurrentDateFuncExprCommonSubexpr,
-      CurrentTimeFuncExprCommonSubexpr <$> maybe iconst,
-      CurrentTimestampFuncExprCommonSubexpr <$> maybe iconst,
-      LocalTimeFuncExprCommonSubexpr <$> maybe iconst,
-      LocalTimestampFuncExprCommonSubexpr <$> maybe iconst,
+      CurrentTimeFuncExprCommonSubexpr <$> maybe nonNegativeInt64,
+      CurrentTimestampFuncExprCommonSubexpr <$> maybe nonNegativeInt64,
+      LocalTimeFuncExprCommonSubexpr <$> maybe nonNegativeInt64,
+      LocalTimestampFuncExprCommonSubexpr <$> maybe nonNegativeInt64,
       pure CurrentRoleFuncExprCommonSubexpr,
       pure CurrentUserFuncExprCommonSubexpr,
       pure SessionUserFuncExprCommonSubexpr,
@@ -701,7 +699,7 @@ qualAllOp =
 op = do
   a <- text (Range.exponential 1 7) (listElement "+-*/<>=~!@#%^&|`?")
   case Validation.op a of
-    Nothing -> return a
+    Nothing -> return (Op a)
     _ -> discard
 
 anyOperator =
@@ -762,12 +760,12 @@ aexprConst =
     [ IAexprConst <$> iconst,
       FAexprConst <$> fconst,
       SAexprConst <$> sconst,
-      BAexprConst <$> text (Range.exponential 1 100) (listElement "01"),
-      XAexprConst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF"),
+      BAexprConst <$> (Bconst <$> text (Range.exponential 1 100) (listElement "01")),
+      XAexprConst <$> (Xconst <$> text (Range.exponential 1 100) (listElement "0123456789abcdefABCDEF")),
       FuncAexprConst <$> funcName <*> maybe funcConstArgs <*> sconst,
       ConstTypenameAexprConst <$> constTypename <*> sconst,
       StringIntervalAexprConst <$> sconst <*> maybe interval,
-      IntIntervalAexprConst <$> integral (Range.exponential 0 2309482309483029) <*> sconst,
+      IntIntervalAexprConst <$> (Iconst <$> integral (Range.exponential 0 2309482309483029)) <*> sconst,
       BoolAexprConst <$> bool,
       pure NullAexprConst
     ]
@@ -789,35 +787,39 @@ numeric =
       pure SmallintNumeric,
       pure BigintNumeric,
       pure RealNumeric,
-      FloatNumeric <$> maybe iconst,
+      FloatNumeric <$> maybe nonNegativeInt64,
       pure DoublePrecisionNumeric,
-      DecimalNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
-      DecNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
-      NumericNumeric <$> maybe (nonEmpty (Range.exponential 1 7) (small aExpr)),
+      DecimalNumeric <$> maybe exprList,
+      DecNumeric <$> maybe exprList,
+      NumericNumeric <$> maybe exprList,
       pure BooleanNumeric
     ]
 
-bit = Bit <$> bool <*> maybe (nonEmpty (Range.exponential 1 7) (small aExpr))
+bit = Bit <$> optVarying <*> maybe exprList
+
+optVarying = OptVarying <$> bool
 
 constBit = bit
 
-constCharacter = ConstCharacter <$> character <*> maybe iconst
+constCharacter = ConstCharacter <$> character <*> maybe nonNegativeInt64
 
 character =
   choice
-    [ CharacterCharacter <$> bool,
-      CharCharacter <$> bool,
+    [ CharacterCharacter <$> optVarying,
+      CharCharacter <$> optVarying,
       pure VarcharCharacter,
-      NationalCharacterCharacter <$> bool,
-      NationalCharCharacter <$> bool,
-      NcharCharacter <$> bool
+      NationalCharacterCharacter <$> optVarying,
+      NationalCharCharacter <$> optVarying,
+      NcharCharacter <$> optVarying
     ]
 
 constDatetime =
   choice
-    [ TimestampConstDatetime <$> maybe iconst <*> maybe bool,
-      TimeConstDatetime <$> maybe iconst <*> maybe bool
+    [ TimestampConstDatetime <$> maybe nonNegativeInt64 <*> maybe timezone,
+      TimeConstDatetime <$> maybe nonNegativeInt64 <*> maybe timezone
     ]
+
+timezone = Timezone <$> bool
 
 interval =
   choice
@@ -836,17 +838,22 @@ interval =
       MinuteToSecondInterval <$> intervalSecond
     ]
 
-intervalSecond = maybe iconst
+intervalSecond = IntervalSecond <$> maybe nonNegativeInt64
 
-sconst = text (Range.exponential 0 1000) unicode
+sconst = Sconst <$> text (Range.exponential 0 1000) unicode
 
-iconstOrFconst = choice [Left <$> iconst <|> Right <$> fconst]
+iconstOrFconst = choice [Left <$> nonNegativeInt64, Right <$> fconstValue]
 
-fconst =
-  filter (\a -> fromIntegral (round a :: Int) /= a)
-    $ realFrac_ (Range.exponentialFloat 0 309457394857984375983475943)
+fconst = Fconst <$> fconstValue
 
-iconst = integral (Range.exponential 0 maxBound)
+fconstValue =
+  filter
+    (\a -> fromIntegral (round a :: Int) /= a)
+    (realFrac_ (Range.exponentialFloat 0 309457394857984375983475943))
+
+iconst = Iconst <$> integral (Range.exponential 0 maxBound)
+
+nonNegativeInt64 = integral (Range.exponential 0 maxBound)
 
 -- * Types
 
@@ -864,7 +871,7 @@ typenameArrayDimensions =
       ExplicitTypenameArrayDimensions <$> maybe iconst
     ]
 
-arrayBounds = nonEmpty (Range.exponential 1 4) (maybe iconst)
+arrayBounds = ArrayBounds <$> nonEmpty (Range.exponential 1 4) (maybe iconst)
 
 simpleTypename =
   choice
@@ -878,11 +885,11 @@ simpleTypename =
 
 genericType = GenericType <$> typeFunctionName <*> maybe attrs <*> maybe typeModifiers
 
-attrs = nonEmpty (Range.exponential 1 10) attrName
+attrs = Attrs <$> nonEmpty (Range.exponential 1 10) attrName
 
 typeModifiers = exprList
 
-typeList = nonEmpty (Range.exponential 1 7) typename
+typeList = TypeList <$> nonEmpty (Range.exponential 1 7) typename
 
 subType = enumBounded
 
@@ -916,7 +923,7 @@ qualifiedName =
       IndirectedQualifiedName <$> name <*> indirection
     ]
 
-indirection = nonEmpty (Range.linear 1 3) indirectionEl
+indirection = Indirection <$> nonEmpty (Range.linear 1 3) indirectionEl
 
 indirectionEl =
   choice
@@ -946,7 +953,7 @@ anyName = AnyName <$> colId <*> maybe attrs
 
 -- * Indexes
 
-indexParams = nonEmpty (Range.exponential 1 5) indexElem
+indexParams = IndexParams <$> nonEmpty (Range.exponential 1 5) indexElem
 
 indexElem = IndexElem <$> indexElemDef <*> maybe collate <*> maybe class_ <*> maybe ascDesc <*> maybe nullsOrder
 

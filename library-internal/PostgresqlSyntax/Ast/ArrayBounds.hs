@@ -1,0 +1,28 @@
+module PostgresqlSyntax.Ast.ArrayBounds where
+
+import PostgresqlSyntax.Ast.Iconst
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
+
+-- |
+-- ==== References
+-- @
+-- opt_array_bounds:
+--   | opt_array_bounds '[' Iconst ']'
+--   | opt_array_bounds '[' ']'
+--   | EMPTY
+-- @
+newtype ArrayBounds = ArrayBounds (NonEmpty (Maybe Iconst))
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst ArrayBounds where
+  toTextBuilder settings (ArrayBounds a) = TextBuilders.spaceNonEmpty (TextBuilders.renderInBrackets . foldMap (toTextBuilder settings)) a
+  parser settings = ArrayBounds <$> Parsers.sep1 Parsers.space (Parsers.inBrackets (optional (parser settings)))
+
+instance Qc.Arbitrary ArrayBounds where
+  shrink = Qc.genericShrink
+  arbitrary = ArrayBounds <$> Gens.nonEmptyUpTo 3 (Qc.oneof [pure Nothing, Just <$> Qc.arbitrary])

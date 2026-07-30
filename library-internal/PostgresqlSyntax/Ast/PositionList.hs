@@ -1,0 +1,26 @@
+module PostgresqlSyntax.Ast.PositionList where
+
+import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
+
+-- |
+-- ==== References
+-- @
+-- position_list:
+--   | b_expr IN_P b_expr
+--   | EMPTY
+-- @
+data PositionList = PositionList BExpr BExpr
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst PositionList where
+  toTextBuilder settings (PositionList a b) = toTextBuilder settings a <> " IN " <> toTextBuilder settings b
+  parser settings = PositionList <$> parser settings <*> (Parsers.space1 *> Parsers.keyword "in" *> Parsers.space1 *> parser settings)
+
+instance Qc.Arbitrary PositionList where
+  shrink = Qc.genericShrink
+  arbitrary = PositionList <$> Gens.downscale arbitrary <*> Gens.downscale arbitrary

@@ -1,0 +1,103 @@
+module PostgresqlSyntax.Ast.Ident where
+
+import qualified Data.Text as Text
+import qualified HeadedMegaparsec as Parser
+import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
+import PostgresqlSyntax.IsAst
+import qualified PostgresqlSyntax.KeywordSet as KeywordSet
+import qualified PostgresqlSyntax.Predicate as Predicate
+import PostgresqlSyntax.Prelude hiding (filter, try)
+import PostgresqlSyntax.Settings (Settings)
+import qualified Test.QuickCheck as Qc
+import qualified TextBuilder
+
+-- |
+-- ==== References
+-- @
+-- IDENT
+-- @
+data Ident = QuotedIdent Text | UnquotedIdent Text
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst Ident where
+  toTextBuilder _settings = \case
+    QuotedIdent a -> TextBuilder.char7 '"' <> TextBuilder.text (Text.replace "\"" "\"\"" a) <> TextBuilder.char7 '"'
+    UnquotedIdent a -> TextBuilder.text a
+  parser _settings = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
+    where
+      quotedName = Parser.filter (const "Empty name") (not . Text.null) (Parsers.quotedString '"') & fmap QuotedIdent
+
+-- |
+-- ==== References
+-- @
+-- ColId:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+-- @
+--
+-- Most grammar positions that hold an identifier (column\/table\/alias
+-- names, ...) are actually @ColId@, not bare @IDENT@ — this is the
+-- permissive variant that most 'Ident'-typed fields elsewhere in
+-- "PostgresqlSyntax.Ast" should parse with, since 'Ident'\'s own generic
+-- 'parser' only accepts the strict @IDENT@ token (no Parsers.keyword fallback).
+colId :: Settings -> Parser Ident
+colId settings =
+  Parser.label "identifier" $
+    parser settings
+      <|> Parsers.keywordNameFromSet UnquotedIdent (KeywordSet.unreservedKeyword <> KeywordSet.colNameKeyword)
+
+-- |
+-- ==== References
+-- @
+-- ColLabel:
+--   |  IDENT
+--   |  unreserved_keyword
+--   |  col_name_keyword
+--   |  type_func_name_keyword
+--   |  reserved_keyword
+-- @
+colLabel :: Settings -> Parser Ident
+colLabel settings =
+  Parser.label "column label" $
+    Parsers.keywordNameFromSet UnquotedIdent KeywordSet.keyword
+      <|> parser settings
+
+-- |
+-- ==== References
+-- @
+-- type_function_name:
+--   | IDENT
+--   | unreserved_keyword
+--   | type_func_name_keyword
+-- @
+typeFunctionName :: Settings -> Parser Ident
+typeFunctionName settings =
+  Parsers.keywordNameFromSet UnquotedIdent KeywordSet.typeFunctionName
+    <|> parser settings
+
+instance Qc.Arbitrary Ident where
+  shrink = \case
+    QuotedIdent a -> QuotedIdent <$> Shrinks.textTail a
+    UnquotedIdent a -> UnquotedIdent <$> Shrinks.textTail a
+  arbitrary =
+    Qc.frequency
+      [ (95, UnquotedIdent <$> unquotedIdentText),
+        (5, QuotedIdent <$> quotedIdentText)
+      ]
+    where
+      unquotedIdentText =
+        ( do
+            firstChar <- Qc.elements startChars
+            restLength <- Qc.choose (0, 29)
+            rest <- Qc.vectorOf restLength (Qc.elements contChars)
+            pure (Text.pack (firstChar : rest))
+        )
+          `Qc.suchThat` (not . Predicate.keyword)
+      startChars = ['a' .. 'z'] <> ['_']
+      contChars = startChars <> ['0' .. '9'] <> ['$']
+      quotedIdentText = do
+        len <- Qc.choose (1, 30)
+        Text.pack <$> Qc.vectorOf len (Qc.arbitrary `Qc.suchThat` (not . isControl))

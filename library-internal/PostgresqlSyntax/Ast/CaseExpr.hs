@@ -1,0 +1,54 @@
+module PostgresqlSyntax.Ast.CaseExpr where
+
+import qualified HeadedMegaparsec as Parser
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
+import PostgresqlSyntax.Ast.WhenClauseList
+import qualified PostgresqlSyntax.Helpers.Gens as Gens
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
+import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Prelude
+import qualified Test.QuickCheck as Qc
+
+-- |
+-- ==== References
+-- @
+-- case_expr:
+--   | CASE case_arg when_clause_list case_default END_P
+-- @
+data CaseExpr = CaseExpr (Maybe AExpr) WhenClauseList (Maybe AExpr)
+  deriving (Show, Generic, Eq, Ord, Data)
+
+instance IsAst CaseExpr where
+  toTextBuilder settings (CaseExpr a b c) =
+    TextBuilders.optLexemes
+      [ Just "CASE",
+        fmap (toTextBuilder settings) a,
+        Just (toTextBuilder settings b),
+        fmap caseDefault c,
+        Just "END"
+      ]
+    where
+      caseDefault d = "ELSE " <> toTextBuilder settings d
+  parser settings = Parser.label "case expression" $ do
+    Parsers.keyword "case"
+    Parsers.space1
+    Parser.endHead
+    arg <- optional (parser settings <* Parsers.space1)
+    whenClauses <- parser settings
+    Parsers.space1
+    default' <- optional elseClause
+    Parsers.keyword "end"
+    pure (CaseExpr arg whenClauses default')
+    where
+      elseClause = do
+        Parsers.keyword "else"
+        Parsers.space1
+        Parser.endHead
+        a <- parser settings
+        Parsers.space1
+        return a
+
+instance Qc.Arbitrary CaseExpr where
+  shrink = Qc.genericShrink
+  arbitrary = CaseExpr <$> Gens.terminatingMaybe (Gens.downscale arbitrary) <*> arbitrary <*> Gens.terminatingMaybe (Gens.downscale arbitrary)

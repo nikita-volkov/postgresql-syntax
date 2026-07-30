@@ -4,7 +4,7 @@
 -- Benchmark for the "keyword allocation cost in wide alternations" concern
 -- raised in <https://github.com/nikita-volkov/postgresql-syntax/issues/21>.
 --
--- Compares the shipped, cheap 'PostgresqlSyntax.Parsing.keyword'
+-- Compares the shipped, cheap 'PostgresqlSyntax.Helpers.Parsers.keyword'
 -- (a bare 'empty' on mismatch, no allocation beyond the consumed text)
 -- against a richer alternative that reports a proper \"expected one of ...\"
 -- error via 'Text.Megaparsec.failure' (as PR #20 proposed), the way it would
@@ -12,27 +12,23 @@
 --
 -- Both implementations here pin the reported error offset via
 -- 'Megaparsec.setOffset', matching the fix applied to the shipped
--- 'PostgresqlSyntax.Parsing.keyword' to stay correct under megaparsec
+-- 'PostgresqlSyntax.Helpers.Parsers.keyword' to stay correct under megaparsec
 -- >=9.8's stricter '(<|>)' error-merging. That fix is what makes the rich
 -- variant produce complete "expecting ..." lists at all under current
--- megaparsec; see 'PostgresqlSyntax.Parsing.keyword''s haddock.
+-- megaparsec; see 'PostgresqlSyntax.Helpers.Parsers.keyword''s haddock.
 module Main where
 
 import Criterion.Main
 import qualified Data.Char as Char
-import qualified Data.HashSet as HashSet
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import HeadedMegaparsec (HeadedParsec, parse, toParsec)
-import qualified Hedgehog.Gen as Gen
-import qualified Main.Gen as SynGen
-import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-import qualified PostgresqlSyntax.Parsing as Parsing
-import qualified PostgresqlSyntax.Rendering as Rendering
+import qualified PostgresqlSyntax
+import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
 import Prelude
 
--- * Shared token scanner (mirrors 'PostgresqlSyntax.Parsing.anyKeyword')
+-- * Shared token scanner (mirrors 'PostgresqlSyntax.Helpers.Parsers.anyKeyword')
 
 firstIdentifierChar :: Char -> Bool
 firstIdentifierChar x = Char.isAlpha x || x == '_' || x >= '\200' && x <= '\377'
@@ -76,6 +72,18 @@ richKeyword expected = parse $ do
 runHeaded :: HeadedParsec Void Text.Text a -> Text.Text -> Either (Megaparsec.ParseErrorBundle Text.Text Void) a
 runHeaded p = Megaparsec.runParser (toParsec p <* Megaparsec.eof) ""
 
+-- * Keyword word lists (sized to mirror the shipped keyword sets)
+
+-- | ~90 words: the size of a typical mid-size dispatch, mirroring
+-- @PostgresqlSyntax.KeywordSet.reservedKeyword@.
+reservedWords :: [Text.Text]
+reservedWords = ["all", "analyse", "analyze", "and", "any", "array", "as", "asc", "asymmetric", "both", "case", "cast", "check", "collate", "column", "constraint", "create", "current_catalog", "current_date", "current_role", "current_time", "current_timestamp", "current_user", "default", "deferrable", "desc", "distinct", "do", "else", "end", "except", "false", "fetch", "for", "foreign", "from", "grant", "group", "having", "in", "initially", "intersect", "into", "lateral", "leading", "limit", "localtime", "localtimestamp", "not", "null", "offset", "on", "only", "or", "order", "placing", "primary", "references", "returning", "select", "session_user", "some", "symmetric", "table", "then", "to", "trailing", "true", "union", "unique", "user", "using", "variadic", "when", "where", "window", "with"]
+
+-- | ~440 words: the full reserved-word set, worst case, mirroring
+-- @PostgresqlSyntax.KeywordSet.keyword@.
+allWords :: [Text.Text]
+allWords = ["abort", "absolute", "access", "action", "add", "admin", "after", "aggregate", "all", "also", "alter", "always", "analyse", "analyze", "and", "any", "array", "as", "asc", "assertion", "assignment", "asymmetric", "at", "attach", "attribute", "authorization", "backward", "before", "begin", "between", "bigint", "binary", "bit", "boolean", "both", "by", "cache", "call", "called", "cascade", "cascaded", "case", "cast", "catalog", "chain", "char", "character", "characteristics", "check", "checkpoint", "class", "close", "cluster", "coalesce", "collate", "collation", "column", "columns", "comment", "comments", "commit", "committed", "concurrently", "configuration", "conflict", "connection", "constraint", "constraints", "content", "continue", "conversion", "copy", "cost", "create", "cross", "csv", "cube", "current", "current_catalog", "current_date", "current_role", "current_schema", "current_time", "current_timestamp", "current_user", "cursor", "cycle", "data", "database", "day", "deallocate", "dec", "decimal", "declare", "default", "defaults", "deferrable", "deferred", "definer", "delete", "delimiter", "delimiters", "depends", "desc", "detach", "dictionary", "disable", "discard", "distinct", "do", "document", "domain", "double", "drop", "each", "else", "enable", "encoding", "encrypted", "end", "enum", "escape", "event", "except", "exclude", "excluding", "exclusive", "execute", "exists", "explain", "expression", "extension", "external", "extract", "false", "family", "fetch", "filter", "first", "float", "following", "for", "force", "foreign", "forward", "freeze", "from", "full", "function", "functions", "generated", "global", "grant", "granted", "greatest", "group", "grouping", "groups", "handler", "having", "header", "hold", "hour", "identity", "if", "ilike", "immediate", "immutable", "implicit", "import", "in", "include", "including", "increment", "index", "indexes", "inherit", "inherits", "initially", "inline", "inner", "inout", "input", "insensitive", "insert", "instead", "int", "integer", "intersect", "interval", "into", "invoker", "is", "isnull", "isolation", "join", "key", "label", "language", "large", "last", "lateral", "leading", "leakproof", "least", "left", "level", "like", "limit", "listen", "load", "local", "localtime", "localtimestamp", "location", "lock", "locked", "logged", "mapping", "match", "materialized", "maxvalue", "method", "minute", "minvalue", "mode", "month", "move", "name", "names", "national", "natural", "nchar", "new", "next", "nfc", "nfd", "nfkc", "nfkd", "no", "none", "normalize", "normalized", "not", "nothing", "notify", "notnull", "nowait", "null", "nullif", "nulls", "numeric", "object", "of", "off", "offset", "oids", "old", "on", "only", "operator", "option", "options", "or", "order", "ordinality", "others", "out", "outer", "over", "overlaps", "overlay", "overriding", "owned", "owner", "parallel", "parser", "partial", "partition", "passing", "password", "placing", "plans", "policy", "position", "preceding", "precision", "prepare", "prepared", "preserve", "primary", "prior", "privileges", "procedural", "procedure", "procedures", "program", "publication", "quote", "range", "read", "real", "reassign", "recheck", "recursive", "ref", "references", "referencing", "refresh", "reindex", "relative", "release", "rename", "repeatable", "replace", "replica", "reset", "restart", "restrict", "returning", "returns", "revoke", "right", "role", "rollback", "rollup", "routine", "routines", "row", "rows", "rule", "savepoint", "schema", "schemas", "scroll", "search", "second", "security", "select", "sequence", "sequences", "serializable", "server", "session", "session_user", "set", "setof", "sets", "share", "show", "similar", "simple", "skip", "smallint", "snapshot", "some", "sql", "stable", "standalone", "start", "statement", "statistics", "stdin", "stdout", "storage", "stored", "strict", "strip", "subscription", "substring", "support", "symmetric", "sysid", "system", "table", "tables", "tablesample", "tablespace", "temp", "template", "temporary", "text", "then", "ties", "time", "timestamp", "to", "trailing", "transaction", "transform", "treat", "trigger", "trim", "true", "truncate", "trusted", "type", "types", "uescape", "unbounded", "uncommitted", "unencrypted", "union", "unique", "unknown", "unlisten", "unlogged", "until", "update", "user", "using", "vacuum", "valid", "validate", "validator", "value", "values", "varchar", "variadic", "varying", "verbose", "version", "view", "views", "volatile", "when", "where", "whitespace", "window", "with", "within", "without", "work", "wrapper", "write", "xml", "xmlattributes", "xmlconcat", "xmlelement", "xmlexists", "xmlforest", "xmlnamespaces", "xmlparse", "xmlpi", "xmlroot", "xmlserialize", "xmltable", "year", "yes", "zone"]
+
 -- * Wide-alternation scenarios
 
 -- | An alternation over every element of the given keyword list, dispatched
@@ -87,13 +95,13 @@ wideAlternation impl kws = asum (map impl kws)
 
 main :: IO ()
 main = do
-  let reservedWords = HashSet.toList KeywordSet.reservedKeyword -- ~90 words: the size of a typical mid-size dispatch
-      allWords = HashSet.toList KeywordSet.keyword -- ~440 words: the full reserved-word set, worst case
-      lastOf xs = last xs
+  let lastOf xs = last xs
+      firstOf (x : _) = x
+      firstOf [] = error "empty keyword list"
       noMatchToken = "zzzznotakeyword" :: Text.Text
 
-  corpus <- replicateM 500 (Gen.sample (Gen.resize 15 SynGen.preparableStmt))
-  let corpusTexts = map (Rendering.toText . Rendering.preparableStmt) corpus
+  corpus <- replicateM 500 (Qc.generate (Qc.resize 15 (Qc.arbitrary @PostgresqlSyntax.PreparableStmt)))
+  let corpusTexts = map (PostgresqlSyntax.toText mempty) corpus
 
   defaultMain
     [ bgroup
@@ -105,12 +113,12 @@ main = do
             ]
         | (label, kws) <- [("~90 words", reservedWords), ("~440 words", allWords)],
           (scenario, token) <-
-            [ ("first match", head kws),
+            [ ("first match", firstOf kws),
               ("last match", lastOf kws),
               ("no match", noMatchToken)
             ]
         ],
       bgroup
         "full grammar on generated corpus (reference, shipped keyword only)"
-        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . Parsing.run Parsing.preparableStmt)) corpusTexts]
+        [bench "500 generated preparableStmt" $ nf (map (either (const False) (const True) . PostgresqlSyntax.parse @PostgresqlSyntax.PreparableStmt mempty)) corpusTexts]
     ]
