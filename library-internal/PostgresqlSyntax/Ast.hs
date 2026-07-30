@@ -334,7 +334,6 @@ import PostgresqlSyntax.Ast.WindowExclusionClause
 import PostgresqlSyntax.Ast.WindowSpecification
 import PostgresqlSyntax.Ast.WithClause
 import PostgresqlSyntax.Ast.Xconst
-import PostgresqlSyntax.Prelude
 
 -- * Bare aliases
 
