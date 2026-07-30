@@ -7,6 +7,7 @@ import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
+import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
 
@@ -84,7 +85,18 @@ instance IsAst FuncApplicationParams where
           [ pure (a :| []) <* (Parsers.keyword "variadic" *> Parsers.space1),
             (\(b :| bs) -> a :| b : bs) <$> argListEndingInVariadic
           ]
-      starFuncApplicationParams = Parsers.space *> Parsers.char '*' *> Parser.endHead *> Parsers.space $> StarFuncApplicationParams
+      -- A bare '*' char can also be the leading char of a longer operator
+      -- token (e.g. "*#" in @foo(*# DEFAULT)@'s @PrefixQualOpAExpr@), so
+      -- this only commits to the wildcard reading when no further op char
+      -- follows — otherwise it falls through to 'normalFuncApplicationParams',
+      -- which parses the '*' as the start of that operator instead.
+      starFuncApplicationParams =
+        Parsers.space
+          *> Parsers.char '*'
+          *> Parsers.notFollowedBy (Parsers.satisfy Predicate.opChar)
+          *> Parser.endHead
+          *> Parsers.space
+            $> StarFuncApplicationParams
 
 instance Qc.Arbitrary FuncApplicationParams where
   shrink = Qc.genericShrink
