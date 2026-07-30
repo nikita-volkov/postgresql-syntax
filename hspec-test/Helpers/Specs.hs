@@ -32,10 +32,10 @@ itSatisfiesIsAst =
       let sql = toText mempty a
        in case parse mempty sql of
             Left err ->
-              counterexample ("rendered: " <> toList sql <> "\nparse failed: " <> Text.unpack err) False
+              counterexample ("rendered: " <> Text.unpack sql <> "\nparse failed: " <> Text.unpack err) False
             Right a' ->
               counterexample
-                ("rendered: " <> toList sql <> "\nrestored: " <> toList (toText mempty a'))
+                ("rendered: " <> Text.unpack sql <> "\nrestored: " <> Text.unpack (toText mempty a'))
                 (a' === a)
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
@@ -49,7 +49,7 @@ itSatisfiesArbitrary =
         let sql = toText mempty x
             len = Text.length sql
          in Qc.counterexample
-              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")" <> "\n" <> toList sql)
+              ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")" <> "\n" <> Text.unpack sql)
               (len <= zeroSizeMaxLen)
       where
         zeroSizeMaxLen = 500 :: Int
