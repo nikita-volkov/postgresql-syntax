@@ -28,3 +28,4 @@ jobs:
     secrets: inherit
     with:
       test-options: --qc-max-success=${{ inputs.qc-max-success }}
+      doctest-target: postgresql-syntax:internal

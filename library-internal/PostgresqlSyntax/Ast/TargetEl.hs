@@ -34,8 +34,6 @@ instance IsAst TargetEl where
     ExprTargetEl a -> toTextBuilder settings a
     AsteriskTargetEl -> "*"
 
-  -- >>> testParser targetEl "a.b as c"
-  -- AliasedExprTargetEl (CExprAExpr (ColumnrefCExpr (Columnref (UnquotedIdent "a") (Just (AttrNameIndirectionEl (UnquotedIdent "b") :| []))))) (UnquotedIdent "c")
   parser settings =
     Parser.label "target" $
       asum

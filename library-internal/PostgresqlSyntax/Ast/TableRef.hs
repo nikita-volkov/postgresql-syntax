@@ -71,9 +71,6 @@ data TableRef
 instance IsAst TableRef where
   toTextBuilder settings = renderTableRef settings
 
-  --
-  -- >>> testParser tableRef "a left join b on (a.i = b.i)"
-  -- JoinTableRef (MethJoinedTable (QualJoinMeth...
   parser settings =
     Parser.label "table reference" $
       do

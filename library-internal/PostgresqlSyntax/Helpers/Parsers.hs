@@ -20,6 +20,10 @@ import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as MegaparsecChar
 import qualified TextBuilder
 
+-- $setup
+-- >>> import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as HeadedMegaparsec
+-- >>> testParser p = either putStr print . HeadedMegaparsec.run p
+
 inSpace :: Parser a -> Parser a
 inSpace p = space *> p <* space
 
