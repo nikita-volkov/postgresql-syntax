@@ -3,7 +3,6 @@ module Ast.OptTempTableNameSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.OptTempTableName
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

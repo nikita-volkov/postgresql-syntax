@@ -40,7 +40,7 @@ data MathOp
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst MathOp where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     PlusMathOp -> TextBuilder.char7 '+'
     MinusMathOp -> TextBuilder.char7 '-'
     AsteriskMathOp -> TextBuilder.char7 '*'
@@ -54,7 +54,7 @@ instance IsAst MathOp where
     GreaterEqualsMathOp -> ">="
     ArrowLeftArrowRightMathOp -> "<>"
     ExclamationEqualsMathOp -> "!="
-  parser settings =
+  parser _settings =
     asum
       [ ArrowLeftArrowRightMathOp <$ Parsers.string' "<>",
         GreaterEqualsMathOp <$ Parsers.string' ">=",

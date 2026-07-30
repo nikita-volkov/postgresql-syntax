@@ -1,13 +1,13 @@
 module PostgresqlSyntax.Ast.Attrs where
 
-import Control.Applicative.Combinators.NonEmpty (some)
+import qualified Control.Applicative.Combinators.NonEmpty as NonEmpty
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.Ident
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -33,7 +33,7 @@ newtype Attrs = Attrs (NonEmpty Ident)
 
 instance IsAst Attrs where
   toTextBuilder settings (Attrs a) = foldMap (mappend "." . toTextBuilder settings) a
-  parser settings = Attrs <$> some (Parsers.char '.' *> Parser.endHead *> Parsers.space *> colLabelLikeName)
+  parser settings = Attrs <$> NonEmpty.some (Parsers.char '.' *> Parser.endHead *> Parsers.space *> colLabelLikeName)
     where
       colLabelLikeName =
         Parser.label "column label" $

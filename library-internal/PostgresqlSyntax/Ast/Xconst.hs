@@ -6,7 +6,7 @@ import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
 import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 import qualified TextBuilder
 
@@ -19,8 +19,8 @@ newtype Xconst = Xconst Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Xconst where
-  toTextBuilder settings (Xconst a) = "X'" <> TextBuilder.text a <> "'"
-  parser settings = Parser.label "hex literal" $ do
+  toTextBuilder _settings (Xconst a) = "X'" <> TextBuilder.text a <> "'"
+  parser _settings = Parser.label "hex literal" $ do
     Parsers.string' "x'"
     Parser.endHead
     a <- Parsers.takeWhile1P (Just "Hex digit") Predicate.hexDigit

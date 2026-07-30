@@ -15,8 +15,8 @@ newtype Iconst = Iconst Int64
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Iconst where
-  toTextBuilder settings (Iconst a) = TextBuilder.int64Dec a
-  parser settings = Iconst <$> Parsers.decimal
+  toTextBuilder _settings (Iconst a) = TextBuilder.int64Dec a
+  parser _settings = Iconst <$> Parsers.decimal
 
 instance Qc.Arbitrary Iconst where
   shrink = Qc.genericShrink

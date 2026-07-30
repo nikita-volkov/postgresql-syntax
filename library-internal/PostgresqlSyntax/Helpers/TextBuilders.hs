@@ -2,10 +2,8 @@
 -- Rendering helpers shared by 2+ AST node modules.
 module PostgresqlSyntax.Helpers.TextBuilders where
 
-import qualified Data.Text.Encoding as Text
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import PostgresqlSyntax.Prelude
-import qualified TextBuilder
 
 commaNonEmpty :: (a -> TextBuilder) -> NonEmpty a -> TextBuilder
 commaNonEmpty = NonEmpty.intersperseFoldMap ", "

@@ -33,8 +33,6 @@ instance IsAst OverlayList where
       <> " FROM "
       <> toTextBuilder settings c
       <> TextBuilders.suffixMaybe (mappend "FOR " . toTextBuilder settings) d
-    where
-      suffixMaybe f = foldMap (mappend " " . f)
   parser settings = do
     a <- parser settings
     Parsers.space1

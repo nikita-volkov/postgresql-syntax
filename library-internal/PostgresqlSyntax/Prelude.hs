@@ -6,6 +6,7 @@ module PostgresqlSyntax.Prelude
   )
 where
 
+import Control.Applicative.Combinators as Exports (option)
 import Control.Applicative as Exports
 import Control.Arrow as Exports hiding (first, second)
 import Control.Category as Exports
@@ -46,7 +47,7 @@ import Data.Ord as Exports
 import Data.Proxy as Exports
 import Data.Ratio as Exports
 import Data.STRef as Exports
-import Data.Semigroup as Exports
+import Data.Semigroup as Exports (Semigroup (..), stimes, stimesIdempotent, stimesIdempotentMonoid, stimesMonoid)
 import Data.String as Exports
 import Data.Text as Exports (Text)
 import Data.Traversable as Exports

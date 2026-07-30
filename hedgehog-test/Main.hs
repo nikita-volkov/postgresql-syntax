@@ -4,7 +4,7 @@ import qualified Data.Text as Text
 import Hedgehog
 import Hedgehog.Main
 import qualified Main.Gen as Gen
-import PostgresqlSyntax (IsAst, parse, toText)
+import PostgresqlSyntax.IsAst (parse, toText)
 import Prelude
 
 main :: IO ()

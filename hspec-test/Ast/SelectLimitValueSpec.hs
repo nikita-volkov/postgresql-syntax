@@ -3,7 +3,6 @@ module Ast.SelectLimitValueSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectLimitValue
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

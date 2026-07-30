@@ -16,10 +16,10 @@ data OverrideKind = UserOverrideKind | SystemOverrideKind
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst OverrideKind where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     UserOverrideKind -> "USER"
     SystemOverrideKind -> "SYSTEM"
-  parser settings =
+  parser _settings =
     asum
       [ UserOverrideKind <$ Parsers.keyword "user",
         SystemOverrideKind <$ Parsers.keyword "system"

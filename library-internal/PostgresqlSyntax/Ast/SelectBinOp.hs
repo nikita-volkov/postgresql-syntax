@@ -16,11 +16,11 @@ data SelectBinOp = UnionSelectBinOp | IntersectSelectBinOp | ExceptSelectBinOp
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst SelectBinOp where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     UnionSelectBinOp -> "UNION"
     IntersectSelectBinOp -> "INTERSECT"
     ExceptSelectBinOp -> "EXCEPT"
-  parser settings =
+  parser _settings =
     asum
       [ Parsers.keyword "union" $> UnionSelectBinOp,
         Parsers.keyword "intersect" $> IntersectSelectBinOp,

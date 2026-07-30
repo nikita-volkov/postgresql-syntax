@@ -23,12 +23,12 @@ data WindowExclusionClause
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst WindowExclusionClause where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     CurrentRowWindowExclusionClause -> "EXCLUDE CURRENT ROW"
     GroupWindowExclusionClause -> "EXCLUDE GROUP"
     TiesWindowExclusionClause -> "EXCLUDE TIES"
     NoOthersWindowExclusionClause -> "EXCLUDE NO OTHERS"
-  parser settings =
+  parser _settings =
     CurrentRowWindowExclusionClause
       <$ Parsers.keyphrase "exclude current row"
         <|> GroupWindowExclusionClause

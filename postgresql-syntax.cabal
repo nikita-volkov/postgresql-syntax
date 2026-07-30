@@ -239,8 +239,7 @@ library
     PostgresqlSyntax
 
   build-depends:
-    base >=4.12 && <5,
-    postgresql-syntax:internal,
+    postgresql-syntax:internal
 
 test-suite hspec-test
   import: base-settings
@@ -403,7 +402,6 @@ test-suite hspec-test
 
   build-depends:
     hspec >=2.10 && <3,
-    postgresql-syntax,
     postgresql-syntax:internal,
     QuickCheck >=2.17 && <3,
     rerebase >=1.6.1 && <2,
@@ -417,7 +415,6 @@ test-suite hedgehog-test
   other-modules: Main.Gen
   build-depends:
     hedgehog >=1.0.1 && <2,
-    postgresql-syntax,
     postgresql-syntax:internal,
     rerebase >=1.6.1 && <2,
 

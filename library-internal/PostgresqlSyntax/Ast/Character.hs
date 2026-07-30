@@ -27,7 +27,7 @@ data Character
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Character where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     CharacterCharacter a -> "CHARACTER" <> bool "" " VARYING" (coerce a :: Bool)
     CharCharacter a -> "CHAR" <> bool "" " VARYING" (coerce a :: Bool)
     VarcharCharacter -> "VARCHAR"

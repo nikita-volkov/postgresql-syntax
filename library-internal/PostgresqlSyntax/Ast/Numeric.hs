@@ -6,7 +6,7 @@ import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
 -- |

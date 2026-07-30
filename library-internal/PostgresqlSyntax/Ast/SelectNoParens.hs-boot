@@ -1,8 +1,6 @@
 module PostgresqlSyntax.Ast.SelectNoParens where
 
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectClause (SelectClause)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import PostgresqlSyntax.IsAst (IsAst)
 import PostgresqlSyntax.Prelude (Data, Either, Eq, Maybe, Ord, Parser, Show)
 import PostgresqlSyntax.Settings (Settings)

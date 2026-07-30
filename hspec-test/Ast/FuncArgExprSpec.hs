@@ -3,7 +3,6 @@ module Ast.FuncArgExprSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncArgExpr
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

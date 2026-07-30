@@ -17,11 +17,11 @@ data SubType = AnySubType | SomeSubType | AllSubType
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst SubType where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     AnySubType -> "ANY"
     SomeSubType -> "SOME"
     AllSubType -> "ALL"
-  parser settings =
+  parser _settings =
     asum
       [ AnySubType <$ Parsers.keyword "any",
         SomeSubType <$ Parsers.keyword "some",

@@ -22,10 +22,10 @@ data Ident = QuotedIdent Text | UnquotedIdent Text
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Ident where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     QuotedIdent a -> TextBuilder.char7 '"' <> TextBuilder.text (Text.replace "\"" "\"\"" a) <> TextBuilder.char7 '"'
     UnquotedIdent a -> TextBuilder.text a
-  parser settings = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
+  parser _settings = quotedName <|> Parsers.keywordNameByPredicate UnquotedIdent (not . Predicate.keyword)
     where
       quotedName = Parser.filter (const "Empty name") (not . Text.null) (Parsers.quotedString '"') & fmap QuotedIdent
 

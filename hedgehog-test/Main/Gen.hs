@@ -8,10 +8,10 @@ import qualified Data.Text as Text
 import Hedgehog (Gen)
 import Hedgehog.Gen
 import qualified Hedgehog.Range as Range
-import PostgresqlSyntax hiding (colId, colLabel, typeFunctionName)
+import PostgresqlSyntax.Ast
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Validation as Validation
-import Prelude hiding (bit, bool, filter, fromList, maybe, sortBy)
+import Prelude hiding (Op, bit, bool, filter, fromList, maybe, sortBy)
 
 -- * Generic
 
@@ -699,7 +699,7 @@ qualAllOp =
 op = do
   a <- text (Range.exponential 1 7) (listElement "+-*/<>=~!@#%^&|`?")
   case Validation.op a of
-    Nothing -> return (PostgresqlSyntax.Op a)
+    Nothing -> return (Op a)
     _ -> discard
 
 anyOperator =

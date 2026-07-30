@@ -3,7 +3,6 @@ module Ast.JoinedTableSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.JoinedTable
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

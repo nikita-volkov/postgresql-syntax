@@ -4,7 +4,7 @@ import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -18,10 +18,10 @@ newtype IntervalSecond = IntervalSecond (Maybe Int64)
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst IntervalSecond where
-  toTextBuilder settings (IntervalSecond a) = case a of
+  toTextBuilder _settings (IntervalSecond a) = case a of
     Nothing -> "SECOND"
     Just a' -> "SECOND " <> TextBuilders.renderInParens (TextBuilder.int64Dec a')
-  parser settings = do
+  parser _settings = do
     Parsers.keyword "second"
     a <- optional (Parsers.space *> Parsers.inParens Parsers.decimal)
     return (IntervalSecond a)

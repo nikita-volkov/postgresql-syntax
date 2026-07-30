@@ -3,7 +3,7 @@ module PostgresqlSyntax.Ast.JoinType where
 import qualified HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -22,12 +22,12 @@ data JoinType
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst JoinType where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     FullJoinType a -> "FULL" <> if a then " OUTER" else ""
     LeftJoinType a -> "LEFT" <> if a then " OUTER" else ""
     RightJoinType a -> "RIGHT" <> if a then " OUTER" else ""
     InnerJoinType -> "INNER"
-  parser settings =
+  parser _settings =
     asum
       [ do
           Parsers.keyword "full"

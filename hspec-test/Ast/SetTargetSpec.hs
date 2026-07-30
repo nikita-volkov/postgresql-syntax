@@ -3,7 +3,6 @@ module Ast.SetTargetSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SetTarget
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

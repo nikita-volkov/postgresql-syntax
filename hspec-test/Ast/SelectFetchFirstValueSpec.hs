@@ -3,7 +3,6 @@ module Ast.SelectFetchFirstValueSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectFetchFirstValue
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

@@ -3,7 +3,6 @@ module Ast.SelectStmtSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SelectStmt
 import Test.Hspec
-import Prelude
 
 spec :: Spec
 spec = do

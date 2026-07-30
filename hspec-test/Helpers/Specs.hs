@@ -18,11 +18,11 @@ import qualified Data.Text as Text
 import qualified Helpers.Expectations as Expectations
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Settings (Settings)
+import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (counterexample, (===))
 import qualified Test.QuickCheck as Qc
-import Prelude
 
 itSatisfiesIsAst :: forall a. (IsAst a, Eq a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesIsAst =
@@ -51,7 +51,7 @@ itSatisfiesArbitrary =
               ("rendered " <> show len <> " chars at size 0 (max " <> show zeroSizeMaxLen <> ")" <> "\n" <> toList sql)
               (len <= zeroSizeMaxLen)
       where
-        zeroSizeMaxLen = 500
+        zeroSizeMaxLen = 500 :: Int
 
     growsBounded =
       Qc.forAll (Qc.resize maxGenSize (Qc.arbitrary @a)) $ \x ->
@@ -61,8 +61,8 @@ itSatisfiesArbitrary =
               ("rendered " <> show len <> " chars at size " <> show maxGenSize <> " (max " <> show maxGenSizeMaxLen <> ")")
               (len <= maxGenSizeMaxLen)
       where
-        maxGenSize = 100
-        maxGenSizeMaxLen = 1000000
+        maxGenSize = 100 :: Int
+        maxGenSizeMaxLen = 1000000 :: Int
 
 itParses :: forall a. (HasCallStack, IsAst a) => Text -> Spec
 itParses sql =

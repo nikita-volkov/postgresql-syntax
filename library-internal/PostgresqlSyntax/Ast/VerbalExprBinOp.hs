@@ -22,11 +22,11 @@ data VerbalExprBinOp
   deriving (Show, Generic, Eq, Ord, Data, Enum, Bounded)
 
 instance IsAst VerbalExprBinOp where
-  toTextBuilder settings = \case
+  toTextBuilder _settings = \case
     LikeVerbalExprBinOp -> "LIKE"
     IlikeVerbalExprBinOp -> "ILIKE"
     SimilarToVerbalExprBinOp -> "SIMILAR TO"
-  parser settings =
+  parser _settings =
     asum
       [ LikeVerbalExprBinOp <$ Parsers.keyword "like",
         IlikeVerbalExprBinOp <$ Parsers.keyword "ilike",

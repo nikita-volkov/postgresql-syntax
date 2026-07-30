@@ -14,7 +14,6 @@ import PostgresqlSyntax.Ast.OptTempTableName
 import PostgresqlSyntax.Ast.RelationExpr
 import PostgresqlSyntax.Ast.SelectBinOp
 import PostgresqlSyntax.Ast.SelectClause
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.TableRef
 import PostgresqlSyntax.Ast.Targeting
 import PostgresqlSyntax.Ast.WindowDefinition
@@ -22,7 +21,7 @@ import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec

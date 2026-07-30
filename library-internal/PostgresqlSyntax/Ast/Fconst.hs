@@ -15,8 +15,8 @@ newtype Fconst = Fconst Double
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Fconst where
-  toTextBuilder settings (Fconst a) = TextBuilder.doubleDec a
-  parser settings = Fconst <$> Parsers.float
+  toTextBuilder _settings (Fconst a) = TextBuilder.doubleDec a
+  parser _settings = Fconst <$> Parsers.float
 
 instance Qc.Arbitrary Fconst where
   shrink = Qc.genericShrink

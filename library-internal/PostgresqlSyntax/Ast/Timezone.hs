@@ -17,8 +17,8 @@ newtype Timezone = Timezone Bool
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst Timezone where
-  toTextBuilder settings (Timezone a) = if a then "WITHOUT TIME ZONE" else "WITH TIME ZONE"
-  parser settings =
+  toTextBuilder _settings (Timezone a) = if a then "WITHOUT TIME ZONE" else "WITH TIME ZONE"
+  parser _settings =
     Timezone
       <$> asum
         [ False <$ Parsers.keyphrase "with time zone",

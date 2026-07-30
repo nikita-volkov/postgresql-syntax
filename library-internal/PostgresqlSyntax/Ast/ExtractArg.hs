@@ -4,7 +4,7 @@ import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Sconst
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
 -- |

@@ -1,12 +1,11 @@
 module PostgresqlSyntax.Ast.Typename where
 
-import Control.Applicative.Combinators (option)
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Ast.SimpleTypename
 import PostgresqlSyntax.Ast.TypenameArrayDimensions
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import PostgresqlSyntax.IsAst
-import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
+import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (resolveNullabilityMarkers)
 import qualified Test.QuickCheck as Qc
 
