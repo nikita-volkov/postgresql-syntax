@@ -2,8 +2,8 @@ module Ast.RowsfromItemSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.RowsfromItem
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

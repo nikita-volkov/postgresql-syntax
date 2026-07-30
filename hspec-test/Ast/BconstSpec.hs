@@ -2,8 +2,8 @@ module Ast.BconstSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.Bconst
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

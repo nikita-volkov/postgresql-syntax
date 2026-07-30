@@ -2,8 +2,8 @@ module Ast.SubTypeSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SubType
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

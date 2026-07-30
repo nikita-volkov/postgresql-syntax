@@ -2,8 +2,8 @@ module Ast.PositionListSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.PositionList
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

@@ -2,8 +2,8 @@ module Ast.SimpleTypenameSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SimpleTypename
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

@@ -2,8 +2,8 @@ module Ast.LimitClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.LimitClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

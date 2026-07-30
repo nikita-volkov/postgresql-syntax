@@ -2,8 +2,8 @@ module Ast.SubstrListFromForSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.SubstrListFromFor
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

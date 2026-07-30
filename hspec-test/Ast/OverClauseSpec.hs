@@ -2,8 +2,8 @@ module Ast.OverClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.OverClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

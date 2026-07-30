@@ -2,8 +2,8 @@ module Ast.ConstCharacterSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.ConstCharacter
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

@@ -2,8 +2,8 @@ module Ast.FuncExprCommonSubexprSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

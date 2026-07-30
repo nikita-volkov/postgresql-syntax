@@ -1,8 +1,8 @@
 module Main (main) where
 
-import Prelude
 import qualified Spec
 import Test.Hspec
+import Prelude
 
 main :: IO ()
 main = hspec $ parallel Spec.spec

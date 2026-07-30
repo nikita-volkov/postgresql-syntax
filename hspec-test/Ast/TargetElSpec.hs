@@ -2,8 +2,8 @@ module Ast.TargetElSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.TargetEl
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

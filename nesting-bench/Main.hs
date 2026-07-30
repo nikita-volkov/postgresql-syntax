@@ -14,8 +14,8 @@ module Main where
 import Control.Concurrent.MVar
 import qualified Data.Text as Text
 import PostgresqlSyntax (AExpr, parse)
-import Prelude
 import System.Clock
+import Prelude
 
 -- * Inputs
 

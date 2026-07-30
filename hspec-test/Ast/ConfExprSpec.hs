@@ -2,8 +2,8 @@ module Ast.ConfExprSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.ConfExpr
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

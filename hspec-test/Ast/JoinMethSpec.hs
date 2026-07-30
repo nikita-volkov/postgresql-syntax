@@ -2,8 +2,8 @@ module Ast.JoinMethSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.JoinMeth
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

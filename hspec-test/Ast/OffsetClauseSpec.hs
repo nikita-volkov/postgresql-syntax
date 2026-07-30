@@ -2,8 +2,8 @@ module Ast.OffsetClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.OffsetClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

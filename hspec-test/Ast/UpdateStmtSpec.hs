@@ -2,8 +2,8 @@ module Ast.UpdateStmtSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.UpdateStmt
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

@@ -2,8 +2,8 @@ module Ast.ExtractListSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.ExtractList
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

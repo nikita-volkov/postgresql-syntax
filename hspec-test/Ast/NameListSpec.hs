@@ -2,8 +2,8 @@ module Ast.NameListSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.NameList
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

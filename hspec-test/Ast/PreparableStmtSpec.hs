@@ -3,8 +3,8 @@ module Ast.PreparableStmtSpec (spec) where
 import qualified Data.Text as Text
 import Helpers.Specs
 import PostgresqlSyntax.Ast.PreparableStmt
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

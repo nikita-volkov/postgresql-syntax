@@ -2,8 +2,8 @@ module Ast.ForLockingClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.ForLockingClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

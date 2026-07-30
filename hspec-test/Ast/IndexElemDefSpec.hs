@@ -2,8 +2,8 @@ module Ast.IndexElemDefSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.IndexElemDef
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

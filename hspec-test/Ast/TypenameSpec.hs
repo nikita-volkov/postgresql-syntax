@@ -3,8 +3,8 @@ module Ast.TypenameSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Ast.Typename
 import PostgresqlSyntax.Settings (nullabilityMarkers)
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

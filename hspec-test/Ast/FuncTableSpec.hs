@@ -2,8 +2,8 @@ module Ast.FuncTableSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.FuncTable
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

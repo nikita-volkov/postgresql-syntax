@@ -2,8 +2,8 @@ module Ast.NullsOrderSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.NullsOrder
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

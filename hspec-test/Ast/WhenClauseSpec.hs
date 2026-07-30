@@ -2,8 +2,8 @@ module Ast.WhenClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.WhenClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

@@ -2,8 +2,8 @@ module Ast.TimezoneSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.Timezone
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

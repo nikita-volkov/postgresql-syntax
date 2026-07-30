@@ -2,8 +2,8 @@ module Ast.FrameClauseSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.FrameClause
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

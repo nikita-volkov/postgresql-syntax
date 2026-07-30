@@ -2,8 +2,8 @@ module Ast.ConstDatetimeSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.ConstDatetime
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do
