@@ -205,6 +205,7 @@ library internal
     PostgresqlSyntax.Ast.WithClause
     PostgresqlSyntax.Ast.Xconst
     PostgresqlSyntax.CharSet
+    PostgresqlSyntax.Extras.Error
     PostgresqlSyntax.Extras.HeadedMegaparsec
     PostgresqlSyntax.Extras.NonEmpty
     PostgresqlSyntax.Extras.TextBuilder
@@ -402,6 +403,7 @@ test-suite hspec-test
 
   build-depends:
     hspec >=2.10 && <3,
+    megaparsec >=9.2 && <10,
     postgresql-syntax:internal,
     QuickCheck >=2.17 && <3,
     rerebase >=1.6.1 && <2,

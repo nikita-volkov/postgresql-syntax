@@ -6,6 +6,7 @@ module Helpers.Specs
     itParses,
     itRejects,
     itReportsError,
+    itReportsSourcePosError,
     itParsesWithin,
 
     -- * Settings-aware variants
@@ -78,6 +79,13 @@ itReportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Spec
 itReportsError sql expected =
   describe (Text.unpack sql) $ do
     it ("Reports error: " <> expected) (Expectations.reportsError @a sql expected)
+
+-- | Like 'itReportsError' but checks 'PostgresqlSyntax.IsAst.parseWithSourcePosError''s
+-- 'Text.Megaparsec.SourcePos'-based errors instead.
+itReportsSourcePosError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Spec
+itReportsSourcePosError sql expected =
+  describe (Text.unpack sql) $ do
+    it ("Reports error: " <> expected) (Expectations.reportsSourcePosError @a sql expected)
 
 itParsesWithin :: forall a. (HasCallStack, IsAst a) => Int -> Text -> Spec
 itParsesWithin seconds sql =

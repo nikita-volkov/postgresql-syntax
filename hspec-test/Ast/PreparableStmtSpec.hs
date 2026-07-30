@@ -40,3 +40,21 @@ spec = do
       "select i :: int8 from auth.user as u\n\
       \WHERE u.id IS NO NULL && TRUE"
       "(51,\"offset=51:\\nexpecting white space\\n\")"
+  describe "SourcePos error reporting" $ do
+    itReportsSourcePosError @PreparableStmt
+      "select i :: int8 fom auth.user as u\n\
+      \inner join edgenode.usere_provider as p\n\
+      \on u.id = p.user_id\n\
+      \inner join edgenode.provider_branch as b\n\
+      \on b.provider_fk = p.provider_id"
+      "1:22 unexpected 'a'\nexpecting end of input or white space\n"
+    itReportsSourcePosError @PreparableStmt
+      "select i :: int8 from auth.user as u\n\
+      \WHERE u.id IS NO NULL && TRUE"
+      "2:15 expecting white space\n"
+    itReportsSourcePosError @PreparableStmt
+      "SLECT id FROM qsdqsd"
+      "1:1 unexpected 'S'\nexpecting '(' or white space\n"
+    itReportsSourcePosError @PreparableStmt
+      "SELECT id FROM as"
+      "1:18 Reserved keyword \"as\" used as an identifier. If that's what you intend, you have to wrap it in double quotes.\n"

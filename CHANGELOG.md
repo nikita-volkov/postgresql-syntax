@@ -60,6 +60,11 @@
 - Derive `Data` for every AST type in `PostgresqlSyntax.Ast` (#6). Enables
   generic (SYB-style) traversals and transformations over the syntax tree,
   e.g. for expression normalization.
+- Add `parseWithSourcePosError`, like `parseWithPosError` but pairing each
+  error with a `Text.Megaparsec.SourcePos` instead of a raw `Int` byte
+  offset, so callers (e.g. `hasql-th`, see
+  [nikita-volkov/hasql-th#35](https://github.com/nikita-volkov/hasql-th/issues/35))
+  can report line/column positions without recomputing them from the input.
 
 # v0.4.4.0
 

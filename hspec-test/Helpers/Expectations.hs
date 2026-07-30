@@ -4,6 +4,7 @@ module Helpers.Expectations
   ( parsesTo,
     rejects,
     reportsError,
+    reportsSourcePosError,
     parsesWithin,
     parsesToWith,
     rejectsWith,
@@ -15,6 +16,7 @@ import qualified Data.Text as Text
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Settings (Settings)
 import Test.Hspec
+import Text.Megaparsec.Pos (sourcePosPretty)
 import Prelude
 
 parsesTo :: forall a. (HasCallStack, IsAst a) => Text -> Expectation
@@ -35,6 +37,16 @@ reportsError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectati
 reportsError input expected =
   case parseWithPosError @a mempty input of
     Left err -> show (NonEmpty.head err) `shouldBe` expected
+    Right _ -> expectationFailure "expected a parse error, but it succeeded"
+
+-- | Like 'reportsError' but checks 'parseWithSourcePosError''s
+-- 'Text.Megaparsec.SourcePos'-based errors instead.
+reportsSourcePosError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Expectation
+reportsSourcePosError input expected =
+  case parseWithSourcePosError @a mempty input of
+    Left err ->
+      let (pos, msg) = NonEmpty.head err
+       in (sourcePosPretty pos <> " " <> msg) `shouldBe` expected
     Right _ -> expectationFailure "expected a parse error, but it succeeded"
 
 parsesWithin :: forall a. (HasCallStack, IsAst a) => Int -> Text -> Expectation

@@ -3,12 +3,14 @@ module PostgresqlSyntax.IsAst
     toText,
     parse,
     parseWithPosError,
+    parseWithSourcePosError,
   )
 where
 
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
+import qualified Text.Megaparsec as Megaparsec
 import qualified TextBuilder
 
 class IsAst a where
@@ -33,3 +35,9 @@ parse settings = Extras.run (Extras.totally (parser settings))
 -- its byte offset) instead of a single pretty-printed message.
 parseWithPosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Int, String)) a
 parseWithPosError settings = Extras.runParserWithErrorPos (Extras.totally (parser settings))
+
+-- |
+-- Like 'parseWithPosError' but pairs each error with its
+-- 'Text.Megaparsec.SourcePos' instead of a raw byte offset.
+parseWithSourcePosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Megaparsec.SourcePos, String)) a
+parseWithSourcePosError settings = Extras.runParserWithSourcePosError (Extras.totally (parser settings))
