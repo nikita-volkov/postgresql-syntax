@@ -428,18 +428,6 @@ test-suite hspec-test
     QuickCheck >=2.17 && <3,
     rerebase >=1.6.1 && <2,
 
-test-suite hedgehog-test
-  import: base-settings
-  type: exitcode-stdio-1.0
-  hs-source-dirs: hedgehog-test
-  main-is: Main.hs
-  ghc-options: -threaded
-  other-modules: Main.Gen
-  build-depends:
-    hedgehog >=1.0.1 && <2,
-    postgresql-syntax:internal,
-    rerebase >=1.6.1 && <2,
-
 benchmark keyword-bench
   import: base-settings
   type: exitcode-stdio-1.0
