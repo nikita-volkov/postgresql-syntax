@@ -14,8 +14,8 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Settings (Settings)
-import Prelude
 import Test.Hspec
+import Prelude
 
 parsesTo :: forall a. (HasCallStack, IsAst a) => Text -> Expectation
 parsesTo input =

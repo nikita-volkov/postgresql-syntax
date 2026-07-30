@@ -6,8 +6,8 @@ module PostgresqlSyntax.Prelude
   )
 where
 
-import Control.Applicative.Combinators as Exports (option)
 import Control.Applicative as Exports
+import Control.Applicative.Combinators as Exports (option)
 import Control.Arrow as Exports hiding (first, second)
 import Control.Category as Exports
 import Control.Concurrent as Exports

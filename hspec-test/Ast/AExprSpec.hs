@@ -8,8 +8,8 @@ import PostgresqlSyntax.Ast.Columnref
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.VerbalExprBinOp
 import PostgresqlSyntax.IsAst
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do
