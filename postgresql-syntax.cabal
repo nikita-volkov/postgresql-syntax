@@ -5,8 +5,6 @@ category: Database, PostgreSQL, Parsing
 synopsis: PostgreSQL AST parsing and rendering
 description:
   Postgres syntax tree and related utils extracted from the \"hasql-th\" package.
-  The API is in a rather raw \"guts out\" state with most documentation lacking,
-  but the codebase is well tested.
 
 homepage: https://github.com/nikita-volkov/postgresql-syntax
 bug-reports: https://github.com/nikita-volkov/postgresql-syntax/issues
