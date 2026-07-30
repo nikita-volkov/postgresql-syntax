@@ -167,25 +167,18 @@ instance IsAst AExpr where
         | otherwise = TextBuilders.renderInParens (toTextBuilder settings a)
       -- The @d@ operand of a @LIKE@\/@ILIKE@\/@SIMILAR TO@ production, when
       -- it has a trailing @ESCAPE@ clause of its own (@e@). Since @d@ is
-      -- parsed via an unrestricted recursive @a_expr@, rendered bare it
-      -- could itself end in a dangling operator or an escape-less
-      -- 'VerbalExprBinOpAExpr' — either of which would, on reparse, greedily
-      -- swallow the text meant for *this* production's own @ESCAPE@ (an
-      -- operand identifier in the first case, its own inner escape clause in
-      -- the second). Parenthesizing @d@ whenever @e@ is present rules that
-      -- out, the same way @renderOperand@ does for the left position.
+      -- parsed via an unrestricted recursive @a_expr@, rendering it bare
+      -- when it's unbounded (see 'isBoundedAExprOperand') — e.g. a dangling
+      -- operator, or an escape-less 'VerbalExprBinOpAExpr' whose own greedy
+      -- @optional escape@ check would otherwise swallow the text meant for
+      -- \*this* production's @ESCAPE@ — reparses differently. Bounded shapes
+      -- (a column reference, a constant, an already-parenthesized
+      -- expression, DEFAULT, …) always terminate cleanly and never need the
+      -- extra parens, exactly like @renderOperand@'s left position.
       renderVerbalRhs e d = case e of
         Nothing -> toTextBuilder settings d
-        -- Already explicitly parenthesized (as the 'Qc.Arbitrary'
-        -- instance below always arranges whenever it generates an escape
-        -- clause) — render as-is instead of adding a second, redundant
-        -- layer of parens. 'CExpr.canonicalize' can turn the
-        -- 'CExpr.InParensCExpr' the generator constructs into a
-        -- 'CExpr.SelectWithParensCExpr' (see its doc), which self-parenthesizes
-        -- just the same, so both shapes count as "already parenthesized" here.
         Just _
-          | CExprAExpr (CExpr.InParensCExpr _ _) <- d -> toTextBuilder settings d
-          | CExprAExpr (CExpr.SelectWithParensCExpr _ _) <- d -> toTextBuilder settings d
+          | isBoundedAExprOperand d -> toTextBuilder settings d
           | otherwise -> TextBuilders.renderInParens (toTextBuilder settings d)
       -- Distinct from 'PostgresqlSyntax.Ast.AExprReversableOp'\'s own
       -- @toTextBuilder@ (which bakes in the "positive" @IS@\/@BETWEEN@\/@IN@
@@ -450,13 +443,14 @@ instance Qc.Arbitrary AExpr where
                   c <- Qc.arbitrary
                   e <- Gens.terminatingMaybe (Gens.downscale Qc.arbitrary)
                   -- See @renderVerbalRhs@ in the 'IsAst' instance above:
-                  -- whenever there's an escape clause, @d@ must be
-                  -- parenthesized up front so the generated value already
+                  -- whenever there's an escape clause, an unbounded @d@ must
+                  -- be pre-wrapped in parens so the generated value already
                   -- matches what parsing the (necessarily parenthesized)
-                  -- rendering reconstructs.
+                  -- rendering reconstructs — the same rule 'safeAExprOperand'
+                  -- applies for the left/accumulator position.
                   d <- case e of
                     Nothing -> Gens.downscale Qc.arbitrary
-                    Just _ -> (\x -> CExprAExpr (CExpr.canonicalize (CExpr.InParensCExpr x Nothing))) <$> Gens.downscale Qc.arbitrary
+                    Just _ -> safeAExprOperand (Gens.downscale Qc.arbitrary)
                   pure (VerbalExprBinOpAExpr a b c d e)
               ),
               ReversableOpAExpr <$> safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary <*> Qc.arbitrary,
