@@ -7,6 +7,7 @@ module PostgresqlSyntax.IsAst
   )
 where
 
+import qualified Data.Text as Text
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
@@ -27,17 +28,17 @@ toText settings = TextBuilder.toText . toTextBuilder settings
 -- pretty-printed error or the parsed value. The parser is chosen by the
 -- caller's type inference (via the 'IsAst' constraint), so callers no longer
 -- pass an explicit parser argument.
-parse :: (IsAst a) => Settings -> Text -> Either String a
-parse settings = Extras.run (Extras.totally (parser settings))
+parse :: (IsAst a) => Settings -> Text -> Either Text a
+parse settings = first Text.pack . Extras.run (Extras.totally (parser settings))
 
 -- |
 -- Like 'parse' but returns the structured error list (each error paired with
 -- its byte offset) instead of a single pretty-printed message.
-parseWithPosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Int, String)) a
-parseWithPosError settings = Extras.runParserWithErrorPos (Extras.totally (parser settings))
+parseWithPosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Int, Text)) a
+parseWithPosError settings = first (fmap (second Text.pack)) . Extras.runParserWithErrorPos (Extras.totally (parser settings))
 
 -- |
 -- Like 'parseWithPosError' but pairs each error with its
 -- 'Text.Megaparsec.SourcePos' instead of a raw byte offset.
-parseWithSourcePosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Megaparsec.SourcePos, String)) a
-parseWithSourcePosError settings = Extras.runParserWithSourcePosError (Extras.totally (parser settings))
+parseWithSourcePosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Megaparsec.SourcePos, Text)) a
+parseWithSourcePosError settings = first (fmap (second Text.pack)) . Extras.runParserWithSourcePosError (Extras.totally (parser settings))

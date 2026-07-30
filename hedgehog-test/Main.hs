@@ -24,7 +24,7 @@ main =
                           footnote ("SQL: " <> Text.unpack sql)
                           case parse mempty sql of
                             Left err -> do
-                              footnote err
+                              footnote (Text.unpack err)
                               failure
                             Right ast' -> ast === ast'
            in [ p "typename" 10000 Gen.typename,

@@ -19,11 +19,11 @@ import qualified Data.Text as Text
 import qualified Helpers.Expectations as Expectations
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Settings (Settings)
+import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (counterexample, (===))
 import qualified Test.QuickCheck as Qc
-import Prelude
 
 itSatisfiesIsAst :: forall a. (IsAst a, Eq a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesIsAst =
@@ -32,7 +32,7 @@ itSatisfiesIsAst =
       let sql = toText mempty a
        in case parse mempty sql of
             Left err ->
-              counterexample ("rendered: " <> toList sql <> "\nparse failed: " <> err) False
+              counterexample ("rendered: " <> toList sql <> "\nparse failed: " <> Text.unpack err) False
             Right a' ->
               counterexample
                 ("rendered: " <> toList sql <> "\nrestored: " <> toList (toText mempty a'))

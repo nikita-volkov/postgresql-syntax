@@ -15,14 +15,14 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Settings (Settings)
+import Prelude
 import Test.Hspec
 import Text.Megaparsec.Pos (sourcePosPretty)
-import Prelude
 
 parsesTo :: forall a. (HasCallStack, IsAst a) => Text -> Expectation
 parsesTo input =
   case parse @a mempty input of
-    Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
+    Left err -> expectationFailure (Text.unpack (err <> "\ninput: " <> input))
     Right _ -> pure ()
 
 rejects :: forall a. (HasCallStack, IsAst a, Show a) => Text -> Expectation
@@ -46,7 +46,7 @@ reportsSourcePosError input expected =
   case parseWithSourcePosError @a mempty input of
     Left err ->
       let (pos, msg) = NonEmpty.head err
-       in (sourcePosPretty pos <> " " <> msg) `shouldBe` expected
+       in (Text.unpack (Text.pack (sourcePosPretty pos) <> " " <> msg)) `shouldBe` expected
     Right _ -> expectationFailure "expected a parse error, but it succeeded"
 
 parsesWithin :: forall a. (HasCallStack, IsAst a) => Int -> Text -> Expectation
@@ -54,7 +54,7 @@ parsesWithin seconds input = do
   result <-
     timeout (seconds * 1000000)
       $ case parse @a mempty input of
-        Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
+        Left err -> expectationFailure (Text.unpack (err <> "\ninput: " <> input))
         Right _ -> pure ()
   case result of
     Nothing -> expectationFailure ("Did not finish parsing within " <> show seconds <> "s")
@@ -64,7 +64,7 @@ parsesWithin seconds input = do
 parsesToWith :: forall a. (HasCallStack, IsAst a) => Settings -> Text -> Expectation
 parsesToWith settings input =
   case parse @a settings input of
-    Left err -> expectationFailure (err <> "\ninput: " <> Text.unpack input)
+    Left err -> expectationFailure (Text.unpack (err <> "\ninput: " <> input))
     Right _ -> pure ()
 
 -- | Like 'rejects' but with a non-default 'Settings'.
