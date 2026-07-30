@@ -57,15 +57,20 @@ jobs:
             exit 1
           fi
 
-  format-and-test:
-    uses: ./.github/workflows/format-and-test.yaml
+  build:
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
+  generate-docs:
+    uses: nikita-volkov/haskell-hackage-lib-github-actions-workflows/.github/workflows/generate-docs.yaml@v4
     secrets: inherit
 
   release:
     needs:
       - validate-version
       - validate-changelog
-      - format-and-test
+      - build
+      - generate-docs
     runs-on: ubuntu-latest
     environment:
       name: hackage
