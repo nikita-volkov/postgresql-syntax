@@ -14,6 +14,14 @@ import PostgresqlSyntax.Settings (Settings)
 import qualified Text.Megaparsec as Megaparsec
 import qualified TextBuilder
 
+-- |
+-- Laws:
+--
+-- * __Congruent rendering__: @a == b => toTextBuilder settings a == toTextBuilder settings b@
+--   for every 'Settings' — rendering only depends on the value, not on how it
+--   was constructed. This is what makes it meaningful to say two structurally
+--   different shapes can still render to identical text — the ambiguity that
+--   'Canonicalizes' exists to resolve.
 class IsAst a where
   toTextBuilder :: Settings -> a -> TextBuilder
   parser :: Settings -> Parser a

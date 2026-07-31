@@ -37,6 +37,8 @@ itSatisfiesIsAst =
               counterexample
                 ("rendered: " <> Text.unpack sql <> "\nrestored: " <> Text.unpack (toText mempty a'))
                 (a' === a)
+    prop "Renders equal values equally" $ \(a :: a) (b :: a) ->
+      a /= b || toText mempty a == toText mempty b
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesArbitrary =
