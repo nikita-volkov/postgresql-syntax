@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.Typename where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SimpleTypename
 import PostgresqlSyntax.Ast.TypenameArrayDimensions
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (resolveNullabilityMarkers)
 import qualified Test.QuickCheck as Qc

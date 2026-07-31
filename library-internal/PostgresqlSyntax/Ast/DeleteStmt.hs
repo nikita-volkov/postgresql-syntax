@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.DeleteStmt where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
 import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.ReturningClause
@@ -10,7 +11,6 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

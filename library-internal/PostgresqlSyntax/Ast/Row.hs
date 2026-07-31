@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.Row where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.ExplicitRow
 import PostgresqlSyntax.Ast.ImplicitRow
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

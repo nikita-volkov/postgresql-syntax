@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.TableRef where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.JoinedTable (JoinedTable)
-import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Algebra (IsAst)
 import PostgresqlSyntax.Prelude (Data, Eq, Ord, Parser, Show, TextBuilder)
 import PostgresqlSyntax.Settings (Settings)
 import Test.QuickCheck (Arbitrary)

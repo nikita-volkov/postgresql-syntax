@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.Indirection where
 
 import Control.Applicative.Combinators.NonEmpty (some)
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.IndirectionEl
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (some)
 import qualified Test.QuickCheck as Qc
 

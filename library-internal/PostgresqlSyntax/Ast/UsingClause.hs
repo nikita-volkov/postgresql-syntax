@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.UsingClause where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FromList
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.SubqueryOp where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

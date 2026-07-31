@@ -66,6 +66,7 @@ library internal
   import: base-settings
   hs-source-dirs: library-internal
   exposed-modules:
+    PostgresqlSyntax.Algebra
     PostgresqlSyntax.Ast
     PostgresqlSyntax.Ast.AExpr
     PostgresqlSyntax.Ast.AexprConst
@@ -227,7 +228,6 @@ library internal
     PostgresqlSyntax.Helpers.Parsers
     PostgresqlSyntax.Helpers.Shrinks
     PostgresqlSyntax.Helpers.TextBuilders
-    PostgresqlSyntax.IsAst
     PostgresqlSyntax.KeywordSet
     PostgresqlSyntax.Predicate
     PostgresqlSyntax.Prelude

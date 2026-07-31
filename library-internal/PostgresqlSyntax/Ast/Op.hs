@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.Op where
 
 import qualified Data.Text as Text
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
-import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude
 import qualified PostgresqlSyntax.Validation as Validation

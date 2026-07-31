@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.Columnref where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Ident (Ident, colId)
 import PostgresqlSyntax.Ast.Indirection
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

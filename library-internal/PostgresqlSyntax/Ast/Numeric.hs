@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.Numeric where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.ExprList
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

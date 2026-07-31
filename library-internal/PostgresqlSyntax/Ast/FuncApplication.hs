@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.FuncApplication where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FuncApplicationParams
 import PostgresqlSyntax.Ast.FuncName
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

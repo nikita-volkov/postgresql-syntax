@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.PreparableStmt where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.CallStmt
 import PostgresqlSyntax.Ast.DeleteStmt
 import PostgresqlSyntax.Ast.InsertStmt
 import PostgresqlSyntax.Ast.SelectStmt
 import PostgresqlSyntax.Ast.UpdateStmt
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

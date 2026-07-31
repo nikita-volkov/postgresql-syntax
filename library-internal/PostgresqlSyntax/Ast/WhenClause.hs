@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.WhenClause where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

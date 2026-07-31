@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.BExpr where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.BExprIsOp
 import PostgresqlSyntax.Ast.CExpr (CExpr)
 import PostgresqlSyntax.Ast.QualOp
@@ -9,7 +10,6 @@ import PostgresqlSyntax.Ast.Typename
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

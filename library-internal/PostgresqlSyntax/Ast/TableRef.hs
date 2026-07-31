@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.TableRef where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.FuncAliasClause
 import PostgresqlSyntax.Ast.FuncTable
@@ -12,7 +13,6 @@ import PostgresqlSyntax.Ast.TablesampleClause
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, head, many, some, tail, try)
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc

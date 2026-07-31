@@ -4,13 +4,13 @@ module PostgresqlSyntax.Ast.InExpr
 where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (selectWithParensAExpr)
 import PostgresqlSyntax.Ast.ExprList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, refineToSelectWithParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec

@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.Sconst where
 
 import qualified Data.Text as Text
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 import qualified TextBuilder

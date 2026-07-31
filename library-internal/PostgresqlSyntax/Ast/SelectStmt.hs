@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SelectStmt where
 
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectNoParens (SelectNoParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

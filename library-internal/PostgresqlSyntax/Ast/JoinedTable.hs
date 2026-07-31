@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.JoinedTable where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.JoinMeth
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef, joinedTableParser, renderJoinedTable)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

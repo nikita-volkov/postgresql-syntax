@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.TrimModifier where
 
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

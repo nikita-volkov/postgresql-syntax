@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.QualOp where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AnyOperator
 import PostgresqlSyntax.Ast.Op
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

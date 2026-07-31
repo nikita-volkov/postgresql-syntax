@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.SelectFetchFirstValue where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.CExpr
 import PostgresqlSyntax.Ast.Fconst
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

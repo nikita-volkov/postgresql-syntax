@@ -1,11 +1,11 @@
 module Ast.SelectWithParensSpec (spec) where
 
 import Helpers.Specs
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SelectNoParens
 import PostgresqlSyntax.Ast.SelectWithParens
-import PostgresqlSyntax.IsAst
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do

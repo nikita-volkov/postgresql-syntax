@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.FuncExprWindowless where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FuncApplication
 import PostgresqlSyntax.Ast.FuncExprCommonSubexpr
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

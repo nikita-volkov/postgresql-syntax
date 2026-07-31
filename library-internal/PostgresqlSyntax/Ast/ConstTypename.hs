@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.ConstTypename where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Bit (Bit)
 import PostgresqlSyntax.Ast.ConstCharacter
 import PostgresqlSyntax.Ast.ConstDatetime
 import PostgresqlSyntax.Ast.Numeric
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

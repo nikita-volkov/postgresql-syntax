@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.FuncAliasClause where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.TableFuncElementList
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

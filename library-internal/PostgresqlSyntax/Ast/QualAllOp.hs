@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.QualAllOp where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AllOp
 import PostgresqlSyntax.Ast.AnyOperator
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

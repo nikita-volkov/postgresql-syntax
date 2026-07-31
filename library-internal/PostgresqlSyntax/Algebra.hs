@@ -1,4 +1,4 @@
-module PostgresqlSyntax.IsAst
+module PostgresqlSyntax.Algebra
   ( IsAst (..),
     toText,
     parse,

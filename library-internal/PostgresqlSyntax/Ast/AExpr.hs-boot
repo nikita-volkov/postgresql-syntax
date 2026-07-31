@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.AExpr where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Algebra (IsAst)
 import PostgresqlSyntax.Prelude (Bool, Data, Eq, Maybe, Ord, Parser, Show, Text)
 import PostgresqlSyntax.Settings (Settings)
 import Test.QuickCheck (Arbitrary, Gen)

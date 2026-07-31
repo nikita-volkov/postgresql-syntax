@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.SelectWithParens where
 
-import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Algebra (IsAst)
 import PostgresqlSyntax.Prelude (Data, Eq, Maybe, Ord, Show)
 import Test.QuickCheck (Arbitrary)
 

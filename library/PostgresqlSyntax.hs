@@ -12,11 +12,11 @@
 -- 'mempty' for standard Postgres syntax.
 module PostgresqlSyntax
   ( -- * Parsing and rendering
-    IsAst.IsAst (..),
-    IsAst.toText,
-    IsAst.parse,
-    IsAst.parseWithPosError,
-    IsAst.parseWithSourcePosError,
+    Algebra.IsAst (..),
+    Algebra.toText,
+    Algebra.parse,
+    Algebra.parseWithPosError,
+    Algebra.parseWithSourcePosError,
 
     -- * Settings
     Settings.Settings,
@@ -27,6 +27,6 @@ module PostgresqlSyntax
   )
 where
 
+import qualified PostgresqlSyntax.Algebra as Algebra
 import PostgresqlSyntax.Ast
-import qualified PostgresqlSyntax.IsAst as IsAst
 import qualified PostgresqlSyntax.Settings as Settings

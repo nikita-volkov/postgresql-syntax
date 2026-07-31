@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.AexprConst where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Bconst
 import PostgresqlSyntax.Ast.ConstTypename
 import PostgresqlSyntax.Ast.Fconst
@@ -13,7 +14,6 @@ import PostgresqlSyntax.Ast.Xconst
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec

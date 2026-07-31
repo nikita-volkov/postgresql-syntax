@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.ConstDatetime where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Timezone
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

@@ -1,5 +1,5 @@
 -- |
--- Parse\/render options for the 'PostgresqlSyntax.IsAst' machinery.
+-- Parse\/render options for the 'PostgresqlSyntax.Algebra' machinery.
 --
 -- The type is abstract: build a 'Settings' value with 'nullabilityMarkers' and
 -- combine values with their 'Semigroup'\/'Monoid' instances ('mempty' is

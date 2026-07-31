@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.PositionList where
 
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.BExpr (BExpr)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

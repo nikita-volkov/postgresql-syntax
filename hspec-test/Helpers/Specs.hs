@@ -17,13 +17,13 @@ where
 
 import qualified Data.Text as Text
 import qualified Helpers.Expectations as Expectations
-import PostgresqlSyntax.IsAst
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Settings (Settings)
+import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck (counterexample, (===))
 import qualified Test.QuickCheck as Qc
-import Prelude
 
 itSatisfiesIsAst :: forall a. (IsAst a, Eq a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesIsAst =
@@ -80,7 +80,7 @@ itReportsError sql expected =
   describe (Text.unpack sql) $ do
     it ("Reports error: " <> expected) (Expectations.reportsError @a sql expected)
 
--- | Like 'itReportsError' but checks 'PostgresqlSyntax.IsAst.parseWithSourcePosError''s
+-- | Like 'itReportsError' but checks 'PostgresqlSyntax.Algebra.parseWithSourcePosError''s
 -- 'Text.Megaparsec.SourcePos'-based errors instead.
 itReportsSourcePosError :: forall a. (HasCallStack, IsAst a) => Text -> String -> Spec
 itReportsSourcePosError sql expected =

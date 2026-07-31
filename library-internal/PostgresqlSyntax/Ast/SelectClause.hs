@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SelectClause where
 
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect (SimpleSelect)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

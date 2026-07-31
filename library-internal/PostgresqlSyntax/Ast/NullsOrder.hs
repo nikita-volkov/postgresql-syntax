@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.NullsOrder where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

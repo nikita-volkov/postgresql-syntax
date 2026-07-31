@@ -2,9 +2,9 @@ module PostgresqlSyntax.Ast.Xconst where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
-import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

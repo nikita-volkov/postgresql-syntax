@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.FuncArgExpr where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.Ident
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

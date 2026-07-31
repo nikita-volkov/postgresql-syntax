@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.SelectNoParens where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Algebra (IsAst)
 import PostgresqlSyntax.Prelude (Data, Either, Eq, Maybe, Ord, Parser, Show)
 import PostgresqlSyntax.Settings (Settings)
 import Test.QuickCheck (Arbitrary)

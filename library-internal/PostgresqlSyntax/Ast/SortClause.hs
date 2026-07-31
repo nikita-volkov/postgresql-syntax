@@ -1,11 +1,11 @@
 module PostgresqlSyntax.Ast.SortClause where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SortBy
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, sortBy, try)
 import qualified Test.QuickCheck as Qc
 

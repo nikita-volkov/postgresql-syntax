@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.AllOp where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.MathOp
 import PostgresqlSyntax.Ast.Op
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.WindowSpecification where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.ExprList
 import PostgresqlSyntax.Ast.FrameClause
 import PostgresqlSyntax.Ast.Ident
@@ -8,7 +9,6 @@ import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

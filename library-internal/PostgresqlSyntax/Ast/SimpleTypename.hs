@@ -1,6 +1,7 @@
 module PostgresqlSyntax.Ast.SimpleTypename where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Bit
 import PostgresqlSyntax.Ast.Character
 import PostgresqlSyntax.Ast.ConstDatetime
@@ -10,7 +11,6 @@ import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.Numeric
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

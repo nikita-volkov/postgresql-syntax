@@ -4,11 +4,11 @@ module PostgresqlSyntax.Ast.RelationExprOptAlias
   )
 where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.RelationExpr
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc

@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.FuncApplicationParams where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FuncArgExpr
 import PostgresqlSyntax.Ast.SortClause
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc

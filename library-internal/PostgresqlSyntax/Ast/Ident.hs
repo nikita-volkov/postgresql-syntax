@@ -2,10 +2,10 @@ module PostgresqlSyntax.Ast.Ident where
 
 import qualified Data.Text as Text
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.Shrinks as Shrinks
-import PostgresqlSyntax.IsAst
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import qualified PostgresqlSyntax.Predicate as Predicate
 import PostgresqlSyntax.Prelude hiding (filter, try)

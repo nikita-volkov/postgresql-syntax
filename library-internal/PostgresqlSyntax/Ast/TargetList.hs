@@ -1,10 +1,10 @@
 module PostgresqlSyntax.Ast.TargetList where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.TargetEl
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

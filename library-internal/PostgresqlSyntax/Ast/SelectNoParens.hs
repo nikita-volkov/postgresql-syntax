@@ -7,6 +7,7 @@ module PostgresqlSyntax.Ast.SelectNoParens
 where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.ForLockingClause
 import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.SelectLimit
@@ -17,7 +18,6 @@ import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc

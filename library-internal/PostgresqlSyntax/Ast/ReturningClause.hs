@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.ReturningClause where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.TargetList
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (filter, many, some, try)
 import qualified Test.QuickCheck as Qc
 

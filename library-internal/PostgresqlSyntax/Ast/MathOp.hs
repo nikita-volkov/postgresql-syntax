@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.MathOp where
 
+import PostgresqlSyntax.Algebra
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude hiding (many, some, try)
 import qualified Test.QuickCheck as Qc
 

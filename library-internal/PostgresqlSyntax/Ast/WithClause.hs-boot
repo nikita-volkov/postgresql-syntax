@@ -1,6 +1,6 @@
 module PostgresqlSyntax.Ast.WithClause where
 
-import PostgresqlSyntax.IsAst (IsAst)
+import PostgresqlSyntax.Algebra (IsAst)
 import PostgresqlSyntax.Prelude (Data, Eq, Ord, Show)
 import Test.QuickCheck (Arbitrary)
 

@@ -1,10 +1,10 @@
 module Ast.IndexElemSpec (spec) where
 
 import Helpers.Specs
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.IndexElem
-import PostgresqlSyntax.IsAst
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do

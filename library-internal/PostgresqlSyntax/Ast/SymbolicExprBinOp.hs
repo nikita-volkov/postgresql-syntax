@@ -1,8 +1,8 @@
 module PostgresqlSyntax.Ast.SymbolicExprBinOp where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.MathOp
 import PostgresqlSyntax.Ast.QualOp
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

@@ -10,6 +10,7 @@ module PostgresqlSyntax.Ast.AExpr
 where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AExprReversableOp
 import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
 import PostgresqlSyntax.Ast.CExpr (CExpr)
@@ -26,7 +27,6 @@ import PostgresqlSyntax.Ast.VerbalExprBinOp
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc

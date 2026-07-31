@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.ExtractArg where
 
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.Sconst
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 

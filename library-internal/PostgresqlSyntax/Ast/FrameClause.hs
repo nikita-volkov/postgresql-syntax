@@ -1,12 +1,12 @@
 module PostgresqlSyntax.Ast.FrameClause where
 
 import qualified HeadedMegaparsec as Parser
+import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FrameClauseMode
 import PostgresqlSyntax.Ast.FrameExtent
 import PostgresqlSyntax.Ast.WindowExclusionClause
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
-import PostgresqlSyntax.IsAst
 import PostgresqlSyntax.Prelude
 import qualified Test.QuickCheck as Qc
 
