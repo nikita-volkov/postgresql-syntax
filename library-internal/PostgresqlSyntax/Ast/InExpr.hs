@@ -5,9 +5,9 @@ where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (selectWithParensAExpr)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, refineToSelectWithParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
@@ -65,6 +65,6 @@ instance Qc.Arbitrary InExpr where
 instance Canonicalizes InExpr where
   canonicalize = \case
     SelectInExpr a
-      | Just inner <- refineToSelectWithParens a ->
-          ExprListInExpr (ExprList (selectWithParensAExpr inner :| []))
+      | Just inner <- project @SelectWithParens a ->
+          ExprListInExpr (ExprList (embed @SelectWithParens inner :| []))
     other -> other

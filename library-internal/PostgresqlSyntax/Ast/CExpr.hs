@@ -6,7 +6,7 @@ where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, refineToSelectWithParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.AexprConst
 import PostgresqlSyntax.Ast.ArrayExpr
 import PostgresqlSyntax.Ast.CaseExpr
@@ -17,7 +17,7 @@ import PostgresqlSyntax.Ast.FuncExpr
 import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.ImplicitRow
 import PostgresqlSyntax.Ast.Indirection
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens, withParensSelectWithParens)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Extras.NonEmpty as NonEmpty
 import qualified PostgresqlSyntax.Extras.TextBuilder as TextBuilder
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
@@ -184,6 +184,6 @@ instance Qc.Arbitrary CExpr where
 instance Canonicalizes CExpr where
   canonicalize = \case
     InParensCExpr a outerIndirection
-      | Just inner <- refineToSelectWithParens a ->
-          SelectWithParensCExpr (withParensSelectWithParens inner) outerIndirection
+      | Just inner <- project @SelectWithParens a ->
+          SelectWithParensCExpr (embed @SelectWithParens inner) outerIndirection
     other -> other

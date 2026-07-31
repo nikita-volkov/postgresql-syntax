@@ -5,6 +5,7 @@ module PostgresqlSyntax.Algebra
     parseWithPosError,
     parseWithSourcePosError,
     Canonicalizes (..),
+    Refines (..),
   )
 where
 
@@ -62,3 +63,17 @@ parseWithSourcePosError settings = first (fmap (second Text.pack)) . Extras.runP
 class (IsAst a) => Canonicalizes a where
   canonicalize :: a -> a
   canonicalize = id
+
+-- |
+-- Laws:
+--
+-- * __Refinement law__: @project . embed = Just@
+--
+-- Expresses embedding relationships between AST node types across module
+-- boundaries where cross-module pattern matching is unavailable. Instances
+-- hold between two types when the 'sub' type can be trivially embedded into
+-- 'sup', and trivial 'sup' values can be recognized as such a 'sub' and
+-- extracted back out.
+class Refines sub sup where
+  embed :: sub -> sup
+  project :: sup -> Maybe sub

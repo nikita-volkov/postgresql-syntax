@@ -116,6 +116,10 @@ refineToSelectWithParens = \case
   SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing -> Just c
   _ -> Nothing
 
+instance Refines SelectWithParens SelectNoParens where
+  embed c = SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing
+  project = refineToSelectWithParens
+
 instance Qc.Arbitrary SelectNoParens where
   shrink = Qc.genericShrink
   arbitrary =

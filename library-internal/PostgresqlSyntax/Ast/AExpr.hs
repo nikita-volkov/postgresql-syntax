@@ -1,20 +1,14 @@
 module PostgresqlSyntax.Ast.AExpr
   ( AExpr (..),
-    filteredParser,
-    isBoundedAExprOperand,
-    safeAExprOperand,
-    selectWithParensAExpr,
-    refineToSelectWithParens,
   )
 where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AExprReversableOp
-import PostgresqlSyntax.Ast.AnyName hiding (filteredParser)
+import PostgresqlSyntax.Ast.AnyName
 import PostgresqlSyntax.Ast.CExpr (CExpr)
 import qualified PostgresqlSyntax.Ast.CExpr as CExpr
-import PostgresqlSyntax.Ast.Ident
 import PostgresqlSyntax.Ast.QualOp
 import PostgresqlSyntax.Ast.Row
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
@@ -312,13 +306,6 @@ overlapsSuffix settings a = do
       CExprAExpr (CExpr.ImplicitRowCExpr x) -> Just (ImplicitRowRow x)
       _ -> Nothing
 
--- | 'parser', but rejecting the given words when they'd otherwise be
--- accepted as a trailing bare column-reference identifier. Needed by
--- "PostgresqlSyntax.Ast.SortBy", which must not let @a_expr@ swallow a
--- Parsers.keyword (@USING@\/@ASC@\/@DESC@\/@NULLS@) that is meant to terminate it.
-filteredParser :: Settings -> [Text] -> Parser AExpr
-filteredParser settings excluded = customizedParser settings (CExpr.customizedParser settings (Parsers.filteredColIdLike UnquotedIdent (parser settings) excluded))
-
 -- |
 -- Whether the given 'AExpr' is safe to place in the left\/accumulator
 -- position of a suffix production without parenthesizing it — see
@@ -374,26 +361,11 @@ safeAExprOperand gen = do
       then a
       else CExprAExpr (CExpr.InParensCExpr a Nothing)
 
--- |
--- Smart constructor wrapping a bare 'SelectWithParens' as an 'AExpr', for
--- modules that can only see 'AExpr' via its @hs-boot@ (which keeps it
--- abstract to break an import cycle) — see "PostgresqlSyntax.Ast.InExpr",
--- which needs it to canonicalize a @select_with_parens@\/@expr_list@
--- ambiguity.
-selectWithParensAExpr :: SelectWithParens -> AExpr
-selectWithParensAExpr a = CExprAExpr (CExpr.SelectWithParensCExpr a Nothing)
-
--- |
--- If an 'AExpr' is a bare, indirection-less 'PostgresqlSyntax.Ast.CExpr.SelectWithParensCExpr'
--- wrapping, returns the wrapped 'SelectWithParens'. The inverse of
--- 'selectWithParensAExpr', exposed for the same @hs-boot@-abstraction reason
--- — see "PostgresqlSyntax.Ast.CExpr", which needs it to canonicalize an
--- @'(' a_expr ')'@\/@select_with_parens@ ambiguity analogous to the one
--- described there.
-refineToSelectWithParens :: AExpr -> Maybe SelectWithParens
-refineToSelectWithParens = \case
-  CExprAExpr (CExpr.SelectWithParensCExpr a Nothing) -> Just a
-  _ -> Nothing
+instance Refines SelectWithParens AExpr where
+  embed a = CExprAExpr (CExpr.SelectWithParensCExpr a Nothing)
+  project = \case
+    CExprAExpr (CExpr.SelectWithParensCExpr a Nothing) -> Just a
+    _ -> Nothing
 
 -- |
 -- Collapses the non-canonical @Right@-wrapping-a-bare-@select_with_parens@
@@ -413,7 +385,7 @@ refineToSelectWithParens = \case
 instance Canonicalizes AExpr where
   canonicalize = \case
     SubqueryAExpr a b c (Right d)
-      | Just inner <- refineToSelectWithParens d -> SubqueryAExpr a b c (Left inner)
+      | Just inner <- project d -> SubqueryAExpr a b c (Left inner)
     other -> other
 
 instance Qc.Arbitrary AExpr where

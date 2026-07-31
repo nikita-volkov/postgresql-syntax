@@ -2,7 +2,7 @@ module PostgresqlSyntax.Ast.SortBy where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr, filteredParser)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.AscDesc
 import PostgresqlSyntax.Ast.NullsOrder
 import PostgresqlSyntax.Ast.QualAllOp
@@ -29,13 +29,7 @@ instance IsAst SortBy where
     UsingSortBy a b c -> toTextBuilder settings a <> " USING " <> toTextBuilder settings b <> TextBuilders.suffixMaybe (toTextBuilder settings) c
     AscDescSortBy a b c -> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> TextBuilders.suffixMaybe (toTextBuilder settings) c
   parser settings = do
-    -- gram.y:14056 sortby. Of the four words that can terminate this
-    -- a_expr, only NULLS is unreserved (kwlist.h:315) and therefore a
-    -- legal ColId; USING/ASC/DESC are reserved (kwlist.h:496,47,138) and
-    -- can never be absorbed. Postgres disambiguates NULLS with a
-    -- two-token lexer lookahead (NULLS_LA, gram.y:864); this exclusion is
-    -- the coarser recursive-descent equivalent.
-    a <- filteredParser settings ["nulls"]
+    a <- parser settings
     asum
       [ do
           Parsers.space1

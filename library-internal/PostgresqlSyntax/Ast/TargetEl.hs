@@ -3,7 +3,6 @@ module PostgresqlSyntax.Ast.TargetEl where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
 import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
-import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.AExpr as AExpr
 import PostgresqlSyntax.Ast.Ident
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
@@ -66,14 +65,6 @@ instance Qc.Arbitrary TargetEl where
     Qc.oneof
       [ pure AsteriskTargetEl,
         AliasedExprTargetEl <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
-        -- Unlike 'AliasedExprTargetEl' (separated from its alias by the
-        -- reserved @AS@ Parsers.keyword) or 'ExprTargetEl' (followed only by a
-        -- comma\/end of list, neither valid @a_expr@ continuations), the
-        -- expr here is followed directly by a bare alias identifier with
-        -- nothing but a space — exactly the hazard
-        -- 'PostgresqlSyntax.Ast.AExpr.isBoundedAExprOperand' guards
-        -- against (e.g. rendering an 'PostgresqlSyntax.Ast.AExpr.OrAExpr'
-        -- bare here would let its right operand absorb the alias).
-        ImplicitlyAliasedExprTargetEl <$> AExpr.safeAExprOperand (Gens.downscale Qc.arbitrary) <*> Qc.arbitrary,
+        ImplicitlyAliasedExprTargetEl <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
         ExprTargetEl <$> Gens.downscale Qc.arbitrary
       ]

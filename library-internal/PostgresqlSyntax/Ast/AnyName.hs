@@ -7,7 +7,6 @@ import PostgresqlSyntax.Ast.Ident
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.KeywordSet as KeywordSet
 import PostgresqlSyntax.Prelude
-import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -42,10 +41,3 @@ instance IsAst AnyName where
 instance Qc.Arbitrary AnyName where
   shrink = Qc.genericShrink
   arbitrary = AnyName <$> arbitrary <*> arbitrary
-
--- | 'parser', but rejecting the given words when they'd otherwise be
--- accepted as the leading identifier — needed by
--- "PostgresqlSyntax.Ast.IndexElem"'s @opt_class@ position, mirroring the
--- pre-extraction @filteredAnyName@.
-filteredParser :: Settings -> [Text] -> Parser AnyName
-filteredParser settings excluded = AnyName <$> (Parser.wrapToHead (Parsers.filteredColIdLike UnquotedIdent (parser settings) excluded) <* Parser.endHead) <*> optional (Parsers.space *> parser settings)

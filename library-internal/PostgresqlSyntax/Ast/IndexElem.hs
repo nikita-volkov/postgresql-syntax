@@ -45,13 +45,7 @@ instance IsAst IndexElem where
     where
       collate = Parsers.keyword "collate" *> Parsers.space1 *> Parser.endHead *> parser settings
 
-      -- gram.y:8558 index_elem: ColId index_elem_options, and gram.y:8596
-      -- opt_nulls_order (index_elem_options inlines opt_qualified_name at
-      -- gram.y:8525 for the operator-class name). That name is a bare
-      -- ColId, so of the words that can terminate it only the unreserved
-      -- NULLS (kwlist.h:315) is a genuine hazard — ASC/DESC are reserved
-      -- (kwlist.h:47,138) and were never candidates.
-      class_ = filteredParser settings ["nulls"]
+      class_ = parser settings
 
 instance Qc.Arbitrary IndexElem where
   shrink = Qc.genericShrink

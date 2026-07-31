@@ -89,9 +89,7 @@ instance Canonicalizes SelectWithParens where
 -- needs it to canonicalize a @select_with_parens@\/@expr_list@ ambiguity
 -- analogous to the one described above.
 refineToSelectWithParens :: SelectWithParens -> Maybe SelectWithParens
-refineToSelectWithParens = \case
-  WithParensSelectWithParens a -> Just a
-  _ -> Nothing
+refineToSelectWithParens = project
 
 -- |
 -- Smart constructor for the @WithParensSelectWithParens@ shape, for modules
@@ -100,4 +98,10 @@ refineToSelectWithParens = \case
 -- which needs it to canonicalize a @'(' a_expr ')'@\/@select_with_parens@
 -- ambiguity analogous to the one described above.
 withParensSelectWithParens :: SelectWithParens -> SelectWithParens
-withParensSelectWithParens = WithParensSelectWithParens
+withParensSelectWithParens = embed
+
+instance Refines SelectWithParens SelectWithParens where
+  embed = WithParensSelectWithParens
+  project = \case
+    WithParensSelectWithParens a -> Just a
+    _ -> Nothing

@@ -126,7 +126,14 @@ anyKeyword = parse $
     do
       firstChar <- Megaparsec.satisfy Predicate.firstIdentifierChar
       remainder <- Megaparsec.takeWhileP Nothing Predicate.notFirstIdentifierChar
-      return (Text.toLower (Text.cons firstChar remainder))
+      let parsedKeyword = Text.toLower (Text.cons firstChar remainder)
+      when (parsedKeyword == "nulls") (Megaparsec.notFollowedBy nullsLa)
+      return parsedKeyword
+  where
+    nullsLa =
+      MegaparsecChar.space1
+        *> (MegaparsecChar.string' "first" <|> MegaparsecChar.string' "last")
+        *> Megaparsec.notFollowedBy (Megaparsec.satisfy Predicate.notFirstIdentifierChar)
 
 -- | Expected keyword
 --

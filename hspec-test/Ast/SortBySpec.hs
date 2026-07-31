@@ -3,8 +3,8 @@ module Ast.SortBySpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SortBy
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do
@@ -19,6 +19,4 @@ spec = do
       fmap render (parse @SortBy mempty "a desc nulls last") `shouldBe` Right "a DESC NULLS LAST"
       fmap render (parse @SortBy mempty "a nulls first") `shouldBe` Right "a NULLS FIRST"
       fmap render (parse @SortBy mempty "a using > nulls last") `shouldBe` Right "a USING > NULLS LAST"
-      case parse @SortBy mempty "nulls" of
-        Left _ -> pure ()
-        Right _ -> expectationFailure "expected a parse failure for bare \"nulls\""
+      fmap render (parse @SortBy mempty "nulls") `shouldBe` Right "nulls"
