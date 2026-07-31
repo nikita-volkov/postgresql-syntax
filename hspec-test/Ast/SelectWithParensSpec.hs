@@ -4,8 +4,8 @@ import Helpers.Specs
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SelectNoParens
 import PostgresqlSyntax.Ast.SelectWithParens
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

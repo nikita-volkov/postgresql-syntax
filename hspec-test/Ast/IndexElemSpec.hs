@@ -3,8 +3,8 @@ module Ast.IndexElemSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.IndexElem
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do

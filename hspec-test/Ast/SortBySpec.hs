@@ -3,8 +3,8 @@ module Ast.SortBySpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.SortBy
-import Prelude
 import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do
