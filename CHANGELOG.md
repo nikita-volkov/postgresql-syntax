@@ -1,3 +1,9 @@
+# Upcoming
+
+## Fixes
+
+- Added doc-files to the .cabal-file. README.md, LICENSE and CHANGELOG.md.
+
 # v0.5.0.0
 
 ## Breaking

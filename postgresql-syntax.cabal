@@ -13,6 +13,10 @@ maintainer: Nikita Volkov <nikita.y.volkov@mail.ru>
 copyright: (c) 2020, Nikita Volkov
 license: MIT
 license-file: LICENSE
+extra-doc-files:
+  CHANGELOG.md
+  LICENSE
+  README.md
 
 source-repository head
   type: git
