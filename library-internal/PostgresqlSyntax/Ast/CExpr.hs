@@ -1,7 +1,6 @@
 module PostgresqlSyntax.Ast.CExpr
   ( CExpr (..),
     customizedParser,
-    canonicalize,
   )
 where
 
@@ -182,9 +181,9 @@ instance Qc.Arbitrary CExpr where
 -- otherwise construct it (shrinking the outer indirection to @Nothing@ is
 -- exactly how it arises), which renders fine but parses back to a
 -- different, canonical value and so breaks the roundtrip property.
-canonicalize :: CExpr -> CExpr
-canonicalize = \case
-  InParensCExpr a outerIndirection
-    | Just inner <- refineToSelectWithParens a ->
-        SelectWithParensCExpr (withParensSelectWithParens inner) outerIndirection
-  other -> other
+instance Canonicalizes CExpr where
+  canonicalize = \case
+    InParensCExpr a outerIndirection
+      | Just inner <- refineToSelectWithParens a ->
+          SelectWithParensCExpr (withParensSelectWithParens inner) outerIndirection
+    other -> other

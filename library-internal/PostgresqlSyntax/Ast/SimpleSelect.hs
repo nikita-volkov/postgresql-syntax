@@ -167,18 +167,18 @@ instance Qc.Arbitrary SimpleSelect where
 -- otherwise construct the non-canonical shape, which renders fine but
 -- parses back to a different, canonical value and so breaks the
 -- roundtrip property.
-canonicalize :: SimpleSelect -> SimpleSelect
-canonicalize s@(BinSimpleSelect {}) =
-  case rest of
-    (op, distinct, next) : more -> BinSimpleSelect op headClause distinct (buildRight next more)
-    [] -> s
-  where
-    (headClause, rest) = flattenChain (SimpleSelectSelectClause s)
-    buildRight lastClause [] = lastClause
-    buildRight clause ((op, distinct, next) : more) = SimpleSelectSelectClause (BinSimpleSelect op clause distinct (buildRight next more))
-    flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
-      let (lhsHead, lhsRest) = flattenChain lhs
-          (rhsHead, rhsRest) = flattenChain rhs
-       in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
-    flattenChain c = (c, [])
-canonicalize other = other
+instance Canonicalizes SimpleSelect where
+  canonicalize s@(BinSimpleSelect {}) =
+    case rest of
+      (op, distinct, next) : more -> BinSimpleSelect op headClause distinct (buildRight next more)
+      [] -> s
+    where
+      (headClause, rest) = flattenChain (SimpleSelectSelectClause s)
+      buildRight lastClause [] = lastClause
+      buildRight clause ((op, distinct, next) : more) = SimpleSelectSelectClause (BinSimpleSelect op clause distinct (buildRight next more))
+      flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
+        let (lhsHead, lhsRest) = flattenChain lhs
+            (rhsHead, rhsRest) = flattenChain rhs
+         in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
+      flattenChain c = (c, [])
+  canonicalize other = other

@@ -4,6 +4,7 @@ module PostgresqlSyntax.Algebra
     parse,
     parseWithPosError,
     parseWithSourcePosError,
+    Canonicalizes (..),
   )
 where
 
@@ -50,3 +51,14 @@ parseWithPosError settings = first (fmap (second Text.pack)) . Extras.runParserW
 -- 'Text.Megaparsec.SourcePos' instead of a raw byte offset.
 parseWithSourcePosError :: (IsAst a) => Settings -> Text -> Either (NonEmpty (Megaparsec.SourcePos, Text)) a
 parseWithSourcePosError settings = first (fmap (second Text.pack)) . Extras.runParserWithSourcePosError (Extras.totally (parser settings))
+
+-- |
+-- Laws:
+--
+-- * __Idempotent__: @canonicalize . canonicalize = canonicalize@
+-- * __Parse-agreement__ (the property this class exists to provide):
+--   @parse settings . toText settings = Right . canonicalize@ for every
+--   'PostgresqlSyntax.Settings.Settings'
+class (IsAst a) => Canonicalizes a where
+  canonicalize :: a -> a
+  canonicalize = id

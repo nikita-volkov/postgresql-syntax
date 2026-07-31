@@ -75,11 +75,11 @@ instance Qc.Arbitrary SelectWithParens where
 -- the non-canonical shape (shrinking the inner 'SelectNoParens' toward
 -- @Nothing@s is exactly how it arises), which renders fine but parses back
 -- to a different, canonical value and so breaks the roundtrip property.
-canonicalize :: SelectWithParens -> SelectWithParens
-canonicalize = \case
-  NoParensSelectWithParens a
-    | Just c <- SelectNoParens.refineToSelectWithParens a -> WithParensSelectWithParens c
-  other -> other
+instance Canonicalizes SelectWithParens where
+  canonicalize = \case
+    NoParensSelectWithParens a
+      | Just c <- SelectNoParens.refineToSelectWithParens a -> WithParensSelectWithParens c
+    other -> other
 
 -- |
 -- If a 'SelectWithParens' is the @WithParensSelectWithParens@ wrapping of

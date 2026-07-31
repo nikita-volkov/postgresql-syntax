@@ -62,9 +62,9 @@ instance Qc.Arbitrary InExpr where
 -- can otherwise construct the non-canonical shape, which renders fine but
 -- parses back to a different, canonical value and so breaks the
 -- roundtrip property.
-canonicalize :: InExpr -> InExpr
-canonicalize = \case
-  SelectInExpr a
-    | Just inner <- refineToSelectWithParens a ->
-        ExprListInExpr (ExprList (selectWithParensAExpr inner :| []))
-  other -> other
+instance Canonicalizes InExpr where
+  canonicalize = \case
+    SelectInExpr a
+      | Just inner <- refineToSelectWithParens a ->
+          ExprListInExpr (ExprList (selectWithParensAExpr inner :| []))
+    other -> other

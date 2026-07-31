@@ -2,6 +2,7 @@
 
 module Helpers.Specs
   ( itSatisfiesIsAst,
+    itSatisfiesCanonicalizes,
     itSatisfiesArbitrary,
     itParses,
     itRejects,
@@ -39,6 +40,12 @@ itSatisfiesIsAst =
                 (a' === a)
     prop "Renders equal values equally" $ \(a :: a) (b :: a) ->
       a /= b || toText mempty a == toText mempty b
+
+itSatisfiesCanonicalizes :: forall a. (Canonicalizes a, Eq a, Show a, Qc.Arbitrary a) => Spec
+itSatisfiesCanonicalizes =
+  describe "Canonicalizes" $ do
+    prop "Idempotent" $ \(a :: a) ->
+      canonicalize (canonicalize a) === canonicalize a
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesArbitrary =

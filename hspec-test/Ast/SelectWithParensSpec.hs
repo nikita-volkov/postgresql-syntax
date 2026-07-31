@@ -10,6 +10,7 @@ import Test.Hspec
 spec :: Spec
 spec = do
   itSatisfiesIsAst @SelectWithParens
+  itSatisfiesCanonicalizes @SelectWithParens
   itSatisfiesArbitrary @SelectWithParens
   describe "Nesting depth" $ do
     -- The parenthesised sub-select has two possible representations.

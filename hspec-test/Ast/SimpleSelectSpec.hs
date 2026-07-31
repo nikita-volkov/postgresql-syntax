@@ -7,4 +7,5 @@ import Test.Hspec
 spec :: Spec
 spec = do
   itSatisfiesIsAst @SimpleSelect
+  itSatisfiesCanonicalizes @SimpleSelect
   itSatisfiesArbitrary @SimpleSelect

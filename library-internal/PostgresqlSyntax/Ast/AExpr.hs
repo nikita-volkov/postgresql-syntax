@@ -5,7 +5,6 @@ module PostgresqlSyntax.Ast.AExpr
     safeAExprOperand,
     selectWithParensAExpr,
     refineToSelectWithParens,
-    canonicalize,
   )
 where
 
@@ -411,11 +410,11 @@ refineToSelectWithParens = \case
 -- making the latter non-canonical for this shape. Both 'arbitrary' and
 -- 'shrink' can otherwise construct it, which renders fine but parses back to
 -- a different, canonical value and so breaks the roundtrip property.
-canonicalize :: AExpr -> AExpr
-canonicalize = \case
-  SubqueryAExpr a b c (Right d)
-    | Just inner <- refineToSelectWithParens d -> SubqueryAExpr a b c (Left inner)
-  other -> other
+instance Canonicalizes AExpr where
+  canonicalize = \case
+    SubqueryAExpr a b c (Right d)
+      | Just inner <- refineToSelectWithParens d -> SubqueryAExpr a b c (Left inner)
+    other -> other
 
 instance Qc.Arbitrary AExpr where
   shrink = fmap canonicalize . Qc.genericShrink

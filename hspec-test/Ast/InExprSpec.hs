@@ -7,4 +7,5 @@ import Test.Hspec
 spec :: Spec
 spec = do
   itSatisfiesIsAst @InExpr
+  itSatisfiesCanonicalizes @InExpr
   itSatisfiesArbitrary @InExpr
