@@ -1,5 +1,6 @@
 module PostgresqlSyntax.Ast.SimpleSelect
   ( SimpleSelect (..),
+    SelectChainLink,
   )
 where
 
@@ -124,45 +125,57 @@ instance LeftRecursive SimpleSelect where
 -- left-associative. The default fold (uniform left-association) would
 -- root @a INTERSECT b UNION c@ at @INTERSECT@ and nest @a EXCEPT b EXCEPT
 -- c@ to the right — both wrong.
-instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, SelectClause) where
+instance LeftRecursion SelectClause SimpleSelect SelectChainLink where
   extension settings = do
     op <- Parsers.space1 *> parser settings <* Parsers.space1
     Parser.endHead
     distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
     rhs <- nonRecursiveParser @SelectClause settings
-    return (op, distinct, rhs)
+    return (SelectChainLink op distinct rhs)
 
-  applyExtension lhs (op, distinct, rhs) = BinSimpleSelect op lhs distinct rhs
+  applyExtension lhs (SelectChainLink op distinct rhs) = BinSimpleSelect op lhs distinct rhs
 
-  -- ==== The precedence fold
-  --
-  -- @go@ applies items to the accumulator one at a time, left to right —
-  -- which by itself is already left-associative for a run of same-operator
-  -- items, INTERSECT included. What needs help is a /low-precedence/ item
-  -- (@UNION@\/@EXCEPT@) immediately followed by @INTERSECT@ items: those
-  -- bind tighter, so they must combine into that item's right operand
-  -- before @go@ applies it, not become separate steps of @go@'s own fold.
-  -- @absorbIntersect@ does exactly that — and only that: it leaves an
-  -- @INTERSECT@ item itself untouched (its rest is handled by @go@'s next
-  -- iteration, one item at a time), and otherwise absorbs a maximal
-  -- trailing run of @INTERSECT@ items into the current item's right
-  -- operand. @go@ then continues from whatever @absorbIntersect@ left
-  -- unconsumed, and either finishes (if nothing's left — the whole point
-  -- of ending on 'applyExtension' rather than 'embed' is that the final
-  -- combination must be the returned @ext@, not re-wrapped as @base@) or
-  -- continues.
-  foldExtensions base (i0 :| is0) = go base i0 is0
-    where
-      go acc item rest =
-        let (absorbedItem, rest') = absorbIntersect item rest
-         in case rest' of
-              [] -> applyExtension acc absorbedItem
-              item' : rest'' -> go (embed (applyExtension acc absorbedItem)) item' rest''
+  foldExtensions = foldChain
 
-      absorbIntersect item@(IntersectSelectBinOp, _, _) rest = (item, rest)
-      absorbIntersect (op, distinct, rhs) ((IntersectSelectBinOp, d, rhs') : rest) =
-        absorbIntersect (op, distinct, SimpleSelectSelectClause (BinSimpleSelect IntersectSelectBinOp rhs d rhs')) rest
-      absorbIntersect item rest = (item, rest)
+-- |
+-- One @UNION@\/@INTERSECT@\/@EXCEPT@ continuation, minus the left operand
+-- it applies to — the 'PostgresqlSyntax.Algebra.LeftRecursion' @item@ for
+-- 'SimpleSelect', named so it stops leaking into
+-- "PostgresqlSyntax.Ast.SelectClause"\'s @hs-boot@ instance head as an
+-- anonymous triple.
+data SelectChainLink = SelectChainLink SelectBinOp (Maybe Bool) SelectClause
+
+-- |
+-- ==== The precedence fold
+--
+-- @go@ applies items to the accumulator one at a time, left to right —
+-- which by itself is already left-associative for a run of same-operator
+-- items, INTERSECT included. What needs help is a /low-precedence/ item
+-- (@UNION@\/@EXCEPT@) immediately followed by @INTERSECT@ items: those
+-- bind tighter, so they must combine into that item's right operand
+-- before @go@ applies it, not become separate steps of @go@'s own fold.
+-- @absorbIntersect@ does exactly that — and only that: it leaves an
+-- @INTERSECT@ item itself untouched (its rest is handled by @go@'s next
+-- iteration, one item at a time), and otherwise absorbs a maximal
+-- trailing run of @INTERSECT@ items into the current item's right
+-- operand. @go@ then continues from whatever @absorbIntersect@ left
+-- unconsumed, and either finishes (if nothing's left — the whole point of
+-- ending on 'applyExtension' rather than 'embed' is that the final
+-- combination must be the returned @SimpleSelect@, not re-wrapped as a
+-- @SelectClause@) or continues.
+foldChain :: SelectClause -> NonEmpty SelectChainLink -> SimpleSelect
+foldChain base (i0 :| is0) = go base i0 is0
+  where
+    go acc item rest =
+      let (absorbedItem, rest') = absorbIntersect item rest
+       in case rest' of
+            [] -> applyExtension acc absorbedItem
+            item' : rest'' -> go (embed (applyExtension acc absorbedItem)) item' rest''
+
+    absorbIntersect item@(SelectChainLink IntersectSelectBinOp _ _) rest = (item, rest)
+    absorbIntersect (SelectChainLink op distinct rhs) (SelectChainLink IntersectSelectBinOp d rhs' : rest) =
+      absorbIntersect (SelectChainLink op distinct (SimpleSelectSelectClause (BinSimpleSelect IntersectSelectBinOp rhs d rhs'))) rest
+    absorbIntersect item rest = (item, rest)
 
 instance Qc.Arbitrary SimpleSelect where
   shrink = fmap canonicalize . Qc.genericShrink
@@ -190,30 +203,29 @@ instance Qc.Arbitrary SimpleSelect where
 
 -- |
 -- Collapses an arbitrary-shaped @BinSimpleSelect@ chain to the shape
--- 'foldExtensions' actually produces for it (left-associated within each
+-- 'foldChain' actually produces for it (left-associated within each
 -- precedence level, @INTERSECT@ binding tighter than @UNION@\/@EXCEPT@ —
--- see the 'LeftRecursion' instance above): 'flattenChain' reduces the
--- chain to its flat sequence of operators and operands regardless of how
--- it's currently nested, and re-folding that sequence with the same
--- 'foldExtensions' the parser itself uses is by construction the shape
--- @parse . toText@ produces. Both 'arbitrary' and 'shrink' can otherwise
--- construct a non-canonical shape, which renders fine but parses back to
--- a different, canonical value and so breaks the roundtrip property.
+-- see 'foldChain' above): 'flattenChain' reduces the chain to its flat
+-- sequence of operators and operands regardless of how it's currently
+-- nested, and re-folding that sequence with the same 'foldChain' the
+-- parser itself uses is by construction the shape @parse . toText@
+-- produces. Both 'arbitrary' and 'shrink' can otherwise construct a
+-- non-canonical shape, which renders fine but parses back to a
+-- different, canonical value and so breaks the roundtrip property.
 instance Canonicalizes SimpleSelect where
   canonicalize s@(BinSimpleSelect {}) =
     case flattenChain (SimpleSelectSelectClause s) of
-      (headClause, i : is) -> foldExtensions headClause (i :| is)
+      (headClause, i : is) -> foldChain headClause (i :| is)
       (_, []) -> s
   canonicalize other = other
 
 -- |
 -- Reduces a @BinSimpleSelect@ chain, in whatever shape it's currently
 -- nested, to its leading operand and the flat, left-to-right sequence of
--- @(op, distinct, operand)@ items that follow it — the inverse of
--- 'foldExtensions'.
-flattenChain :: SelectClause -> (SelectClause, [(SelectBinOp, Maybe Bool, SelectClause)])
+-- 'SelectChainLink' items that follow it — the inverse of 'foldChain'.
+flattenChain :: SelectClause -> (SelectClause, [SelectChainLink])
 flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
   let (lhsHead, lhsRest) = flattenChain lhs
       (rhsHead, rhsRest) = flattenChain rhs
-   in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
+   in (lhsHead, lhsRest <> [SelectChainLink op distinct rhsHead] <> rhsRest)
 flattenChain c = (c, [])
