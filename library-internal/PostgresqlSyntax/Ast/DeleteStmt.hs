@@ -3,7 +3,6 @@ module PostgresqlSyntax.Ast.DeleteStmt where
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
-import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.ReturningClause
 import PostgresqlSyntax.Ast.UsingClause
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
@@ -39,7 +38,7 @@ instance IsAst DeleteStmt where
     Parser.endHead
     Parsers.keyword "from"
     Parsers.space1
-    b <- RelationExprOptAlias.customizedParser settings ["using", "where", "returning"]
+    b <- parser settings
     c <- optional (Parsers.space1 *> parser settings)
     d <- optional (Parsers.space1 *> parser settings)
     e <- optional (Parsers.space1 *> parser settings)

@@ -4,7 +4,6 @@ import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FromClause
 import PostgresqlSyntax.Ast.RelationExprOptAlias (RelationExprOptAlias)
-import qualified PostgresqlSyntax.Ast.RelationExprOptAlias as RelationExprOptAlias
 import PostgresqlSyntax.Ast.ReturningClause
 import PostgresqlSyntax.Ast.SetClauseList
 import PostgresqlSyntax.Ast.WhereOrCurrentClause
@@ -44,7 +43,7 @@ instance IsAst UpdateStmt where
     Parsers.keyword "update"
     Parsers.space1
     Parser.endHead
-    b <- RelationExprOptAlias.customizedParser settings ["set"]
+    b <- parser settings
     Parsers.space1
     Parsers.keyword "set"
     Parsers.space1

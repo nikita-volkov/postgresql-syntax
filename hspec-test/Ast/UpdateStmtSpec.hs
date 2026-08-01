@@ -8,3 +8,5 @@ spec :: Spec
 spec = do
   itSatisfiesIsAst @UpdateStmt
   itSatisfiesArbitrary @UpdateStmt
+  itParses @UpdateStmt "update foo as set set x = 1"
+  itRejects @UpdateStmt "update foo set set x = 1"
