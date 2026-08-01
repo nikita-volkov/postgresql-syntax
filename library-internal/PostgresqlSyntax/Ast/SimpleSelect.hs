@@ -136,15 +136,21 @@ instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, Selec
 
   -- ==== The precedence fold
   --
-  -- @absorbIntersect@ absorbs a maximal leading run of @INTERSECT@ items
-  -- into its left operand (left-associative, since @INTERSECT@ binds
-  -- tighter than everything else here) and returns whatever's left,
-  -- starting at the next @UNION@\/@EXCEPT@ (or the end of the chain).
-  -- @go@ then repeats: apply the pending low-precedence item (letting its
-  -- own right-hand side absorb its own leading @INTERSECT@ run first),
-  -- and either finish (if nothing's left — the whole point of ending on
-  -- 'applyExtension' rather than 'embed' is that the final combination
-  -- must be the returned @ext@, not re-wrapped as @base@) or continue.
+  -- @go@ applies items to the accumulator one at a time, left to right —
+  -- which by itself is already left-associative for a run of same-operator
+  -- items, INTERSECT included. What needs help is a /low-precedence/ item
+  -- (@UNION@\/@EXCEPT@) immediately followed by @INTERSECT@ items: those
+  -- bind tighter, so they must combine into that item's right operand
+  -- before @go@ applies it, not become separate steps of @go@'s own fold.
+  -- @absorbIntersect@ does exactly that — and only that: it leaves an
+  -- @INTERSECT@ item itself untouched (its rest is handled by @go@'s next
+  -- iteration, one item at a time), and otherwise absorbs a maximal
+  -- trailing run of @INTERSECT@ items into the current item's right
+  -- operand. @go@ then continues from whatever @absorbIntersect@ left
+  -- unconsumed, and either finishes (if nothing's left — the whole point
+  -- of ending on 'applyExtension' rather than 'embed' is that the final
+  -- combination must be the returned @ext@, not re-wrapped as @base@) or
+  -- continues.
   foldExtensions base (i0 :| is0) = go base i0 is0
     where
       go acc item rest =
@@ -153,6 +159,7 @@ instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, Selec
               [] -> applyExtension acc absorbedItem
               item' : rest'' -> go (embed (applyExtension acc absorbedItem)) item' rest''
 
+      absorbIntersect item@(IntersectSelectBinOp, _, _) rest = (item, rest)
       absorbIntersect (op, distinct, rhs) ((IntersectSelectBinOp, d, rhs') : rest) =
         absorbIntersect (op, distinct, SimpleSelectSelectClause (BinSimpleSelect IntersectSelectBinOp rhs d rhs')) rest
       absorbIntersect item rest = (item, rest)

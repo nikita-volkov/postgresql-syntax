@@ -35,6 +35,12 @@ precedenceSpec = do
   it "a UNION b INTERSECT c is a UNION (b INTERSECT c)"
     $ parse mempty "TABLE a UNION TABLE b INTERSECT TABLE c"
     `shouldBe` Right (bin UnionSelectBinOp (table "a") (bin IntersectSelectBinOp (table "b") (table "c")))
+  it "a INTERSECT b INTERSECT c nests left, not right (issue #34)"
+    $ parse mempty "TABLE a INTERSECT TABLE b INTERSECT TABLE c"
+    `shouldBe` Right (bin IntersectSelectBinOp (bin IntersectSelectBinOp (table "a") (table "b")) (table "c"))
+  it "a INTERSECT b INTERSECT c INTERSECT d nests fully left (issue #34)"
+    $ parse mempty "TABLE a INTERSECT TABLE b INTERSECT TABLE c INTERSECT TABLE d"
+    `shouldBe` Right (bin IntersectSelectBinOp (bin IntersectSelectBinOp (bin IntersectSelectBinOp (table "a") (table "b")) (table "c")) (table "d"))
   where
     table name = TableSimpleSelect (SimpleRelationExpr (SimpleQualifiedName (UnquotedIdent name)) False)
     bin op lhs rhs = BinSimpleSelect op (SimpleSelectSelectClause lhs) Nothing (SimpleSelectSelectClause rhs)
