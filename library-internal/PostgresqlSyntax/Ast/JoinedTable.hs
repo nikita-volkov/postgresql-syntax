@@ -1,10 +1,17 @@
-module PostgresqlSyntax.Ast.JoinedTable where
+module PostgresqlSyntax.Ast.JoinedTable
+  ( JoinedTable (..),
+    inParensJoinedTable,
+  )
+where
 
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.JoinMeth
-import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef, joinedTableParser, renderJoinedTable)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
+import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
+import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.Prelude
+import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -29,21 +36,34 @@ data JoinedTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
--- Delegates to 'PostgresqlSyntax.Ast.TableRef.renderJoinedTable'\/
--- 'PostgresqlSyntax.Ast.TableRef.joinedTableParser' rather than combining
--- 'TableRef'\'s and 'JoinMeth'\'s own instances directly: a bare @table_ref@
--- parse is greedy — it absorbs any trailing @CROSS JOIN@\/@JOIN@\/@NATURAL
--- JOIN@ continuation into itself (see 'PostgresqlSyntax.Ast.TableRef'\'s
--- @recur@) — so parsing this type's own @b@ field with the plain exported
--- 'PostgresqlSyntax.Ast.TableRef.parser' would always swallow the @a@\/@c@
--- that's meant to follow it, and 'JoinMeth'\'s own renderer places a
--- 'PostgresqlSyntax.Ast.JoinQual' immediately after the @JOIN@ keyword
--- rather than after @c@ (see its own doc for why). 'TableRef' is the only
--- module with both this type and 'TableRef' in scope non-abstractly at
--- once, so it hosts the one correct, round-trippable implementation.
+-- Rendering combines 'TableRef'\'s and 'JoinMeth'\'s constructors directly
+-- rather than delegating to either's own 'IsAst' instance: 'JoinMeth'\'s own
+-- renderer places a 'PostgresqlSyntax.Ast.JoinQual' immediately after the
+-- @JOIN@ keyword rather than after the right operand (see its own doc for
+-- why), so it isn't what belongs here.
+--
+-- Parsing delegates to 'PostgresqlSyntax.Algebra.parseExtended' over the
+-- 'PostgresqlSyntax.Algebra.LeftRecursion' instance hosted in
+-- "PostgresqlSyntax.Ast.TableRef" (see its own doc) — a bare @table_ref@
+-- parse is greedy, absorbing any trailing @CROSS JOIN@\/@JOIN@\/@NATURAL
+-- JOIN@ continuation into itself, so a @joined_table@ is never reachable
+-- as a bare, zero-extension 'TableRef'; it always needs at least one.
 instance IsAst JoinedTable where
-  toTextBuilder = renderJoinedTable
-  parser = joinedTableParser
+  toTextBuilder settings = \case
+    InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
+    MethJoinedTable a b c -> case a of
+      CrossJoinMeth -> toTextBuilder settings b <> " CROSS JOIN " <> toTextBuilder settings c
+      QualJoinMeth d e -> toTextBuilder settings b <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> toTextBuilder settings c <> " " <> toTextBuilder settings e
+      NaturalJoinMeth d -> toTextBuilder settings b <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> toTextBuilder settings c
+
+  parser settings = parseExtended @TableRef settings <|> inParensJoinedTable settings
+
+-- ==== References
+-- @
+--   | '(' joined_table ')'
+-- @
+inParensJoinedTable :: Settings -> Parser JoinedTable
+inParensJoinedTable settings = InParensJoinedTable <$> Parsers.inParens (parser settings)
 
 instance Qc.Arbitrary JoinedTable where
   shrink = Qc.genericShrink

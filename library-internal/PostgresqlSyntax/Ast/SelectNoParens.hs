@@ -9,7 +9,7 @@ import PostgresqlSyntax.Ast.ForLockingClause
 import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.SelectLimit
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import {-# SOURCE #-} qualified PostgresqlSyntax.Ast.SimpleSelect as SimpleSelect
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect ()
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
@@ -54,12 +54,14 @@ instance IsAst SelectNoParens where
         Parsers.space1
         sharedSelectNoParens settings (Just with)
 
+-- |
+-- Parses the @select_clause@ (see
+-- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'LeftRecursion' instance for the
+-- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining grammar) plus everything that can
+-- follow it.
 sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
-sharedSelectNoParens settings with = SimpleSelect.selectClauseBase settings >>= selectNoParensAfterClauseParser settings with
-
-selectNoParensAfterClauseParser :: Settings -> Maybe WithClause -> SelectClause -> Parser SelectNoParens
-selectNoParensAfterClauseParser settings with clauseBase = do
-  select <- SimpleSelect.extendSelectClause settings clauseBase
+sharedSelectNoParens settings with = do
+  select <- parseLeftRecursive @SelectClause settings
   sort <- optional (Parsers.space1 *> parser settings)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)

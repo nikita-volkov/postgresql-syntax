@@ -1,7 +1,5 @@
 module PostgresqlSyntax.Ast.SimpleSelect
   ( SimpleSelect (..),
-    selectClauseBase,
-    extendSelectClause,
   )
 where
 
@@ -24,7 +22,6 @@ import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
-import qualified Text.Megaparsec as Megaparsec
 
 -- |
 -- ==== References
@@ -70,25 +67,22 @@ instance IsAst SimpleSelect where
     ValuesSimpleSelect a -> toTextBuilder settings a
     TableSimpleSelect a -> "TABLE " <> toTextBuilder settings a
     BinSimpleSelect a b c d -> toTextBuilder settings b <> " " <> toTextBuilder settings a <> foldMap (mappend " " . TextBuilders.renderAllOrDistinct) c <> " " <> toTextBuilder settings d
-  parser settings = do
-    a <- baseSimpleSelect settings <|> Parser.parse (Megaparsec.try (Parser.toParsec withParensHead))
-    extendMany suffix a
-    where
-      suffix headSimpleSelect = binopExtension (SimpleSelectSelectClause headSimpleSelect)
-      withParensHead = do
-        swp <- parser settings
-        binopExtension (WithParensSelectClause swp)
-      binopExtension headClause = do
-        op <- Parsers.space1 *> parser settings <* Parsers.space1
-        Parser.endHead
-        distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
-        rhs <- selectClauseBase settings >>= extendSelectClause settings
-        return (BinSimpleSelect op headClause distinct rhs)
+
+  -- ==== Law
+  --
+  -- @parser = parseExtended \@SelectClause \<|\> baseSimpleSelect@ — a bare
+  -- 'SimpleSelect' is either a @select_clause@ chain of at least one
+  -- @UNION@\/@INTERSECT@\/@EXCEPT@ (see 'LeftRecursion' below), or, failing
+  -- that (no continuation follows), one of the non-chain base cases; it's
+  -- never a bare, zero-extension @select_clause@ (that's not a
+  -- 'SimpleSelect' at all — see 'SelectClause'). The chain alternative has
+  -- to come first: trying 'baseSimpleSelect' alone would succeed on just
+  -- the head of a chain and never look for what follows.
+  parser settings = parseExtended @SelectClause settings <|> baseSimpleSelect settings
 
 -- |
 -- The non-recursive base cases only (no @select_clause BINOP
--- select_clause@ extension) — see this module's own boot-exposed
--- signature.
+-- select_clause@ extension).
 baseSimpleSelect :: Settings -> Parser SimpleSelect
 baseSimpleSelect settings =
   asum
@@ -112,23 +106,59 @@ baseSimpleSelect settings =
       ValuesSimpleSelect <$> parser settings
     ]
 
-selectClauseBase :: Settings -> Parser SelectClause
-selectClauseBase settings =
-  asum
-    [ WithParensSelectClause <$> parser settings,
-      SimpleSelectSelectClause <$> baseSimpleSelect settings
-    ]
+-- |
+-- The left-recursion-eliminated form of @select_clause@: a bare
+-- 'SelectClause' (either a parenthesized select, or one of
+-- 'baseSimpleSelect'\'s non-chain cases) is the non-recursive base (@β@),
+-- and each @UNION@\/@INTERSECT@\/@EXCEPT@ continuation (@α@) is a
+-- 'SelectBinOp' plus its @ALL@\/@DISTINCT@ qualifier and right operand,
+-- applied via 'BinSimpleSelect'.
+--
+-- 'foldExtensions' is overridden because, unlike
+-- "PostgresqlSyntax.Ast.TableRef"\'s join chain, this hub's items aren't
+-- all one precedence level: @gram.y@ declares @%left UNION EXCEPT@ before
+-- (i.e. binding looser than) @%left INTERSECT@ (gram.y:813-814), both
+-- left-associative. The default fold (uniform left-association) would
+-- root @a INTERSECT b UNION c@ at @INTERSECT@ and nest @a EXCEPT b EXCEPT
+-- c@ to the right — both wrong.
+instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, SelectClause) where
+  nonRecursiveBase settings =
+    asum
+      [ WithParensSelectClause <$> parser settings,
+        SimpleSelectSelectClause <$> baseSimpleSelect settings
+      ]
 
-extendSelectClause :: Settings -> SelectClause -> Parser SelectClause
-extendSelectClause settings = extendMany suffix
-  where
-    suffix headSelectClause = SimpleSelectSelectClause <$> extensionSimpleSelect headSelectClause
-    extensionSimpleSelect headSelectClause = do
-      op <- Parsers.space1 *> parser settings <* Parsers.space1
-      Parser.endHead
-      distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
-      rhs <- selectClauseBase settings >>= extendSelectClause settings
-      return (BinSimpleSelect op headSelectClause distinct rhs)
+  extension settings = do
+    op <- Parsers.space1 *> parser settings <* Parsers.space1
+    Parser.endHead
+    distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
+    rhs <- nonRecursiveBase @SelectClause settings
+    return (op, distinct, rhs)
+
+  applyExtension lhs (op, distinct, rhs) = BinSimpleSelect op lhs distinct rhs
+
+  -- ==== The precedence fold
+  --
+  -- @absorbIntersect@ absorbs a maximal leading run of @INTERSECT@ items
+  -- into its left operand (left-associative, since @INTERSECT@ binds
+  -- tighter than everything else here) and returns whatever's left,
+  -- starting at the next @UNION@\/@EXCEPT@ (or the end of the chain).
+  -- @go@ then repeats: apply the pending low-precedence item (letting its
+  -- own right-hand side absorb its own leading @INTERSECT@ run first),
+  -- and either finish (if nothing's left — the whole point of ending on
+  -- 'applyExtension' rather than 'embed' is that the final combination
+  -- must be the returned @ext@, not re-wrapped as @base@) or continue.
+  foldExtensions base (i0 :| is0) = go base i0 is0
+    where
+      go acc item rest =
+        let (absorbedItem, rest') = absorbIntersect item rest
+         in case rest' of
+              [] -> applyExtension acc absorbedItem
+              item' : rest'' -> go (embed (applyExtension acc absorbedItem)) item' rest''
+
+      absorbIntersect (op, distinct, rhs) ((IntersectSelectBinOp, d, rhs') : rest) =
+        absorbIntersect (op, distinct, SimpleSelectSelectClause (BinSimpleSelect IntersectSelectBinOp rhs d rhs')) rest
+      absorbIntersect item rest = (item, rest)
 
 instance Qc.Arbitrary SimpleSelect where
   shrink = fmap canonicalize . Qc.genericShrink
@@ -155,29 +185,31 @@ instance Qc.Arbitrary SimpleSelect where
         )
 
 -- |
--- Collapses a left-associated @BinSimpleSelect@ chain (@(a OP1 b) OP2
--- c@) to the right-associated shape (@a OP1 (b OP2 c)@) that the parser
--- actually produces: 'parser' above parses each operator's right-hand
--- side via 'extendSelectClause', which itself greedily consumes the rest
--- of the chain before returning — so a chain of @N@ operators nests
--- entirely to the right, and only that shape is reachable by parsing the
--- rendered text (both shapes render identically, since rendering doesn't
--- parenthesize chain elements). Both 'arbitrary' and 'shrink' can
--- otherwise construct the non-canonical shape, which renders fine but
--- parses back to a different, canonical value and so breaks the
--- roundtrip property.
+-- Collapses an arbitrary-shaped @BinSimpleSelect@ chain to the shape
+-- 'foldExtensions' actually produces for it (left-associated within each
+-- precedence level, @INTERSECT@ binding tighter than @UNION@\/@EXCEPT@ —
+-- see the 'LeftRecursion' instance above): 'flattenChain' reduces the
+-- chain to its flat sequence of operators and operands regardless of how
+-- it's currently nested, and re-folding that sequence with the same
+-- 'foldExtensions' the parser itself uses is by construction the shape
+-- @parse . toText@ produces. Both 'arbitrary' and 'shrink' can otherwise
+-- construct a non-canonical shape, which renders fine but parses back to
+-- a different, canonical value and so breaks the roundtrip property.
 instance Canonicalizes SimpleSelect where
   canonicalize s@(BinSimpleSelect {}) =
-    case rest of
-      (op, distinct, next) : more -> BinSimpleSelect op headClause distinct (buildRight next more)
-      [] -> s
-    where
-      (headClause, rest) = flattenChain (SimpleSelectSelectClause s)
-      buildRight lastClause [] = lastClause
-      buildRight clause ((op, distinct, next) : more) = SimpleSelectSelectClause (BinSimpleSelect op clause distinct (buildRight next more))
-      flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
-        let (lhsHead, lhsRest) = flattenChain lhs
-            (rhsHead, rhsRest) = flattenChain rhs
-         in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
-      flattenChain c = (c, [])
+    case flattenChain (SimpleSelectSelectClause s) of
+      (headClause, i : is) -> foldExtensions headClause (i :| is)
+      (_, []) -> s
   canonicalize other = other
+
+-- |
+-- Reduces a @BinSimpleSelect@ chain, in whatever shape it's currently
+-- nested, to its leading operand and the flat, left-to-right sequence of
+-- @(op, distinct, operand)@ items that follow it — the inverse of
+-- 'foldExtensions'.
+flattenChain :: SelectClause -> (SelectClause, [(SelectBinOp, Maybe Bool, SelectClause)])
+flattenChain (SimpleSelectSelectClause (BinSimpleSelect op lhs distinct rhs)) =
+  let (lhsHead, lhsRest) = flattenChain lhs
+      (rhsHead, rhsRest) = flattenChain rhs
+   in (lhsHead, lhsRest <> [(op, distinct, rhsHead)] <> rhsRest)
+flattenChain c = (c, [])

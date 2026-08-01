@@ -1,3 +1,13 @@
+# Upcoming
+
+## Breaking
+
+- Fixed the parsed tree shape of `UNION`/`INTERSECT`/`EXCEPT` chains to match Postgres's actual associativity and precedence (`gram.y`'s `%left UNION EXCEPT` / `%left INTERSECT`, INTERSECT binding tighter): `a EXCEPT b EXCEPT c` now nests left instead of right, and `a INTERSECT b UNION c` now roots at `UNION` instead of `INTERSECT`. Rendered text is unaffected; only `SimpleSelect`'s parsed/canonical tree shape for such chains changes (#30).
+
+## Non-breaking
+
+- `TableRef.hs` and `FuncApplicationParams.hs` now have explicit export lists, exporting only their types and instances (#30).
+
 # v0.5.0.1
 
 ## Fixes

@@ -1,9 +1,9 @@
 module PostgresqlSyntax.Ast.SimpleSelect where
 
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectClause (SelectClause)
-import PostgresqlSyntax.Algebra (IsAst)
-import PostgresqlSyntax.Prelude (Data, Eq, Ord, Parser, Show)
-import PostgresqlSyntax.Settings (Settings)
+import PostgresqlSyntax.Algebra (IsAst, LeftRecursion)
+import PostgresqlSyntax.Ast.SelectBinOp (SelectBinOp)
+import PostgresqlSyntax.Prelude (Bool, Data, Eq, Maybe, Ord, Show)
 import Test.QuickCheck (Arbitrary)
 
 data SimpleSelect
@@ -20,6 +20,4 @@ instance IsAst SimpleSelect
 
 instance Arbitrary SimpleSelect
 
-selectClauseBase :: Settings -> Parser SelectClause
-
-extendSelectClause :: Settings -> SelectClause -> Parser SelectClause
+instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, SelectClause)

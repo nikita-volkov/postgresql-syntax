@@ -11,10 +11,15 @@ module PostgresqlSyntax.Algebra
     canonicalizesProperties,
     Refines (..),
     refinesProperties,
+    LeftRecursion (..),
+    leftRecursionProperties,
+    parseLeftRecursive,
+    parseExtended,
   )
 where
 
 import qualified Data.Text as Text
+import qualified HeadedMegaparsec as Parser
 import qualified PostgresqlSyntax.Extras.HeadedMegaparsec as Extras
 import PostgresqlSyntax.Prelude
 import PostgresqlSyntax.Settings (Settings)
@@ -134,3 +139,107 @@ refinesProperties =
         project (embed a :: sup) Qc.=== Just a
     )
   ]
+
+-- |
+-- The two halves of a left-recursive grammar production, split apart by
+-- left-recursion elimination (@A -> Aα | β@ becomes @A -> β α*@): 'base' is
+-- @A@, 'ext' is what a fully-applied @α@ produces, and 'item' is a single
+-- @α@ with its left operand removed (since that operand is supplied
+-- externally, by whatever's folding the chain).
+--
+-- Laws:
+--
+-- * __Base-parser agreement__: @parser \@base = parseLeftRecursive \@base@
+-- * __Left fold__: 'foldExtensions'\'s default applies its first item
+--   to 'base', then folds every remaining item onto that result via
+--   'embed' — the first item is applied innermost.
+class (Refines ext base) => LeftRecursion base ext item | base -> ext item where
+  -- | Parse the non-recursive base case only (@β@).
+  nonRecursiveBase :: Settings -> Parser base
+
+  -- | Parse a single @α@, minus the left operand it would apply to.
+  extension :: Settings -> Parser item
+
+  -- | Apply one parsed 'item' to a left operand.
+  applyExtension :: base -> item -> ext
+
+  -- | Fold a chain of one or more parsed items onto a base. Overridden
+  -- where a hub's items aren't all the same precedence (see
+  -- "PostgresqlSyntax.Ast.SimpleSelect").
+  foldExtensions :: base -> NonEmpty item -> ext
+  foldExtensions b (i :| is) = foldl' (\acc j -> applyExtension @base @ext @item (embed acc) j) (applyExtension b i) is
+
+-- |
+-- 'Qc.Property'-checkers for 'LeftRecursion'\'s documented laws, keyed by
+-- name. \"Base-parser agreement\" is compared up to whether parsing
+-- succeeds, ignoring error message text, since a base's 'parser' may wrap
+-- 'parseLeftRecursive' in a 'HeadedMegaparsec.label' or similar that changes
+-- failure messages without changing what's accepted.
+leftRecursionProperties :: forall base ext item. (LeftRecursion base ext item, IsAst base, Eq base, Show base, Qc.Arbitrary base, Eq ext, Show ext, Qc.Arbitrary item, Show item) => [(String, Qc.Property)]
+leftRecursionProperties =
+  [ ( "Base-parser agreement",
+      Qc.property $ \(a :: base) ->
+        let sql = toText mempty a
+            run p = first (const ()) (Extras.run (Extras.totally p) sql)
+         in run (parser @base mempty) Qc.=== run (parseLeftRecursive @base @ext @item mempty)
+    ),
+    ( "Left fold",
+      Qc.property $ \(b :: base) (i :: item) (is :: [item]) ->
+        foldExtensions @base @ext @item b (i :| is)
+          Qc.=== foldl' (\acc j -> applyExtension @base @ext @item (embed acc) j) (applyExtension b i) is
+    )
+  ]
+
+-- |
+-- Parses zero or more 'extension's onto a 'nonRecursiveBase', folding them
+-- via 'foldExtensions'. This is what @A -> β α*@ (the whole of @A@) means
+-- as a parser.
+parseLeftRecursive :: forall base ext item. (LeftRecursion base ext item) => Settings -> Parser base
+parseLeftRecursive settings = do
+  b <- nonRecursiveBase @base @ext @item settings
+  optional (parseItems @base @ext @item settings) >>= \case
+    Nothing -> pure b
+    Just items -> pure (embed (foldExtensions b items))
+
+-- |
+-- Like 'parseLeftRecursive', but requires at least one 'extension' to
+-- follow the base, and so returns the fully-applied 'ext' type directly
+-- rather than 'base'. This is what a bare @α*@ (one or more) means as a
+-- parser, for hubs where a chain of at least one extension is itself the
+-- interesting type (e.g. a @joined_table@, which is never a bare
+-- @table_ref@ with zero joins).
+--
+-- Unlike 'parseLeftRecursive', 'nonRecursiveBase' here is wrapped in
+-- 'Parser.wrapToHead'. Without it, if 'nonRecursiveBase' itself commits
+-- past an internal 'Parser.endHead' (e.g. by matching a nested,
+-- fully-parenthesized instance of the very thing this function's caller
+-- is one alternative for), that commitment silently swallows the
+-- immediately-following "is there at least one extension?" check: a
+-- missing extension would fail as a hard, uncatchable error instead of a
+-- clean one this function's own caller can backtrack from. 'wrapToHead'
+-- resets that, forcing the check to fail cleanly. 'parseLeftRecursive'
+-- doesn't need this: its own extension check already goes through
+-- 'optional', which independently wraps in 'Megaparsec.try' regardless of
+-- what 'nonRecursiveBase' committed to.
+parseExtended :: forall base ext item. (LeftRecursion base ext item) => Settings -> Parser ext
+parseExtended settings = do
+  b <- Parser.wrapToHead (nonRecursiveBase @base @ext @item settings)
+  items <- parseItems @base @ext @item settings
+  pure (foldExtensions b items)
+
+-- |
+-- Parses one or more 'extension's back-to-back, wrapping each in
+-- 'Parser.wrapToHead'\/'Parser.endHead' so that, once an extension's own
+-- head has matched, backtracking out of the whole chain (back to "there
+-- are no more extensions") is no longer attempted — matching the
+-- hand-written recursive-descent loops this replaces.
+parseItems :: forall base ext item. (LeftRecursion base ext item) => Settings -> Parser (NonEmpty item)
+parseItems settings = go
+  where
+    go = do
+      i <- Parser.wrapToHead (extension @base @ext @item settings)
+      Parser.endHead
+      rest <- optional go
+      pure $ case rest of
+        Nothing -> i :| []
+        Just (j :| js) -> i :| j : js

@@ -1,4 +1,7 @@
-module PostgresqlSyntax.Ast.FuncApplicationParams where
+module PostgresqlSyntax.Ast.FuncApplicationParams
+  ( FuncApplicationParams (..),
+  )
+where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra

@@ -31,11 +31,27 @@ instance IsAst SelectClause where
   toTextBuilder settings = \case
     SimpleSelectSelectClause a -> toTextBuilder settings a
     WithParensSelectClause a -> toTextBuilder settings a
-  parser settings =
-    SimpleSelectSelectClause
-      <$> parser settings
-        <|> WithParensSelectClause
-      <$> parser settings
+
+  -- ==== Law
+  --
+  -- @parser = parseLeftRecursive \@SelectClause@ — see
+  -- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'PostgresqlSyntax.Algebra.LeftRecursion'
+  -- instance for the real @select_clause@ grammar, including
+  -- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining.
+  parser settings = parseLeftRecursive @SelectClause settings
+
+-- |
+-- A 'SimpleSelect' embeds trivially into a 'SelectClause' (it's one of its
+-- two alternatives), and a 'SelectClause' of that exact shape is
+-- recognizable back as one. Needed so
+-- "PostgresqlSyntax.Ast.SimpleSelect"\'s
+-- 'PostgresqlSyntax.Algebra.LeftRecursion' instance can fold a chain of
+-- @UNION@\/@INTERSECT@\/@EXCEPT@ items onto a leading 'SelectClause'.
+instance Refines SimpleSelect SelectClause where
+  embed = SimpleSelectSelectClause
+  project = \case
+    SimpleSelectSelectClause a -> Just a
+    _ -> Nothing
 
 instance Qc.Arbitrary SelectClause where
   shrink = Qc.genericShrink

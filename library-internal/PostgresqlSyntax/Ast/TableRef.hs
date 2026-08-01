@@ -1,4 +1,7 @@
-module PostgresqlSyntax.Ast.TableRef where
+module PostgresqlSyntax.Ast.TableRef
+  ( TableRef (..),
+  )
+where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
@@ -69,72 +72,97 @@ data TableRef
   deriving (Show, Generic, Eq, Ord, Data)
 
 instance IsAst TableRef where
-  toTextBuilder settings = renderTableRef settings
+  toTextBuilder settings = \case
+    RelationExprTableRef a b c ->
+      TextBuilders.optLexemes
+        [ Just (toTextBuilder settings a),
+          fmap (toTextBuilder settings) b,
+          fmap (toTextBuilder settings) c
+        ]
+    FuncTableRef a b c ->
+      TextBuilders.optLexemes
+        [ if a then Just "LATERAL" else Nothing,
+          Just (toTextBuilder settings b),
+          fmap (toTextBuilder settings) c
+        ]
+    SelectTableRef a b c ->
+      TextBuilders.optLexemes
+        [ if a then Just "LATERAL" else Nothing,
+          Just (toTextBuilder settings b),
+          fmap (toTextBuilder settings) c
+        ]
+    JoinTableRef a b -> case b of
+      Just c -> TextBuilders.renderInParens (toTextBuilder settings a) <> " " <> toTextBuilder settings c
+      Nothing -> toTextBuilder settings a
 
-  parser settings =
-    Parser.label "table reference" $
-      do
-        tr <- nonTrailingTableRef settings
-        recur settings tr
-
--- |
--- Renders a 'TableRef'. Also used, via 'renderJoinedTable', by
--- "PostgresqlSyntax.Ast.JoinedTable"\'s own 'IsAst' instance — see the doc
--- there for why that module doesn't maintain its own copy of this logic.
-renderTableRef :: Settings -> TableRef -> TextBuilder
-renderTableRef settings = \case
-  RelationExprTableRef a b c ->
-    TextBuilders.optLexemes
-      [ Just (toTextBuilder settings a),
-        fmap (toTextBuilder settings) b,
-        fmap (toTextBuilder settings) c
-      ]
-  FuncTableRef a b c ->
-    TextBuilders.optLexemes
-      [ if a then Just "LATERAL" else Nothing,
-        Just (toTextBuilder settings b),
-        fmap (toTextBuilder settings) c
-      ]
-  SelectTableRef a b c ->
-    TextBuilders.optLexemes
-      [ if a then Just "LATERAL" else Nothing,
-        Just (toTextBuilder settings b),
-        fmap (toTextBuilder settings) c
-      ]
-  JoinTableRef a b -> case b of
-    Just c -> TextBuilders.renderInParens (renderJoinedTable settings a) <> " " <> toTextBuilder settings c
-    Nothing -> renderJoinedTable settings a
+  parser settings = Parser.label "table reference" (parseLeftRecursive settings)
 
 -- |
--- Renders a 'PostgresqlSyntax.Ast.JoinedTable.JoinedTable'. This — not
--- "PostgresqlSyntax.Ast.JoinedTable"\'s own 'IsAst' instance — is what
--- actually gets used whenever a joined table is rendered as part of a
--- 'TableRef', since a @table_ref@ and a @joined_table@ are genuinely
--- mutually recursive (a @table_ref@ can be a @joined_table@, and a
--- @joined_table@'s branches each embed two @table_ref@s), and only this
--- module has both in scope non-abstractly at once. Exposed via the
--- 'PostgresqlSyntax.Ast.TableRef.hs-boot' so
--- "PostgresqlSyntax.Ast.JoinedTable" can delegate its own 'IsAst' instance
--- to it, rather than maintaining a second, subtly different copy — see the
--- doc on 'PostgresqlSyntax.Ast.JoinMeth' for why 'JoinMeth'\'s own instance
--- still needs to differ from this one.
-renderJoinedTable :: Settings -> JoinedTable -> TextBuilder
-renderJoinedTable settings = \case
-  InParensJoinedTable a -> TextBuilders.renderInParens (renderJoinedTable settings a)
-  MethJoinedTable a b c -> case a of
-    CrossJoinMeth -> renderTableRef settings b <> " CROSS JOIN " <> renderTableRef settings c
-    QualJoinMeth d e -> renderTableRef settings b <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> renderTableRef settings c <> " " <> toTextBuilder settings e
-    NaturalJoinMeth d -> renderTableRef settings b <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> renderTableRef settings c
+-- 'PostgresqlSyntax.Ast.JoinedTable' embeds trivially into a bare,
+-- alias-less 'TableRef' (@joined_table@ is one of @table_ref@'s
+-- alternatives), and a 'TableRef' of that exact shape is recognizable back
+-- as one. See 'PostgresqlSyntax.Algebra.LeftRecursion' for how this is
+-- used to fold a chain of joins onto a leading 'TableRef'.
+instance Refines JoinedTable TableRef where
+  embed a = JoinTableRef a Nothing
+  project = \case
+    JoinTableRef a Nothing -> Just a
+    _ -> Nothing
 
-recur :: Settings -> TableRef -> Parser TableRef
-recur settings tr =
-  asum
-    [ do
-        tr2 <- Parser.wrapToHead (Parsers.space1 *> trailingTableRef settings tr)
-        Parser.endHead
-        recur settings tr2,
-      pure tr
-    ]
+-- |
+-- The left-recursion-eliminated form of @table_ref@\/@joined_table@: a
+-- 'TableRef' is the non-recursive base (@β@, 'nonTrailingTableRef'), and a
+-- @joined_table@ continuation (@α@) is a 'JoinMeth' plus its right
+-- operand, applied via 'MethJoinedTable'. All three join kinds sit at the
+-- same precedence (@%left JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL@ in
+-- @gram.y@), so the default left fold is exactly right — unlike
+-- "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
+-- 'PostgresqlSyntax.Algebra.foldExtensions'.
+instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
+  nonRecursiveBase = nonTrailingTableRef
+
+  -- ==== References
+  -- @
+  --   | table_ref CROSS JOIN table_ref
+  --   | table_ref join_type JOIN table_ref join_qual
+  --   | table_ref JOIN table_ref join_qual
+  --   | table_ref NATURAL join_type JOIN table_ref
+  --   | table_ref NATURAL JOIN table_ref
+  -- @
+  extension settings =
+    Parsers.space1
+      *> asum
+        [ do
+            Parsers.keyphrase "cross join"
+            Parser.endHead
+            Parsers.space1
+            tr2 <- nonTrailingTableRef settings
+            return (CrossJoinMeth, tr2),
+          do
+            jt <- joinTypedJoin
+            Parser.endHead
+            Parsers.space1
+            tr2 <- parser settings
+            Parsers.space1
+            jq <- parser settings
+            return (QualJoinMeth jt jq, tr2),
+          do
+            Parsers.keyword "natural"
+            Parser.endHead
+            Parsers.space1
+            jt <- joinTypedJoin
+            Parsers.space1
+            tr2 <- nonTrailingTableRef settings
+            return (NaturalJoinMeth jt, tr2)
+        ]
+    where
+      joinTypedJoin =
+        Just
+          <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
+            <|> Nothing
+          <$ Parsers.keyword "join"
+
+  applyExtension tr1 (joinMeth, tr2) = MethJoinedTable joinMeth tr1 tr2
 
 nonTrailingTableRef :: Settings -> Parser TableRef
 nonTrailingTableRef settings =
@@ -166,89 +194,10 @@ nonTrailingTableRef settings =
         ]
     inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable settings <*> pure Nothing
     joinedTableWithAliasTableRef = do
-      jt <- Parser.wrapToHead (Parsers.inParens (joinedTableParser settings))
+      jt <- Parser.wrapToHead (Parsers.inParens (parser settings))
       Parsers.space1
       alias <- parser settings
       return (JoinTableRef jt (Just alias))
-
-trailingTableRef :: Settings -> TableRef -> Parser TableRef
-trailingTableRef settings tableRef =
-  JoinTableRef <$> trailingJoinedTable settings tableRef <*> pure Nothing
-
--- |
--- Parses a 'PostgresqlSyntax.Ast.JoinedTable.JoinedTable'. See
--- 'renderJoinedTable' for why this — not
--- "PostgresqlSyntax.Ast.JoinedTable"\'s own 'IsAst' instance — is what
--- actually gets used to parse a joined table wherever one can occur inside a
--- 'TableRef'.
-joinedTableParser :: Settings -> Parser JoinedTable
-joinedTableParser settings =
-  headP >>= tailP
-  where
-    headP =
-      asum
-        [ do
-            tr <- Parser.wrapToHead (nonTrailingTableRef settings)
-            Parsers.space1
-            trailingJoinedTable settings tr,
-          inParensJoinedTable settings
-        ]
-    tailP jt =
-      asum
-        [ do
-            jt2 <- Parser.wrapToHead (Parsers.space1 *> trailingJoinedTable settings (JoinTableRef jt Nothing))
-            Parser.endHead
-            tailP jt2,
-          pure jt
-        ]
-
--- ==== References
--- @
---   | '(' joined_table ')'
--- @
-inParensJoinedTable :: Settings -> Parser JoinedTable
-inParensJoinedTable settings = InParensJoinedTable <$> Parsers.inParens (joinedTableParser settings)
-
--- ==== References
--- @
---   | table_ref CROSS JOIN table_ref
---   | table_ref join_type JOIN table_ref join_qual
---   | table_ref JOIN table_ref join_qual
---   | table_ref NATURAL join_type JOIN table_ref
---   | table_ref NATURAL JOIN table_ref
--- @
-trailingJoinedTable :: Settings -> TableRef -> Parser JoinedTable
-trailingJoinedTable settings tr1 =
-  asum
-    [ do
-        Parsers.keyphrase "cross join"
-        Parser.endHead
-        Parsers.space1
-        tr2 <- nonTrailingTableRef settings
-        return (MethJoinedTable CrossJoinMeth tr1 tr2),
-      do
-        jt <- joinTypedJoin
-        Parser.endHead
-        Parsers.space1
-        tr2 <- parser settings
-        Parsers.space1
-        jq <- parser settings
-        return (MethJoinedTable (QualJoinMeth jt jq) tr1 tr2),
-      do
-        Parsers.keyword "natural"
-        Parser.endHead
-        Parsers.space1
-        jt <- joinTypedJoin
-        Parsers.space1
-        tr2 <- nonTrailingTableRef settings
-        return (MethJoinedTable (NaturalJoinMeth jt) tr1 tr2)
-    ]
-  where
-    joinTypedJoin =
-      Just
-        <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
-          <|> Nothing
-        <$ Parsers.keyword "join"
 
 instance Qc.Arbitrary TableRef where
   shrink = Qc.genericShrink
