@@ -1,6 +1,5 @@
 module PostgresqlSyntax.Ast.SimpleSelect
   ( SimpleSelect (..),
-    SelectChainLink,
   )
 where
 
@@ -73,13 +72,13 @@ instance IsAst SimpleSelect where
   --
   -- @parser = parseExtended \@SelectClause \<|\> baseSimpleSelect@ — a bare
   -- 'SimpleSelect' is either a @select_clause@ chain of at least one
-  -- @UNION@\/@INTERSECT@\/@EXCEPT@ (see 'LeftRecursion' below), or, failing
+  -- @UNION@\/@INTERSECT@\/@EXCEPT@ (see 'ExtendedBy' below), or, failing
   -- that (no continuation follows), one of the non-chain base cases; it's
   -- never a bare, zero-extension @select_clause@ (that's not a
   -- 'SimpleSelect' at all — see 'SelectClause'). The chain alternative has
   -- to come first: trying 'baseSimpleSelect' alone would succeed on just
   -- the head of a chain and never look for what follows.
-  parser settings = parseExtended @SelectClause settings <|> nonRecursiveParser settings
+  parser settings = parseExtended @SelectClause settings <|> parseBase settings
 
 -- |
 -- The @simple_select@ productions that don't left-recurse through
@@ -88,7 +87,7 @@ instance IsAst SimpleSelect where
 -- through this class method, which is why 'SimpleSelect' needs no helper
 -- export.
 instance LeftRecursive SimpleSelect where
-  nonRecursiveParser settings =
+  parseBase settings =
     asum
       [ do
           Parsers.keyword "select"
@@ -114,36 +113,34 @@ instance LeftRecursive SimpleSelect where
 -- The left-recursion-eliminated form of @select_clause@: a bare
 -- 'SelectClause' (either a parenthesized select, or one of
 -- 'SimpleSelect'\'s non-chain cases) is the non-recursive base (@β@),
--- and each @UNION@\/@INTERSECT@\/@EXCEPT@ continuation (@α@) is a
+-- and each @UNION@\/@INTERSECT@\/@EXCEPT@ continuation is a
 -- 'SelectBinOp' plus its @ALL@\/@DISTINCT@ qualifier and right operand,
 -- applied via 'BinSimpleSelect'.
 --
--- 'foldExtensions' is overridden because, unlike
--- "PostgresqlSyntax.Ast.TableRef"\'s join chain, this hub's items aren't
--- all one precedence level: @gram.y@ declares @%left UNION EXCEPT@ before
--- (i.e. binding looser than) @%left INTERSECT@ (gram.y:813-814), both
--- left-associative. The default fold (uniform left-association) would
+-- Keeps the collect-then-fold shape — parsing every 'SelectChainLink' up
+-- front via 'parseExtensionChain', then folding via 'foldChain' — rather
+-- than folding as it goes, because this hub's items aren't all one
+-- precedence level: @gram.y@ declares @%left UNION EXCEPT@ before (i.e.
+-- binding looser than) @%left INTERSECT@ (gram.y:813-814), both
+-- left-associative, so a uniform left-to-right fold-as-you-parse would
 -- root @a INTERSECT b UNION c@ at @INTERSECT@ and nest @a EXCEPT b EXCEPT
--- c@ to the right — both wrong.
-instance LeftRecursion SelectClause SimpleSelect SelectChainLink where
-  extension settings = do
-    op <- Parsers.space1 *> parser settings <* Parsers.space1
-    Parser.endHead
-    distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
-    rhs <- nonRecursiveParser @SelectClause settings
-    return (SelectChainLink op distinct rhs)
-
-  applyExtension lhs (SelectChainLink op distinct rhs) = BinSimpleSelect op lhs distinct rhs
-
-  foldExtensions = foldChain
+-- c@ to the right — both wrong. 'foldChain' needs the whole flat sequence
+-- in hand to sort that out; see its own docs above.
+instance ExtendedBy SelectClause SimpleSelect where
+  parseExtensions settings lhs = foldChain lhs <$> parseLinks settings
 
 -- |
 -- One @UNION@\/@INTERSECT@\/@EXCEPT@ continuation, minus the left operand
--- it applies to — the 'PostgresqlSyntax.Algebra.LeftRecursion' @item@ for
--- 'SimpleSelect', named so it stops leaking into
--- "PostgresqlSyntax.Ast.SelectClause"\'s @hs-boot@ instance head as an
--- anonymous triple.
+-- it applies to.
 data SelectChainLink = SelectChainLink SelectBinOp (Maybe Bool) SelectClause
+
+parseLinks :: Settings -> Parser (NonEmpty SelectChainLink)
+parseLinks settings = parseExtensionChain $ do
+  op <- Parsers.space1 *> parser settings <* Parsers.space1
+  Parser.endHead
+  distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
+  rhs <- parseBase @SelectClause settings
+  return (SelectChainLink op distinct rhs)
 
 -- |
 -- ==== The precedence fold
@@ -160,17 +157,19 @@ data SelectChainLink = SelectChainLink SelectBinOp (Maybe Bool) SelectClause
 -- trailing run of @INTERSECT@ items into the current item's right
 -- operand. @go@ then continues from whatever @absorbIntersect@ left
 -- unconsumed, and either finishes (if nothing's left — the whole point of
--- ending on 'applyExtension' rather than 'embed' is that the final
--- combination must be the returned @SimpleSelect@, not re-wrapped as a
--- @SelectClause@) or continues.
+-- ending on 'applyLink' rather than wrapping it back into a
+-- @SelectClause@ is that the final combination must be the returned
+-- @SimpleSelect@) or continues.
 foldChain :: SelectClause -> NonEmpty SelectChainLink -> SimpleSelect
 foldChain base (i0 :| is0) = go base i0 is0
   where
     go acc item rest =
       let (absorbedItem, rest') = absorbIntersect item rest
        in case rest' of
-            [] -> applyExtension acc absorbedItem
-            item' : rest'' -> go (embed (applyExtension acc absorbedItem)) item' rest''
+            [] -> applyLink acc absorbedItem
+            item' : rest'' -> go (SimpleSelectSelectClause (applyLink acc absorbedItem)) item' rest''
+
+    applyLink lhs (SelectChainLink op distinct rhs) = BinSimpleSelect op lhs distinct rhs
 
     absorbIntersect item@(SelectChainLink IntersectSelectBinOp _ _) rest = (item, rest)
     absorbIntersect (SelectChainLink op distinct rhs) (SelectChainLink IntersectSelectBinOp d rhs' : rest) =

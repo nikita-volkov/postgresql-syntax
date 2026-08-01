@@ -85,14 +85,14 @@ instance IsAst TableRef where
       Just c -> TextBuilders.renderInParens (toTextBuilder settings a) <> " " <> toTextBuilder settings c
       Nothing -> toTextBuilder settings a
 
-  parser settings = Parser.label "table reference" (parseLeftRecursive settings)
+  parser settings = Parser.label "table reference" (parseMaybeExtended settings)
 
 -- |
 -- 'PostgresqlSyntax.Ast.JoinedTable' embeds trivially into a bare,
 -- alias-less 'TableRef' (@joined_table@ is one of @table_ref@'s
 -- alternatives), and a 'TableRef' of that exact shape is recognizable back
--- as one. See 'PostgresqlSyntax.Algebra.LeftRecursion' for how this is
--- used to fold a chain of joins onto a leading 'TableRef'.
+-- as one. See 'PostgresqlSyntax.Algebra.ExtendedBy' for how this is used to
+-- fold a chain of joins onto a leading 'TableRef'.
 instance Refines JoinedTable TableRef where
   embed a = JoinTableRef a Nothing
   project = \case
@@ -103,15 +103,15 @@ instance Refines JoinedTable TableRef where
 -- Every @table_ref@ production except the left-recursive ones (those are
 -- the @joined_table@ continuations, hosted by
 -- "PostgresqlSyntax.Ast.JoinedTable"\'s
--- 'PostgresqlSyntax.Algebra.LeftRecursion' instance).
+-- 'PostgresqlSyntax.Algebra.ExtendedBy' instance).
 --
 -- The two @joined_table@-shaped alternatives here are /not/ left-recursive:
 -- both begin with a parenthesis, so neither can loop back into this parser
 -- without consuming input. They reach @'(' joined_table ')'@ through
--- 'JoinedTable'\'s own 'nonRecursiveParser' rather than through a
+-- 'JoinedTable'\'s own 'parseBase' rather than through a
 -- 'JoinedTable' helper export.
 instance LeftRecursive TableRef where
-  nonRecursiveParser settings =
+  parseBase settings =
     asum
       [ lateralTableRef,
         Parser.wrapToHead nonLateralTableRef,
@@ -143,7 +143,7 @@ instance LeftRecursive TableRef where
               optAliasClause <- optional $ Parsers.space1 *> parser settings
               return (SelectTableRef lateral select optAliasClause)
           ]
-      inParensJoinedTableTableRef = JoinTableRef <$> nonRecursiveParser @JoinedTable settings <*> pure Nothing
+      inParensJoinedTableTableRef = JoinTableRef <$> parseBase @JoinedTable settings <*> pure Nothing
       joinedTableWithAliasTableRef = do
         jt <- Parser.wrapToHead (Parsers.inParens (parser settings))
         Parsers.space1

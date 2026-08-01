@@ -34,22 +34,22 @@ instance IsAst SelectClause where
 
   -- ==== Law
   --
-  -- @parser = parseLeftRecursive \@SelectClause@ — see
-  -- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'PostgresqlSyntax.Algebra.LeftRecursion'
+  -- @parser = parseMaybeExtended \@SelectClause@ — see
+  -- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'PostgresqlSyntax.Algebra.ExtendedBy'
   -- instance for the real @select_clause@ grammar, including
   -- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining.
-  parser settings = parseLeftRecursive @SelectClause settings
+  parser settings = parseMaybeExtended @SelectClause settings
 
 -- |
 -- Every @select_clause@ production except the left-recursive ones (those
 -- are the @UNION@\/@INTERSECT@\/@EXCEPT@ continuations, hosted by
 -- "PostgresqlSyntax.Ast.SimpleSelect"\'s
--- 'PostgresqlSyntax.Algebra.LeftRecursion' instance).
+-- 'PostgresqlSyntax.Algebra.ExtendedBy' instance).
 instance LeftRecursive SelectClause where
-  nonRecursiveParser settings =
+  parseBase settings =
     asum
       [ WithParensSelectClause <$> parser settings,
-        SimpleSelectSelectClause <$> nonRecursiveParser @SimpleSelect settings
+        SimpleSelectSelectClause <$> parseBase @SimpleSelect settings
       ]
 
 -- |
@@ -57,7 +57,7 @@ instance LeftRecursive SelectClause where
 -- two alternatives), and a 'SelectClause' of that exact shape is
 -- recognizable back as one. Needed so
 -- "PostgresqlSyntax.Ast.SimpleSelect"\'s
--- 'PostgresqlSyntax.Algebra.LeftRecursion' instance can fold a chain of
+-- 'PostgresqlSyntax.Algebra.ExtendedBy' instance can fold a chain of
 -- @UNION@\/@INTERSECT@\/@EXCEPT@ items onto a leading 'SelectClause'.
 instance Refines SimpleSelect SelectClause where
   embed = SimpleSelectSelectClause

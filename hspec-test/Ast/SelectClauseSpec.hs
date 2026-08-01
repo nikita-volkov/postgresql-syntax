@@ -7,5 +7,5 @@ import Test.Hspec
 spec :: Spec
 spec = do
   itSatisfiesIsAst @SelectClause
-  itSatisfiesLeftRecursion @SelectClause @_ @_
+  itSatisfiesExtendedBy @SelectClause @_
   itSatisfiesArbitrary @SelectClause

@@ -33,13 +33,12 @@ data JoinedTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
--- Parsing delegates to 'parseExtended' over the 'LeftRecursion' instance
+-- Parsing delegates to 'parseExtended' over the 'ExtendedBy' instance
 -- below — a bare @table_ref@ parse is greedy, absorbing any trailing @CROSS
 -- JOIN@\/@JOIN@\/@NATURAL JOIN@ continuation into itself, so a
 -- @joined_table@ is never reachable as a bare, zero-extension 'TableRef';
 -- it always needs at least one. Failing that, the only remaining
--- @joined_table@ production is the non-left-recursive
--- 'nonRecursiveParser'.
+-- @joined_table@ production is the non-left-recursive 'parseBase'.
 instance IsAst JoinedTable where
   toTextBuilder settings = \case
     InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
@@ -47,7 +46,7 @@ instance IsAst JoinedTable where
     QualJoinedTable a b c d -> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c <> " " <> toTextBuilder settings d
     NaturalJoinedTable a b c -> toTextBuilder settings a <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c
 
-  parser settings = parseExtended @TableRef settings <|> nonRecursiveParser settings
+  parser settings = parseExtended @TableRef settings <|> parseBase settings
 
 -- |
 -- The one @joined_table@ production that doesn't begin with a
@@ -62,7 +61,7 @@ instance IsAst JoinedTable where
 -- through this class method, which is why 'JoinedTable' needs no helper
 -- export.
 instance LeftRecursive JoinedTable where
-  nonRecursiveParser settings = InParensJoinedTable <$> Parsers.inParens (parser settings)
+  parseBase settings = InParensJoinedTable <$> Parsers.inParens (parser settings)
 
 instance Qc.Arbitrary JoinedTable where
   shrink = Qc.genericShrink
@@ -80,26 +79,13 @@ instance Qc.Arbitrary JoinedTable where
           ]
 
 -- |
--- A 'JoinedTable' with its left operand removed — the 'item' half of the
--- 'LeftRecursion' instance below. Mirrors 'JoinedTable'\'s three
--- join-bearing constructors one-for-one, each missing its leading
--- 'TableRef'.
-data JoinedTableExtension
-  = CrossJoinedTableExtension TableRef
-  | QualJoinedTableExtension (Maybe JoinType) TableRef JoinQual
-  | NaturalJoinedTableExtension (Maybe JoinType) TableRef
-
--- |
 -- The left-recursion-eliminated form of @table_ref@\/@joined_table@: a
--- 'TableRef' is the non-recursive base (@β@, its own
--- 'nonRecursiveParser'), and a @joined_table@ continuation (@α@) is a
--- 'JoinedTableExtension' — one of 'JoinedTable'\'s three join shapes,
--- minus its left operand. All three join kinds sit at the same precedence
--- (@%left JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL@ in @gram.y@), so the
--- default left fold is exactly right — unlike
--- "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
--- 'foldExtensions'.
-instance LeftRecursion TableRef JoinedTable JoinedTableExtension where
+-- 'TableRef' is the non-recursive base (@β@, its own 'parseBase'). All
+-- three join kinds sit at the same precedence (@%left JOIN CROSS LEFT FULL
+-- RIGHT INNER_P NATURAL@ in @gram.y@), and there's nothing to hold between
+-- parsing a join and applying it, so no item type is warranted here —
+-- unlike "PostgresqlSyntax.Ast.SimpleSelect", this hub isn't collect-then-fold.
+instance ExtendedBy TableRef JoinedTable where
   -- ==== References
   -- @
   --   | table_ref CROSS JOIN table_ref
@@ -108,40 +94,47 @@ instance LeftRecursion TableRef JoinedTable JoinedTableExtension where
   --   | table_ref NATURAL join_type JOIN table_ref
   --   | table_ref NATURAL JOIN table_ref
   -- @
-  extension settings =
-    Parsers.space1
-      *> asum
-        [ do
-            Parsers.keyphrase "cross join"
-            Parser.endHead
-            Parsers.space1
-            tr2 <- nonRecursiveParser @TableRef settings
-            return (CrossJoinedTableExtension tr2),
-          do
-            jt <- joinTypedJoin
-            Parser.endHead
-            Parsers.space1
-            tr2 <- parser settings
-            Parsers.space1
-            jq <- parser settings
-            return (QualJoinedTableExtension jt tr2 jq),
-          do
-            Parsers.keyword "natural"
-            Parser.endHead
-            Parsers.space1
-            jt <- joinTypedJoin
-            Parsers.space1
-            tr2 <- nonRecursiveParser @TableRef settings
-            return (NaturalJoinedTableExtension jt tr2)
-        ]
+  --
+  -- Parses one join onto 'tr1', then recurses with the built 'JoinedTable'
+  -- (embedded back to 'TableRef') as the new left operand, falling back to
+  -- what's already built when no further join follows. The
+  -- 'Parser.wrapToHead'\/'Parser.endHead' pair around the single join
+  -- mirrors 'PostgresqlSyntax.Algebra.parseExtensionChain'\'s per-item
+  -- protocol, since this recursive shape can't build on that combinator
+  -- directly.
+  parseExtensions settings tr1 = do
+    built <- Parser.wrapToHead parseOneJoin
+    Parser.endHead
+    optional (parseExtensions @TableRef settings (embed built)) >>= pure . maybe built id
     where
+      parseOneJoin =
+        Parsers.space1
+          *> asum
+            [ do
+                Parsers.keyphrase "cross join"
+                Parser.endHead
+                Parsers.space1
+                tr2 <- parseBase @TableRef settings
+                return (CrossJoinedTable tr1 tr2),
+              do
+                jt <- joinTypedJoin
+                Parser.endHead
+                Parsers.space1
+                tr2 <- parser settings
+                Parsers.space1
+                jq <- parser settings
+                return (QualJoinedTable tr1 jt tr2 jq),
+              do
+                Parsers.keyword "natural"
+                Parser.endHead
+                Parsers.space1
+                jt <- joinTypedJoin
+                Parsers.space1
+                tr2 <- parseBase @TableRef settings
+                return (NaturalJoinedTable tr1 jt tr2)
+            ]
       joinTypedJoin =
         Just
           <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
             <|> Nothing
           <$ Parsers.keyword "join"
-
-  applyExtension tr1 = \case
-    CrossJoinedTableExtension tr2 -> CrossJoinedTable tr1 tr2
-    QualJoinedTableExtension jt tr2 jq -> QualJoinedTable tr1 jt tr2 jq
-    NaturalJoinedTableExtension jt tr2 -> NaturalJoinedTable tr1 jt tr2

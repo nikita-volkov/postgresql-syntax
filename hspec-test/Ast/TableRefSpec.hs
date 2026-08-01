@@ -7,5 +7,5 @@ import Test.Hspec
 spec :: Spec
 spec = do
   itSatisfiesIsAst @TableRef
-  itSatisfiesLeftRecursion @TableRef @_ @_
+  itSatisfiesExtendedBy @TableRef @_
   itSatisfiesArbitrary @TableRef

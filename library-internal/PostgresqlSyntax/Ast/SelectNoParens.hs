@@ -56,12 +56,12 @@ instance IsAst SelectNoParens where
 
 -- |
 -- Parses the @select_clause@ (see
--- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'LeftRecursion' instance for the
+-- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'ExtendedBy' instance for the
 -- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining grammar) plus everything that can
 -- follow it.
 sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
 sharedSelectNoParens settings with = do
-  select <- parseLeftRecursive @SelectClause settings
+  select <- parseMaybeExtended @SelectClause settings
   sort <- optional (Parsers.space1 *> parser settings)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)
