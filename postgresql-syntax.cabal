@@ -141,7 +141,6 @@ library internal
     PostgresqlSyntax.Ast.IntervalSecond
     PostgresqlSyntax.Ast.IntoClause
     PostgresqlSyntax.Ast.JoinedTable
-    PostgresqlSyntax.Ast.JoinMeth
     PostgresqlSyntax.Ast.JoinQual
     PostgresqlSyntax.Ast.JoinType
     PostgresqlSyntax.Ast.LimitClause
@@ -335,7 +334,6 @@ test-suite hspec-test
     Ast.IntervalSpec
     Ast.IntoClauseSpec
     Ast.JoinedTableSpec
-    Ast.JoinMethSpec
     Ast.JoinQualSpec
     Ast.JoinTypeSpec
     Ast.LimitClauseSpec

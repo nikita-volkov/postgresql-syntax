@@ -6,6 +6,8 @@ import Test.QuickCheck (Arbitrary)
 
 data JoinedTable
 
+data JoinedTableExtension
+
 instance Show JoinedTable
 
 instance Eq JoinedTable

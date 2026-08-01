@@ -170,23 +170,22 @@ class (Refines ext base) => LeftRecursion base ext item | base -> ext item where
   foldExtensions b (i :| is) = foldl' (\acc j -> applyExtension @base @ext @item (embed acc) j) (applyExtension b i) is
 
 -- |
--- 'Qc.Property'-checkers for 'LeftRecursion'\'s documented laws, keyed by
--- name. \"Base-parser agreement\" is compared up to whether parsing
--- succeeds, ignoring error message text, since a base's 'parser' may wrap
--- 'parseLeftRecursive' in a 'HeadedMegaparsec.label' or similar that changes
--- failure messages without changing what's accepted.
-leftRecursionProperties :: forall base ext item. (LeftRecursion base ext item, IsAst base, Eq base, Show base, Qc.Arbitrary base, Eq ext, Show ext, Qc.Arbitrary item, Show item) => [(String, Qc.Property)]
+-- 'Qc.Property'-checker for 'LeftRecursion'\'s \"Base-parser agreement\"
+-- law, keyed by name. \"Left fold\" isn't checked here: it documents what
+-- 'foldExtensions'\'s /default/ does, not a law every instance must satisfy
+-- — 'PostgresqlSyntax.Ast.SimpleSelect'\'s instance deliberately overrides
+-- it to fold items of differing precedence instead. The agreement check is
+-- itself up to whether parsing succeeds, ignoring error message text, since
+-- a base's 'parser' may wrap 'parseLeftRecursive' in a
+-- 'HeadedMegaparsec.label' or similar that changes failure messages without
+-- changing what's accepted.
+leftRecursionProperties :: forall base ext item. (LeftRecursion base ext item, IsAst base, Eq base, Show base, Qc.Arbitrary base) => [(String, Qc.Property)]
 leftRecursionProperties =
   [ ( "Base-parser agreement",
       Qc.property $ \(a :: base) ->
         let sql = toText mempty a
             run p = first (const ()) (Extras.run (Extras.totally p) sql)
          in run (parser @base mempty) Qc.=== run (parseLeftRecursive @base @ext @item mempty)
-    ),
-    ( "Left fold",
-      Qc.property $ \(b :: base) (i :: item) (is :: [item]) ->
-        foldExtensions @base @ext @item b (i :| is)
-          Qc.=== foldl' (\acc j -> applyExtension @base @ext @item (embed acc) j) (applyExtension b i) is
     )
   ]
 

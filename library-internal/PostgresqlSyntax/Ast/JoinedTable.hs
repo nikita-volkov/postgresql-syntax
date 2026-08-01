@@ -1,11 +1,13 @@
 module PostgresqlSyntax.Ast.JoinedTable
   ( JoinedTable (..),
     inParensJoinedTable,
+    JoinedTableExtension (..),
   )
 where
 
 import PostgresqlSyntax.Algebra
-import PostgresqlSyntax.Ast.JoinMeth
+import PostgresqlSyntax.Ast.JoinQual
+import PostgresqlSyntax.Ast.JoinType
 import {-# SOURCE #-} PostgresqlSyntax.Ast.TableRef (TableRef)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
@@ -23,25 +25,15 @@ import qualified Test.QuickCheck as Qc
 -- | table_ref JOIN table_ref join_qual
 -- | table_ref NATURAL join_type JOIN table_ref
 -- | table_ref NATURAL JOIN table_ref
---
--- The options are covered by the `JoinMeth` type.
 -- @
---
--- See 'PostgresqlSyntax.Ast.JoinMeth' for why this type's own 'IsAst'
--- instance isn't what 'PostgresqlSyntax.Ast.TableRef' actually uses to
--- parse\/render joined tables.
 data JoinedTable
   = InParensJoinedTable JoinedTable
-  | MethJoinedTable JoinMeth TableRef TableRef
+  | CrossJoinedTable TableRef TableRef
+  | QualJoinedTable TableRef (Maybe JoinType) TableRef JoinQual
+  | NaturalJoinedTable TableRef (Maybe JoinType) TableRef
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
--- Rendering combines 'TableRef'\'s and 'JoinMeth'\'s constructors directly
--- rather than delegating to either's own 'IsAst' instance: 'JoinMeth'\'s own
--- renderer places a 'PostgresqlSyntax.Ast.JoinQual' immediately after the
--- @JOIN@ keyword rather than after the right operand (see its own doc for
--- why), so it isn't what belongs here.
---
 -- Parsing delegates to 'PostgresqlSyntax.Algebra.parseExtended' over the
 -- 'PostgresqlSyntax.Algebra.LeftRecursion' instance hosted in
 -- "PostgresqlSyntax.Ast.TableRef" (see its own doc) — a bare @table_ref@
@@ -51,10 +43,9 @@ data JoinedTable
 instance IsAst JoinedTable where
   toTextBuilder settings = \case
     InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
-    MethJoinedTable a b c -> case a of
-      CrossJoinMeth -> toTextBuilder settings b <> " CROSS JOIN " <> toTextBuilder settings c
-      QualJoinMeth d e -> toTextBuilder settings b <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> toTextBuilder settings c <> " " <> toTextBuilder settings e
-      NaturalJoinMeth d -> toTextBuilder settings b <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) d <> " JOIN " <> toTextBuilder settings c
+    CrossJoinedTable a b -> toTextBuilder settings a <> " CROSS JOIN " <> toTextBuilder settings b
+    QualJoinedTable a b c d -> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c <> " " <> toTextBuilder settings d
+    NaturalJoinedTable a b c -> toTextBuilder settings a <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c
 
   parser settings = parseExtended @TableRef settings <|> inParensJoinedTable settings
 
@@ -70,9 +61,23 @@ instance Qc.Arbitrary JoinedTable where
   arbitrary =
     Qc.sized $ \n ->
       if n <= 1
-        then MethJoinedTable <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary
-        else
-          Qc.oneof
-            [ InParensJoinedTable <$> Gens.downscale Qc.arbitrary,
-              MethJoinedTable <$> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary
-            ]
+        then joined
+        else Qc.oneof [InParensJoinedTable <$> Gens.downscale Qc.arbitrary, joined]
+    where
+      joined =
+        Qc.oneof
+          [ CrossJoinedTable <$> Gens.downscale Qc.arbitrary <*> Gens.downscale Qc.arbitrary,
+            QualJoinedTable <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary <*> Qc.arbitrary,
+            NaturalJoinedTable <$> Gens.downscale Qc.arbitrary <*> Qc.arbitrary <*> Gens.downscale Qc.arbitrary
+          ]
+
+-- |
+-- A 'JoinedTable' with its left operand removed — the 'item' half of
+-- 'PostgresqlSyntax.Ast.TableRef'\'s
+-- 'PostgresqlSyntax.Algebra.LeftRecursion' instance (see its own doc).
+-- Mirrors 'JoinedTable'\'s three join-bearing constructors one-for-one,
+-- each missing its leading 'TableRef'.
+data JoinedTableExtension
+  = CrossJoinedTableExtension TableRef
+  | QualJoinedTableExtension (Maybe JoinType) TableRef JoinQual
+  | NaturalJoinedTableExtension (Maybe JoinType) TableRef

@@ -4,6 +4,7 @@ module Helpers.Specs
   ( itSatisfiesIsAst,
     itSatisfiesCanonicalizes,
     itSatisfiesRefines,
+    itSatisfiesLeftRecursion,
     itSatisfiesArbitrary,
     itParses,
     itRejects,
@@ -37,6 +38,10 @@ itSatisfiesCanonicalizes =
 itSatisfiesRefines :: forall sub sup. (Refines sub sup, IsAst sub, Eq sub, Show sub, Qc.Arbitrary sub) => Spec
 itSatisfiesRefines =
   describe "Refines" $ for_ (refinesProperties @sub @sup) (uncurry prop)
+
+itSatisfiesLeftRecursion :: forall base ext item. (LeftRecursion base ext item, IsAst base, Eq base, Show base, Qc.Arbitrary base) => Spec
+itSatisfiesLeftRecursion =
+  describe "LeftRecursion" $ for_ (leftRecursionProperties @base @ext @item) (uncurry prop)
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesArbitrary =

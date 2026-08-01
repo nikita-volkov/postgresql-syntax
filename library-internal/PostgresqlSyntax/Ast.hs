@@ -77,7 +77,6 @@ module PostgresqlSyntax.Ast
     Interval (..),
     IntervalSecond (..),
     IntoClause (..),
-    JoinMeth (..),
     JoinQual (..),
     JoinType (..),
     JoinedTable (..),
@@ -255,7 +254,6 @@ import PostgresqlSyntax.Ast.InsertTarget
 import PostgresqlSyntax.Ast.Interval
 import PostgresqlSyntax.Ast.IntervalSecond
 import PostgresqlSyntax.Ast.IntoClause
-import PostgresqlSyntax.Ast.JoinMeth
 import PostgresqlSyntax.Ast.JoinQual
 import PostgresqlSyntax.Ast.JoinType
 import PostgresqlSyntax.Ast.JoinedTable

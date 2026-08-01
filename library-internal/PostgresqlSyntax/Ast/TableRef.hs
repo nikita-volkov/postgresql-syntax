@@ -8,7 +8,6 @@ import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.AliasClause
 import PostgresqlSyntax.Ast.FuncAliasClause
 import PostgresqlSyntax.Ast.FuncTable
-import PostgresqlSyntax.Ast.JoinMeth
 import PostgresqlSyntax.Ast.JoinedTable
 import PostgresqlSyntax.Ast.RelationExpr
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
@@ -112,13 +111,13 @@ instance Refines JoinedTable TableRef where
 -- |
 -- The left-recursion-eliminated form of @table_ref@\/@joined_table@: a
 -- 'TableRef' is the non-recursive base (@β@, 'nonTrailingTableRef'), and a
--- @joined_table@ continuation (@α@) is a 'JoinMeth' plus its right
--- operand, applied via 'MethJoinedTable'. All three join kinds sit at the
--- same precedence (@%left JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL@ in
--- @gram.y@), so the default left fold is exactly right — unlike
--- "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
+-- @joined_table@ continuation (@α@) is a 'JoinedTableExtension' — one of
+-- 'JoinedTable'\'s three join shapes, minus its left operand. All three
+-- join kinds sit at the same precedence (@%left JOIN CROSS LEFT FULL RIGHT
+-- INNER_P NATURAL@ in @gram.y@), so the default left fold is exactly right
+-- — unlike "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
 -- 'PostgresqlSyntax.Algebra.foldExtensions'.
-instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
+instance LeftRecursion TableRef JoinedTable JoinedTableExtension where
   nonRecursiveBase = nonTrailingTableRef
 
   -- ==== References
@@ -137,7 +136,7 @@ instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
             Parser.endHead
             Parsers.space1
             tr2 <- nonTrailingTableRef settings
-            return (CrossJoinMeth, tr2),
+            return (CrossJoinedTableExtension tr2),
           do
             jt <- joinTypedJoin
             Parser.endHead
@@ -145,7 +144,7 @@ instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
             tr2 <- parser settings
             Parsers.space1
             jq <- parser settings
-            return (QualJoinMeth jt jq, tr2),
+            return (QualJoinedTableExtension jt tr2 jq),
           do
             Parsers.keyword "natural"
             Parser.endHead
@@ -153,7 +152,7 @@ instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
             jt <- joinTypedJoin
             Parsers.space1
             tr2 <- nonTrailingTableRef settings
-            return (NaturalJoinMeth jt, tr2)
+            return (NaturalJoinedTableExtension jt tr2)
         ]
     where
       joinTypedJoin =
@@ -162,7 +161,10 @@ instance LeftRecursion TableRef JoinedTable (JoinMeth, TableRef) where
             <|> Nothing
           <$ Parsers.keyword "join"
 
-  applyExtension tr1 (joinMeth, tr2) = MethJoinedTable joinMeth tr1 tr2
+  applyExtension tr1 = \case
+    CrossJoinedTableExtension tr2 -> CrossJoinedTable tr1 tr2
+    QualJoinedTableExtension jt tr2 jq -> QualJoinedTable tr1 jt tr2 jq
+    NaturalJoinedTableExtension jt tr2 -> NaturalJoinedTable tr1 jt tr2
 
 nonTrailingTableRef :: Settings -> Parser TableRef
 nonTrailingTableRef settings =
