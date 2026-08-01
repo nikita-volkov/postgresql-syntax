@@ -20,8 +20,6 @@ instance IsAst SimpleSelect
 
 instance Arbitrary SimpleSelect
 
-baseSimpleSelect :: Settings -> Parser SimpleSelect
-
 selectClauseBase :: Settings -> Parser SelectClause
 
 extendSelectClause :: Settings -> SelectClause -> Parser SelectClause

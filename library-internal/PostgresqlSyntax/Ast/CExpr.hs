@@ -1,6 +1,5 @@
 module PostgresqlSyntax.Ast.CExpr
   ( CExpr (..),
-    customizedParser,
   )
 where
 

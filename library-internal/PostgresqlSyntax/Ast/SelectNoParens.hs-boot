@@ -21,9 +21,3 @@ instance IsAst SelectNoParens
 instance Arbitrary SelectNoParens
 
 instance Refines SelectWithParens SelectNoParens
-
-unparenthesizedSelectNoParensParser :: Settings -> Parser SelectNoParens
-
-afterSelectWithParensClauseParser :: Settings -> SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
-
-refineToSelectWithParens :: SelectNoParens -> Maybe SelectWithParens

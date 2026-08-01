@@ -1,7 +1,5 @@
 module PostgresqlSyntax.Ast.SelectWithParens
   ( SelectWithParens (..),
-    refineToSelectWithParens,
-    withParensSelectWithParens,
   )
 where
 
@@ -33,31 +31,17 @@ instance IsAst SelectWithParens where
       NoParensSelectWithParens a -> toTextBuilder settings a
       WithParensSelectWithParens a -> toTextBuilder settings a
 
-  -- @gram.y@ gives two productions, @'(' select_with_parens ')'@ and
-  -- @'(' select_no_parens ')'@, and they overlap: a @select_no_parens@ may
-  -- itself be nothing but a @select_clause@, and a @select_clause@ may
-  -- itself be a @select_with_parens@. Transcribed literally as two
-  -- alternatives, that overlap makes every nested paren group get parsed
-  -- twice — once down the @select_with_parens@ branch and once down the
-  -- @select_no_parens@ branch — so the cost doubles with each level of
-  -- nesting. So the shared prefix is parsed once and classified afterwards.
-  --
   -- ==== Canonical shape
   --
-  -- Because the productions overlap, @((select 1))@ has two
-  -- representations: @WithParensSelectWithParens@ wrapping the inner
-  -- parenthesised select, or @NoParensSelectWithParens@ of a
-  -- @SelectNoParens@ whose clause is that same inner parenthesised select.
-  -- Both render back to the same text. __The first is canonical.__
-  parser settings = Parsers.inParens selectWithParensBody
-    where
-      selectWithParensBody =
-        asum
-          [ do
-              a <- Parser.wrapToHead (parser settings)
-              either WithParensSelectWithParens NoParensSelectWithParens <$> SelectNoParens.afterSelectWithParensClauseParser settings a,
-            NoParensSelectWithParens <$> SelectNoParens.unparenthesizedSelectNoParensParser settings
-          ]
+  -- Because @select_with_parens@ (@'(' select_with_parens ')'@) and
+  -- @'(' select_no_parens ')'@ both parse @((select 1))@, there are two
+  -- possible representations: @WithParensSelectWithParens@ wrapping the
+  -- inner parenthesised select, or @NoParensSelectWithParens@ of a
+  -- @SelectNoParens@ whose clause is that inner select. Both render back
+  -- to the same text. __The first (@WithParensSelectWithParens@) is
+  -- canonical.__ The 'Canonicalizes' instance normalizes shrunk or generated
+  -- values to this shape.
+  parser settings = Parsers.inParens (canonicalize . NoParensSelectWithParens <$> parser settings)
 
 instance Qc.Arbitrary SelectWithParens where
   shrink = fmap canonicalize . Qc.genericShrink
@@ -78,27 +62,8 @@ instance Qc.Arbitrary SelectWithParens where
 instance Canonicalizes SelectWithParens where
   canonicalize = \case
     NoParensSelectWithParens a
-      | Just c <- SelectNoParens.refineToSelectWithParens a -> WithParensSelectWithParens c
+      | Just c <- project @SelectWithParens a -> WithParensSelectWithParens c
     other -> other
-
--- |
--- If a 'SelectWithParens' is the @WithParensSelectWithParens@ wrapping of
--- another one, returns the wrapped value. Exposed for modules that can
--- only see 'SelectWithParens' via its @hs-boot@ (which keeps it abstract
--- to break an import cycle) — see "PostgresqlSyntax.Ast.InExpr", which
--- needs it to canonicalize a @select_with_parens@\/@expr_list@ ambiguity
--- analogous to the one described above.
-refineToSelectWithParens :: SelectWithParens -> Maybe SelectWithParens
-refineToSelectWithParens = project
-
--- |
--- Smart constructor for the @WithParensSelectWithParens@ shape, for modules
--- that can only see 'SelectWithParens' via its @hs-boot@ (which keeps it
--- abstract to break an import cycle) — see "PostgresqlSyntax.Ast.CExpr",
--- which needs it to canonicalize a @'(' a_expr ')'@\/@select_with_parens@
--- ambiguity analogous to the one described above.
-withParensSelectWithParens :: SelectWithParens -> SelectWithParens
-withParensSelectWithParens = embed
 
 instance Refines SelectWithParens SelectWithParens where
   embed = WithParensSelectWithParens

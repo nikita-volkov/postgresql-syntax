@@ -1,8 +1,5 @@
 module PostgresqlSyntax.Ast.SelectNoParens
   ( SelectNoParens (..),
-    unparenthesizedSelectNoParensParser,
-    afterSelectWithParensClauseParser,
-    refineToSelectWithParens,
   )
 where
 
@@ -60,19 +57,6 @@ instance IsAst SelectNoParens where
 sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
 sharedSelectNoParens settings with = SimpleSelect.selectClauseBase settings >>= selectNoParensAfterClauseParser settings with
 
--- |
--- 'PostgresqlSyntax.Ast.SelectNoParens.parser' restricted to the forms
--- that do not begin with @(@ — see the boot-exposed signature's doc.
-unparenthesizedSelectNoParensParser :: Settings -> Parser SelectNoParens
-unparenthesizedSelectNoParensParser settings =
-  withSelectNoParens
-    <|> (SimpleSelect.baseSimpleSelect settings >>= selectNoParensAfterClauseParser settings Nothing . SimpleSelectSelectClause)
-  where
-    withSelectNoParens = do
-      with <- Parser.wrapToHead (parser settings)
-      Parsers.space1
-      sharedSelectNoParens settings (Just with)
-
 selectNoParensAfterClauseParser :: Settings -> Maybe WithClause -> SelectClause -> Parser SelectNoParens
 selectNoParensAfterClauseParser settings with clauseBase = do
   select <- SimpleSelect.extendSelectClause settings clauseBase
@@ -90,27 +74,10 @@ selectNoParensAfterClauseParser settings with clauseBase = do
       pure (limit, Just forLocking)
 
 -- |
--- Parses the remainder of a @select_no_parens@ whose leading clause is
--- already known to be a parenthesized select (@a@), then decides — per the
--- \"Canonical shape\" rule — whether the result collapses back down to just
--- that same parenthesized select (@Left@) or is a genuine
--- @SelectNoParens@ wrapping it (@Right@). Needed by
--- "PostgresqlSyntax.Ast.SelectWithParens", which can't pattern-match this
--- module's own 'SelectNoParens' constructor across the hub boundary.
-afterSelectWithParensClauseParser :: Settings -> SelectWithParens -> Parser (Either SelectWithParens SelectNoParens)
-afterSelectWithParensClauseParser settings a = do
-  b <- selectNoParensAfterClauseParser settings Nothing (WithParensSelectClause a)
-  return $ case refineToSelectWithParens b of
-    Just c -> Left c
-    Nothing -> Right b
-
--- |
 -- If a 'SelectNoParens' is merely a trivial wrapper around a single
 -- parenthesized select — no with-clause, sort, limit or locking clause of
--- its own — returns the wrapped 'SelectWithParens'. Used by
--- "PostgresqlSyntax.Ast.SelectWithParens" to canonicalize such wrappers
--- into its @WithParensSelectWithParens@ shape — see its \"Canonical
--- shape\" doc.
+-- its own — returns the wrapped 'SelectWithParens'. Used by the
+-- 'Refines' instance to canonicalize such wrappers.
 refineToSelectWithParens :: SelectNoParens -> Maybe SelectWithParens
 refineToSelectWithParens = \case
   SelectNoParens Nothing (WithParensSelectClause c) Nothing Nothing Nothing -> Just c

@@ -1,6 +1,5 @@
 module PostgresqlSyntax.Ast.SimpleSelect
   ( SimpleSelect (..),
-    baseSimpleSelect,
     selectClauseBase,
     extendSelectClause,
   )
