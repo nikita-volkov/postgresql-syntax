@@ -11,6 +11,7 @@ module PostgresqlSyntax.Algebra
     canonicalizesProperties,
     Refines (..),
     refinesProperties,
+    LeftRecursive (..),
     LeftRecursion (..),
     leftRecursionProperties,
     parseLeftRecursive,
@@ -141,11 +142,40 @@ refinesProperties =
   ]
 
 -- |
+-- A type some of whose grammar productions are left-recursive — i.e. there
+-- is a larger recursive form built by extending a value of this type on its
+-- left. 'nonRecursiveParser' is everything that is /not/ one of those
+-- productions: the @β@ of @A -> Aα | β@.
+--
+-- This is a strictly weaker claim than 'LeftRecursion', which additionally
+-- names the specific @ext@ and @item@ of one such hub. A type can be
+-- 'LeftRecursive' without being any hub's @base@ —
+-- 'PostgresqlSyntax.Ast.JoinedTable' and
+-- 'PostgresqlSyntax.Ast.SimpleSelect' both are, since each is reached by
+-- extending a /different/ type (@table_ref@ and @select_clause@
+-- respectively) yet still has non-left-recursive productions of its own.
+--
+-- Separating this from 'LeftRecursion' is what lets each instance live with
+-- the type it constructs: 'nonRecursiveParser' mentions only its own type,
+-- so it belongs to that type's module, while a hub's 'extension' and
+-- 'applyExtension' belong to the module defining @ext@. Because both are
+-- class methods, either module can reach the other's parser through an
+-- @hs-boot@ instance declaration without exporting a bare helper.
+--
+-- Note that \"non-recursive\" here means non-/left/-recursive only: a
+-- production may still recurse, so long as it doesn't begin with the
+-- recursive position (e.g. @'(' joined_table ')'@).
+class (IsAst a) => LeftRecursive a where
+  -- | Parse only the productions that don't left-recurse (@β@).
+  nonRecursiveParser :: Settings -> Parser a
+
+-- |
 -- The two halves of a left-recursive grammar production, split apart by
 -- left-recursion elimination (@A -> Aα | β@ becomes @A -> β α*@): 'base' is
--- @A@, 'ext' is what a fully-applied @α@ produces, and 'item' is a single
--- @α@ with its left operand removed (since that operand is supplied
--- externally, by whatever's folding the chain).
+-- @A@ (and supplies @β@ via its 'LeftRecursive' instance), 'ext' is what a
+-- fully-applied @α@ produces, and 'item' is a single @α@ with its left
+-- operand removed (since that operand is supplied externally, by whatever's
+-- folding the chain).
 --
 -- Laws:
 --
@@ -153,10 +183,7 @@ refinesProperties =
 -- * __Left fold__: 'foldExtensions'\'s default applies its first item
 --   to 'base', then folds every remaining item onto that result via
 --   'embed' — the first item is applied innermost.
-class (Refines ext base) => LeftRecursion base ext item | base -> ext item where
-  -- | Parse the non-recursive base case only (@β@).
-  nonRecursiveBase :: Settings -> Parser base
-
+class (LeftRecursive base, Refines ext base) => LeftRecursion base ext item | base -> ext item where
   -- | Parse a single @α@, minus the left operand it would apply to.
   extension :: Settings -> Parser item
 
@@ -195,7 +222,7 @@ leftRecursionProperties =
 -- as a parser.
 parseLeftRecursive :: forall base ext item. (LeftRecursion base ext item) => Settings -> Parser base
 parseLeftRecursive settings = do
-  b <- nonRecursiveBase @base @ext @item settings
+  b <- nonRecursiveParser @base settings
   optional (parseItems @base @ext @item settings) >>= \case
     Nothing -> pure b
     Just items -> pure (embed (foldExtensions b items))
@@ -208,8 +235,8 @@ parseLeftRecursive settings = do
 -- interesting type (e.g. a @joined_table@, which is never a bare
 -- @table_ref@ with zero joins).
 --
--- Unlike 'parseLeftRecursive', 'nonRecursiveBase' here is wrapped in
--- 'Parser.wrapToHead'. Without it, if 'nonRecursiveBase' itself commits
+-- Unlike 'parseLeftRecursive', 'nonRecursiveParser' here is wrapped in
+-- 'Parser.wrapToHead'. Without it, if 'nonRecursiveParser' itself commits
 -- past an internal 'Parser.endHead' (e.g. by matching a nested,
 -- fully-parenthesized instance of the very thing this function's caller
 -- is one alternative for), that commitment silently swallows the
@@ -219,10 +246,10 @@ parseLeftRecursive settings = do
 -- resets that, forcing the check to fail cleanly. 'parseLeftRecursive'
 -- doesn't need this: its own extension check already goes through
 -- 'optional', which independently wraps in 'Megaparsec.try' regardless of
--- what 'nonRecursiveBase' committed to.
+-- what 'nonRecursiveParser' committed to.
 parseExtended :: forall base ext item. (LeftRecursion base ext item) => Settings -> Parser ext
 parseExtended settings = do
-  b <- Parser.wrapToHead (nonRecursiveBase @base @ext @item settings)
+  b <- Parser.wrapToHead (nonRecursiveParser @base settings)
   items <- parseItems @base @ext @item settings
   pure (foldExtensions b items)
 

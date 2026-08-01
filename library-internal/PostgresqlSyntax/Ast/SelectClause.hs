@@ -41,6 +41,18 @@ instance IsAst SelectClause where
   parser settings = parseLeftRecursive @SelectClause settings
 
 -- |
+-- Every @select_clause@ production except the left-recursive ones (those
+-- are the @UNION@\/@INTERSECT@\/@EXCEPT@ continuations, hosted by
+-- "PostgresqlSyntax.Ast.SimpleSelect"\'s
+-- 'PostgresqlSyntax.Algebra.LeftRecursion' instance).
+instance LeftRecursive SelectClause where
+  nonRecursiveParser settings =
+    asum
+      [ WithParensSelectClause <$> parser settings,
+        SimpleSelectSelectClause <$> nonRecursiveParser @SimpleSelect settings
+      ]
+
+-- |
 -- A 'SimpleSelect' embeds trivially into a 'SelectClause' (it's one of its
 -- two alternatives), and a 'SelectClause' of that exact shape is
 -- recognizable back as one. Needed so

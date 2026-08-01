@@ -16,7 +16,6 @@ import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.Prelude hiding (filter, head, many, some, tail, try)
-import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |
@@ -35,14 +34,6 @@ import qualified Test.QuickCheck as Qc
 --
 -- TODO: Add xmltable
 -- @
---
--- 'PostgresqlSyntax.Ast.JoinedTable' and 'PostgresqlSyntax.Ast.JoinMeth'
--- have their own modules for the type declarations, but the actual
--- parsing\/rendering of joined tables is hosted here (and here alone),
--- since it's genuinely mutually recursive with table-ref parsing itself
--- (a @table_ref@ can be a @joined_table@, and a @joined_table@'s branches
--- each embed two @table_ref@s) — see the doc on 'JoinMeth' for why that
--- type's own instance isn't what's used below.
 data TableRef
   = -- |
     -- @
@@ -109,97 +100,55 @@ instance Refines JoinedTable TableRef where
     _ -> Nothing
 
 -- |
--- The left-recursion-eliminated form of @table_ref@\/@joined_table@: a
--- 'TableRef' is the non-recursive base (@β@, 'nonTrailingTableRef'), and a
--- @joined_table@ continuation (@α@) is a 'JoinedTableExtension' — one of
--- 'JoinedTable'\'s three join shapes, minus its left operand. All three
--- join kinds sit at the same precedence (@%left JOIN CROSS LEFT FULL RIGHT
--- INNER_P NATURAL@ in @gram.y@), so the default left fold is exactly right
--- — unlike "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
--- 'PostgresqlSyntax.Algebra.foldExtensions'.
-instance LeftRecursion TableRef JoinedTable JoinedTableExtension where
-  nonRecursiveBase = nonTrailingTableRef
-
-  -- ==== References
-  -- @
-  --   | table_ref CROSS JOIN table_ref
-  --   | table_ref join_type JOIN table_ref join_qual
-  --   | table_ref JOIN table_ref join_qual
-  --   | table_ref NATURAL join_type JOIN table_ref
-  --   | table_ref NATURAL JOIN table_ref
-  -- @
-  extension settings =
-    Parsers.space1
-      *> asum
-        [ do
-            Parsers.keyphrase "cross join"
-            Parser.endHead
-            Parsers.space1
-            tr2 <- nonTrailingTableRef settings
-            return (CrossJoinedTableExtension tr2),
-          do
-            jt <- joinTypedJoin
-            Parser.endHead
-            Parsers.space1
-            tr2 <- parser settings
-            Parsers.space1
-            jq <- parser settings
-            return (QualJoinedTableExtension jt tr2 jq),
-          do
-            Parsers.keyword "natural"
-            Parser.endHead
-            Parsers.space1
-            jt <- joinTypedJoin
-            Parsers.space1
-            tr2 <- nonTrailingTableRef settings
-            return (NaturalJoinedTableExtension jt tr2)
-        ]
+-- Every @table_ref@ production except the left-recursive ones (those are
+-- the @joined_table@ continuations, hosted by
+-- "PostgresqlSyntax.Ast.JoinedTable"\'s
+-- 'PostgresqlSyntax.Algebra.LeftRecursion' instance).
+--
+-- The two @joined_table@-shaped alternatives here are /not/ left-recursive:
+-- both begin with a parenthesis, so neither can loop back into this parser
+-- without consuming input. They reach @'(' joined_table ')'@ through
+-- 'JoinedTable'\'s own 'nonRecursiveParser' rather than through a
+-- 'JoinedTable' helper export.
+instance LeftRecursive TableRef where
+  nonRecursiveParser settings =
+    asum
+      [ lateralTableRef,
+        Parser.wrapToHead nonLateralTableRef,
+        relationExprTableRef,
+        joinedTableWithAliasTableRef,
+        inParensJoinedTableTableRef
+      ]
     where
-      joinTypedJoin =
-        Just
-          <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
-            <|> Nothing
-          <$ Parsers.keyword "join"
-
-  applyExtension tr1 = \case
-    CrossJoinedTableExtension tr2 -> CrossJoinedTable tr1 tr2
-    QualJoinedTableExtension jt tr2 jq -> QualJoinedTable tr1 jt tr2 jq
-    NaturalJoinedTableExtension jt tr2 -> NaturalJoinedTable tr1 jt tr2
-
-nonTrailingTableRef :: Settings -> Parser TableRef
-nonTrailingTableRef settings =
-  asum
-    [lateralTableRef <|> Parser.wrapToHead nonLateralTableRef <|> relationExprTableRef <|> joinedTableWithAliasTableRef <|> inParensJoinedTableTableRef]
-  where
-    relationExprTableRef = do
-      relationExpr <- parser settings
-      Parser.endHead
-      optAliasClause <- optional (Parsers.space1 *> parser settings)
-      optTablesampleClause <- optional (Parsers.space1 *> parser settings)
-      return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
-    lateralTableRef = do
-      Parsers.keyword "lateral"
-      Parsers.space1
-      Parser.endHead
-      lateralableTableRef True
-    nonLateralTableRef = lateralableTableRef False
-    lateralableTableRef lateral =
-      asum
-        [ do
-            a <- parser settings
-            b <- optional (Parsers.space1 *> parser settings)
-            return (FuncTableRef lateral a b),
-          do
-            select <- parser settings
-            optAliasClause <- optional $ Parsers.space1 *> parser settings
-            return (SelectTableRef lateral select optAliasClause)
-        ]
-    inParensJoinedTableTableRef = JoinTableRef <$> inParensJoinedTable settings <*> pure Nothing
-    joinedTableWithAliasTableRef = do
-      jt <- Parser.wrapToHead (Parsers.inParens (parser settings))
-      Parsers.space1
-      alias <- parser settings
-      return (JoinTableRef jt (Just alias))
+      relationExprTableRef = do
+        relationExpr <- parser settings
+        Parser.endHead
+        optAliasClause <- optional (Parsers.space1 *> parser settings)
+        optTablesampleClause <- optional (Parsers.space1 *> parser settings)
+        return (RelationExprTableRef relationExpr optAliasClause optTablesampleClause)
+      lateralTableRef = do
+        Parsers.keyword "lateral"
+        Parsers.space1
+        Parser.endHead
+        lateralableTableRef True
+      nonLateralTableRef = lateralableTableRef False
+      lateralableTableRef lateral =
+        asum
+          [ do
+              a <- parser settings
+              b <- optional (Parsers.space1 *> parser settings)
+              return (FuncTableRef lateral a b),
+            do
+              select <- parser settings
+              optAliasClause <- optional $ Parsers.space1 *> parser settings
+              return (SelectTableRef lateral select optAliasClause)
+          ]
+      inParensJoinedTableTableRef = JoinTableRef <$> nonRecursiveParser @JoinedTable settings <*> pure Nothing
+      joinedTableWithAliasTableRef = do
+        jt <- Parser.wrapToHead (Parsers.inParens (parser settings))
+        Parsers.space1
+        alias <- parser settings
+        return (JoinTableRef jt (Just alias))
 
 instance Qc.Arbitrary TableRef where
   shrink = Qc.genericShrink

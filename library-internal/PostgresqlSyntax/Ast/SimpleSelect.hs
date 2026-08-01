@@ -78,38 +78,41 @@ instance IsAst SimpleSelect where
   -- 'SimpleSelect' at all — see 'SelectClause'). The chain alternative has
   -- to come first: trying 'baseSimpleSelect' alone would succeed on just
   -- the head of a chain and never look for what follows.
-  parser settings = parseExtended @SelectClause settings <|> baseSimpleSelect settings
+  parser settings = parseExtended @SelectClause settings <|> nonRecursiveParser settings
 
 -- |
--- The non-recursive base cases only (no @select_clause BINOP
--- select_clause@ extension).
-baseSimpleSelect :: Settings -> Parser SimpleSelect
-baseSimpleSelect settings =
-  asum
-    [ do
-        Parsers.keyword "select"
-        Parsers.notFollowedBy $ Parsers.satisfy isAlphaNum
-        Parser.endHead
-        targeting <- optional (Parsers.space1 *> parser settings)
-        intoClause <- optional (Parsers.space1 *> parser settings)
-        fromClause <- optional (Parsers.space1 *> parser settings)
-        whereClause <- optional (Parsers.space1 *> parser settings)
-        groupClause <- optional (Parsers.space1 *> parser settings)
-        havingClause <- optional (Parsers.space1 *> parser settings)
-        windowClause <- optional (Parsers.space1 *> parser settings)
-        return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
-      do
-        Parsers.keyword "table"
-        Parsers.space1
-        Parser.endHead
-        TableSimpleSelect <$> parser settings,
-      ValuesSimpleSelect <$> parser settings
-    ]
+-- The @simple_select@ productions that don't left-recurse through
+-- @select_clause@ — i.e. everything but @select_clause BINOP
+-- select_clause@. "PostgresqlSyntax.Ast.SelectClause" reaches these
+-- through this class method, which is why 'SimpleSelect' needs no helper
+-- export.
+instance LeftRecursive SimpleSelect where
+  nonRecursiveParser settings =
+    asum
+      [ do
+          Parsers.keyword "select"
+          Parsers.notFollowedBy $ Parsers.satisfy isAlphaNum
+          Parser.endHead
+          targeting <- optional (Parsers.space1 *> parser settings)
+          intoClause <- optional (Parsers.space1 *> parser settings)
+          fromClause <- optional (Parsers.space1 *> parser settings)
+          whereClause <- optional (Parsers.space1 *> parser settings)
+          groupClause <- optional (Parsers.space1 *> parser settings)
+          havingClause <- optional (Parsers.space1 *> parser settings)
+          windowClause <- optional (Parsers.space1 *> parser settings)
+          return (NormalSimpleSelect targeting intoClause fromClause whereClause groupClause havingClause windowClause),
+        do
+          Parsers.keyword "table"
+          Parsers.space1
+          Parser.endHead
+          TableSimpleSelect <$> parser settings,
+        ValuesSimpleSelect <$> parser settings
+      ]
 
 -- |
 -- The left-recursion-eliminated form of @select_clause@: a bare
 -- 'SelectClause' (either a parenthesized select, or one of
--- 'baseSimpleSelect'\'s non-chain cases) is the non-recursive base (@β@),
+-- 'SimpleSelect'\'s non-chain cases) is the non-recursive base (@β@),
 -- and each @UNION@\/@INTERSECT@\/@EXCEPT@ continuation (@α@) is a
 -- 'SelectBinOp' plus its @ALL@\/@DISTINCT@ qualifier and right operand,
 -- applied via 'BinSimpleSelect'.
@@ -122,17 +125,11 @@ baseSimpleSelect settings =
 -- root @a INTERSECT b UNION c@ at @INTERSECT@ and nest @a EXCEPT b EXCEPT
 -- c@ to the right — both wrong.
 instance LeftRecursion SelectClause SimpleSelect (SelectBinOp, Maybe Bool, SelectClause) where
-  nonRecursiveBase settings =
-    asum
-      [ WithParensSelectClause <$> parser settings,
-        SimpleSelectSelectClause <$> baseSimpleSelect settings
-      ]
-
   extension settings = do
     op <- Parsers.space1 *> parser settings <* Parsers.space1
     Parser.endHead
     distinct <- optional (Parsers.allOrDistinct <* Parsers.space1)
-    rhs <- nonRecursiveBase @SelectClause settings
+    rhs <- nonRecursiveParser @SelectClause settings
     return (op, distinct, rhs)
 
   applyExtension lhs (op, distinct, rhs) = BinSimpleSelect op lhs distinct rhs

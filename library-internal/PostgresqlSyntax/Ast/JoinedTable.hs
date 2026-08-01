@@ -1,10 +1,9 @@
 module PostgresqlSyntax.Ast.JoinedTable
   ( JoinedTable (..),
-    inParensJoinedTable,
-    JoinedTableExtension (..),
   )
 where
 
+import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.JoinQual
 import PostgresqlSyntax.Ast.JoinType
@@ -34,12 +33,13 @@ data JoinedTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
--- Parsing delegates to 'PostgresqlSyntax.Algebra.parseExtended' over the
--- 'PostgresqlSyntax.Algebra.LeftRecursion' instance hosted in
--- "PostgresqlSyntax.Ast.TableRef" (see its own doc) — a bare @table_ref@
--- parse is greedy, absorbing any trailing @CROSS JOIN@\/@JOIN@\/@NATURAL
--- JOIN@ continuation into itself, so a @joined_table@ is never reachable
--- as a bare, zero-extension 'TableRef'; it always needs at least one.
+-- Parsing delegates to 'parseExtended' over the 'LeftRecursion' instance
+-- below — a bare @table_ref@ parse is greedy, absorbing any trailing @CROSS
+-- JOIN@\/@JOIN@\/@NATURAL JOIN@ continuation into itself, so a
+-- @joined_table@ is never reachable as a bare, zero-extension 'TableRef';
+-- it always needs at least one. Failing that, the only remaining
+-- @joined_table@ production is the non-left-recursive
+-- 'nonRecursiveParser'.
 instance IsAst JoinedTable where
   toTextBuilder settings = \case
     InParensJoinedTable a -> TextBuilders.renderInParens (toTextBuilder settings a)
@@ -47,14 +47,22 @@ instance IsAst JoinedTable where
     QualJoinedTable a b c d -> toTextBuilder settings a <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c <> " " <> toTextBuilder settings d
     NaturalJoinedTable a b c -> toTextBuilder settings a <> " NATURAL" <> TextBuilders.suffixMaybe (toTextBuilder settings) b <> " JOIN " <> toTextBuilder settings c
 
-  parser settings = parseExtended @TableRef settings <|> inParensJoinedTable settings
+  parser settings = parseExtended @TableRef settings <|> nonRecursiveParser settings
 
--- ==== References
+-- |
+-- The one @joined_table@ production that doesn't begin with a
+-- left-recursive @table_ref@:
+--
 -- @
 --   | '(' joined_table ')'
 -- @
-inParensJoinedTable :: Settings -> Parser JoinedTable
-inParensJoinedTable settings = InParensJoinedTable <$> Parsers.inParens (parser settings)
+--
+-- It still recurses — just not on the left, since the opening parenthesis
+-- has to be consumed first. "PostgresqlSyntax.Ast.TableRef" reaches it
+-- through this class method, which is why 'JoinedTable' needs no helper
+-- export.
+instance LeftRecursive JoinedTable where
+  nonRecursiveParser settings = InParensJoinedTable <$> Parsers.inParens (parser settings)
 
 instance Qc.Arbitrary JoinedTable where
   shrink = Qc.genericShrink
@@ -72,12 +80,68 @@ instance Qc.Arbitrary JoinedTable where
           ]
 
 -- |
--- A 'JoinedTable' with its left operand removed — the 'item' half of
--- 'PostgresqlSyntax.Ast.TableRef'\'s
--- 'PostgresqlSyntax.Algebra.LeftRecursion' instance (see its own doc).
--- Mirrors 'JoinedTable'\'s three join-bearing constructors one-for-one,
--- each missing its leading 'TableRef'.
+-- A 'JoinedTable' with its left operand removed — the 'item' half of the
+-- 'LeftRecursion' instance below. Mirrors 'JoinedTable'\'s three
+-- join-bearing constructors one-for-one, each missing its leading
+-- 'TableRef'.
 data JoinedTableExtension
   = CrossJoinedTableExtension TableRef
   | QualJoinedTableExtension (Maybe JoinType) TableRef JoinQual
   | NaturalJoinedTableExtension (Maybe JoinType) TableRef
+
+-- |
+-- The left-recursion-eliminated form of @table_ref@\/@joined_table@: a
+-- 'TableRef' is the non-recursive base (@β@, its own
+-- 'nonRecursiveParser'), and a @joined_table@ continuation (@α@) is a
+-- 'JoinedTableExtension' — one of 'JoinedTable'\'s three join shapes,
+-- minus its left operand. All three join kinds sit at the same precedence
+-- (@%left JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL@ in @gram.y@), so the
+-- default left fold is exactly right — unlike
+-- "PostgresqlSyntax.Ast.SimpleSelect", this hub doesn't override
+-- 'foldExtensions'.
+instance LeftRecursion TableRef JoinedTable JoinedTableExtension where
+  -- ==== References
+  -- @
+  --   | table_ref CROSS JOIN table_ref
+  --   | table_ref join_type JOIN table_ref join_qual
+  --   | table_ref JOIN table_ref join_qual
+  --   | table_ref NATURAL join_type JOIN table_ref
+  --   | table_ref NATURAL JOIN table_ref
+  -- @
+  extension settings =
+    Parsers.space1
+      *> asum
+        [ do
+            Parsers.keyphrase "cross join"
+            Parser.endHead
+            Parsers.space1
+            tr2 <- nonRecursiveParser @TableRef settings
+            return (CrossJoinedTableExtension tr2),
+          do
+            jt <- joinTypedJoin
+            Parser.endHead
+            Parsers.space1
+            tr2 <- parser settings
+            Parsers.space1
+            jq <- parser settings
+            return (QualJoinedTableExtension jt tr2 jq),
+          do
+            Parsers.keyword "natural"
+            Parser.endHead
+            Parsers.space1
+            jt <- joinTypedJoin
+            Parsers.space1
+            tr2 <- nonRecursiveParser @TableRef settings
+            return (NaturalJoinedTableExtension jt tr2)
+        ]
+    where
+      joinTypedJoin =
+        Just
+          <$> (parser settings <* Parser.endHead <* Parsers.space1 <* Parsers.keyword "join")
+            <|> Nothing
+          <$ Parsers.keyword "join"
+
+  applyExtension tr1 = \case
+    CrossJoinedTableExtension tr2 -> CrossJoinedTable tr1 tr2
+    QualJoinedTableExtension jt tr2 jq -> QualJoinedTable tr1 jt tr2 jq
+    NaturalJoinedTableExtension jt tr2 -> NaturalJoinedTable tr1 jt tr2

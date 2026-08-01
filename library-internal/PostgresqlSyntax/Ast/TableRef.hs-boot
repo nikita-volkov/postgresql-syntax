@@ -1,7 +1,7 @@
 module PostgresqlSyntax.Ast.TableRef where
 
-import {-# SOURCE #-} PostgresqlSyntax.Ast.JoinedTable (JoinedTable, JoinedTableExtension)
-import PostgresqlSyntax.Algebra (IsAst, LeftRecursion, Refines)
+import PostgresqlSyntax.Algebra (IsAst, LeftRecursive, Refines)
+import {-# SOURCE #-} PostgresqlSyntax.Ast.JoinedTable (JoinedTable)
 import PostgresqlSyntax.Prelude (Data, Eq, Ord, Show)
 import Test.QuickCheck (Arbitrary)
 
@@ -21,4 +21,4 @@ instance Arbitrary TableRef
 
 instance Refines JoinedTable TableRef
 
-instance LeftRecursion TableRef JoinedTable JoinedTableExtension
+instance LeftRecursive TableRef
