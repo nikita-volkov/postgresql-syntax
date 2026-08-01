@@ -7,14 +7,16 @@ import PostgresqlSyntax.Ast.AExpr
 import PostgresqlSyntax.Ast.CExpr
 import PostgresqlSyntax.Ast.Columnref
 import PostgresqlSyntax.Ast.Ident
+import PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import PostgresqlSyntax.Ast.VerbalExprBinOp
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do
   itSatisfiesIsAst @AExpr
   itSatisfiesCanonicalizes @AExpr
+  itSatisfiesRefines @SelectWithParens @AExpr
   itSatisfiesArbitrary @AExpr
   describe "Postgres grammar conformance" $ do
     -- gram.y:15985,15987 have only @a_expr qual_Op a_expr@ and

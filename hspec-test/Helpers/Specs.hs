@@ -3,6 +3,7 @@
 module Helpers.Specs
   ( itSatisfiesIsAst,
     itSatisfiesCanonicalizes,
+    itSatisfiesRefines,
     itSatisfiesArbitrary,
     itParses,
     itRejects,
@@ -20,32 +21,22 @@ import qualified Data.Text as Text
 import qualified Helpers.Expectations as Expectations
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Settings (Settings)
+import Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck (counterexample, (===))
 import qualified Test.QuickCheck as Qc
-import Prelude
 
 itSatisfiesIsAst :: forall a. (IsAst a, Eq a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesIsAst =
-  describe "IsAst" $ do
-    prop "Roundtrips" $ \(a :: a) ->
-      let sql = toText mempty a
-       in case parse mempty sql of
-            Left err ->
-              counterexample ("rendered: " <> Text.unpack sql <> "\nparse failed: " <> Text.unpack err) False
-            Right a' ->
-              counterexample
-                ("rendered: " <> Text.unpack sql <> "\nrestored: " <> Text.unpack (toText mempty a'))
-                (a' === a)
-    prop "Renders equal values equally" $ \(a :: a) (b :: a) ->
-      a /= b || toText mempty a == toText mempty b
+  describe "IsAst" $ for_ (isAstProperties @a) (uncurry prop)
 
 itSatisfiesCanonicalizes :: forall a. (Canonicalizes a, Eq a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesCanonicalizes =
-  describe "Canonicalizes" $ do
-    prop "Idempotent" $ \(a :: a) ->
-      canonicalize (canonicalize a) === canonicalize a
+  describe "Canonicalizes" $ for_ (canonicalizesProperties @a) (uncurry prop)
+
+itSatisfiesRefines :: forall sub sup. (Refines sub sup, IsAst sub, Eq sub, Show sub, Qc.Arbitrary sub) => Spec
+itSatisfiesRefines =
+  describe "Refines" $ for_ (refinesProperties @sub @sup) (uncurry prop)
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesArbitrary =
