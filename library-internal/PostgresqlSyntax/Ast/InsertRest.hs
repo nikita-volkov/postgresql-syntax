@@ -41,7 +41,15 @@ instance IsAst InsertRest where
     asum
       [ DefaultValuesInsertRest <$ (Parsers.keyword "default" *> Parsers.space1 *> Parser.endHead *> Parsers.keyword "values"),
         do
-          a <- optional (Parsers.inParens (parser settings) <* Parsers.space1)
+          -- 'Parser.wrapToHead' makes the whole parenthesized column list
+          -- (including any 'Parser.endHead' calls inside 'InsertColumnItem')
+          -- backtrackable as one unit. Without it, parsing e.g. @(VALUES ...)@
+          -- would commit to treating @VALUES@ as a single-column
+          -- 'InsertColumnList' entry (since it's a valid 'ColId') right after
+          -- reading it, and fail instead of backtracking into the correct
+          -- 'SelectStmt' (@select_with_parens@ wrapping a bare @VALUES@
+          -- clause) parse below. See gram.y's @insert_rest@.
+          a <- optional (Parser.wrapToHead (Parsers.inParens (parser settings) <* Parsers.space1))
           b <- optional $ do
             Parsers.keyword "overriding"
             Parsers.space1
