@@ -3,8 +3,8 @@ module Ast.FrameBoundSpec (spec) where
 import Helpers.Specs
 import PostgresqlSyntax.Algebra
 import PostgresqlSyntax.Ast.FrameBound
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do

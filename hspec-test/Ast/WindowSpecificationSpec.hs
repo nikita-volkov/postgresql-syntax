@@ -2,8 +2,8 @@ module Ast.WindowSpecificationSpec (spec) where
 
 import Helpers.Specs
 import PostgresqlSyntax.Ast.WindowSpecification
-import Test.Hspec
 import Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do

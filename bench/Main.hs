@@ -24,9 +24,9 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import HeadedMegaparsec (HeadedParsec, parse, toParsec)
 import qualified PostgresqlSyntax
+import Prelude
 import qualified Test.QuickCheck as Qc
 import qualified Text.Megaparsec as Megaparsec
-import Prelude
 
 -- * Shared token scanner (mirrors 'PostgresqlSyntax.Helpers.Parsers.anyKeyword')
 
