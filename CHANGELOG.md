@@ -1,14 +1,15 @@
 # Upcoming
 
-## Breaking
-
-- Fixed the parsed tree shape of `UNION`/`INTERSECT`/`EXCEPT` chains to match Postgres's actual associativity and precedence (`gram.y`'s `%left UNION EXCEPT` / `%left INTERSECT`, INTERSECT binding tighter): `a EXCEPT b EXCEPT c` now nests left instead of right, and `a INTERSECT b UNION c` now roots at `UNION` instead of `INTERSECT`. Rendered text is unaffected; only `SimpleSelect`'s parsed/canonical tree shape for such chains changes (#30).
-- Fixed a further associativity bug in the same fold: a run of two or more consecutive `INTERSECT`s (e.g. `a INTERSECT b INTERSECT c`) nested right instead of left, contradicting `gram.y`'s `%left INTERSECT`. Parsed/canonical tree shape changes for such chains; rendered text is unaffected (#34).
-
 ## Non-breaking
 
 - `PostgresqlSyntax.Algebra`'s `LeftRecursion base ext item` class (internal-library-only, not part of the public `PostgresqlSyntax` API) is now a single-method `Extends base ext` — drops the unread `item` type parameter: `extension`/`applyExtension`/`foldExtensions` are gone in favor of one `parseExtensions` method; `nonRecursiveParser` → `parseBase`; `parseLeftRecursive` → `parseMaybeExtended`; `leftRecursionProperties` → `extendedByProperties`. `JoinedTableExtension` is deleted (#33).
 - `TableRef.hs` and `FuncApplicationParams.hs` now have explicit export lists, exporting only their types and instances (#30).
+
+## Fixes
+
+- Fixed the parsed tree shape of `UNION`/`INTERSECT`/`EXCEPT` chains to match Postgres's actual associativity and precedence (`gram.y`'s `%left UNION EXCEPT` / `%left INTERSECT`, INTERSECT binding tighter): `a EXCEPT b EXCEPT c` now nests left instead of right, and `a INTERSECT b UNION c` now roots at `UNION` instead of `INTERSECT`. Rendered text is unaffected; only `SimpleSelect`'s parsed/canonical tree shape for such chains changes (#30).
+- Fixed a further associativity bug in the same fold: a run of two or more consecutive `INTERSECT`s (e.g. `a INTERSECT b INTERSECT c`) nested right instead of left, contradicting `gram.y`'s `%left INTERSECT`. Parsed/canonical tree shape changes for such chains; rendered text is unaffected (#34).
+- Fixed `InsertRest` misparsing parenthesized `VALUES`/`SELECT` as a column list (#35).
 
 # v0.5.0.1
 
