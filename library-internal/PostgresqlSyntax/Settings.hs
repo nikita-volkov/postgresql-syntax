@@ -16,9 +16,7 @@ where
 import PostgresqlSyntax.Prelude
 
 -- |
--- \@Settings {optNullabilityMarkers = Nothing}\@ everywhere means standard
--- Postgres. The only knob today is whether the 'PostgresqlSyntax.Ast.Typename'
--- @?@ nullability markers are recognized.
+-- Collection of parse\/render options. Use 'nullabilityMarkers' to build a value, and combine values with their 'Semigroup'\/'Monoid' instances ('mempty' is faithful, standard Postgres).
 data Settings = Settings {optNullabilityMarkers :: Maybe Bool}
   deriving (Show, Eq)
 

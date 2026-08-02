@@ -30,6 +30,8 @@ import qualified Text.Megaparsec as Megaparsec
 import qualified TextBuilder
 
 -- |
+-- Class of AST types that can be rendered to SQL text and parsed back again.
+--
 -- Laws:
 --
 -- * __Roundtrips__: @parse settings (toText settings a) = Right a@ for every
@@ -40,7 +42,14 @@ import qualified TextBuilder
 --   different shapes can still render to identical text — the ambiguity that
 --   'Canonicalizes' exists to resolve.
 class IsAst a where
+  -- |
+  -- Render an AST value to a 'TextBuilder' using the given 'Settings'.
+  -- This is the low-level rendering primitive; 'toText' wraps it.
   toTextBuilder :: Settings -> a -> TextBuilder
+
+  -- |
+  -- A parser for this AST type, parameterized by 'Settings'.
+  -- The parser must satisfy the roundtrip law documented on 'IsAst'.
   parser :: Settings -> Parser a
 
 -- |
