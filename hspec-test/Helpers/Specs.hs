@@ -4,7 +4,7 @@ module Helpers.Specs
   ( itSatisfiesIsAst,
     itSatisfiesCanonicalizes,
     itSatisfiesRefines,
-    itSatisfiesExtendedBy,
+    itSatisfiesExtends,
     itSatisfiesArbitrary,
     itParses,
     itRejects,
@@ -39,9 +39,9 @@ itSatisfiesRefines :: forall sub sup. (Refines sub sup, IsAst sub, Eq sub, Show 
 itSatisfiesRefines =
   describe "Refines" $ for_ (refinesProperties @sub @sup) (uncurry prop)
 
-itSatisfiesExtendedBy :: forall base ext. (ExtendedBy base ext, IsAst base, Eq base, Show base, Qc.Arbitrary base) => Spec
-itSatisfiesExtendedBy =
-  describe "ExtendedBy" $ for_ (extendedByProperties @base @ext) (uncurry prop)
+itSatisfiesExtends :: forall base ext. (Extends base ext, IsAst base, Eq base, Show base, Qc.Arbitrary base) => Spec
+itSatisfiesExtends =
+  describe "Extends" $ for_ (extendedByProperties @base @ext) (uncurry prop)
 
 itSatisfiesArbitrary :: forall a. (IsAst a, Show a, Qc.Arbitrary a) => Spec
 itSatisfiesArbitrary =

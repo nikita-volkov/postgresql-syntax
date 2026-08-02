@@ -12,7 +12,7 @@ module PostgresqlSyntax.Algebra
     Refines (..),
     refinesProperties,
     LeftRecursive (..),
-    ExtendedBy (..),
+    Extends (..),
     extendedByProperties,
     parseMaybeExtended,
     parseExtended,
@@ -148,14 +148,14 @@ refinesProperties =
 -- left. 'parseBase' is everything that is /not/ one of those productions:
 -- the @β@ of @A -> Aα | β@.
 --
--- This is a strictly weaker claim than 'ExtendedBy', which additionally
+-- This is a strictly weaker claim than 'Extends', which additionally
 -- names the specific @ext@ of one such hub. A type can be 'LeftRecursive'
 -- without being any hub's @base@ — 'PostgresqlSyntax.Ast.JoinedTable' and
 -- 'PostgresqlSyntax.Ast.SimpleSelect' both are, since each is reached by
 -- extending a /different/ type (@table_ref@ and @select_clause@
 -- respectively) yet still has non-left-recursive productions of its own.
 --
--- Separating this from 'ExtendedBy' is what lets each instance live with
+-- Separating this from 'Extends' is what lets each instance live with
 -- the type it constructs: 'parseBase' mentions only its own type, so it
 -- belongs to that type's module, while a hub's 'parseExtensions' belongs to
 -- the module defining @ext@. Because both are class methods, either module
@@ -181,20 +181,20 @@ class (IsAst a) => LeftRecursive a where
 -- * __Maximal munch__: 'parseExtensions' must not return while a further
 --   extension is available — instances build this on 'parseExtensionChain'
 --   where possible, which already guarantees it.
-class (LeftRecursive base, Refines ext base) => ExtendedBy base ext | base -> ext where
+class (LeftRecursive base, Refines ext base) => Extends base ext | base -> ext where
   -- | Parse one or more extensions onto an already-parsed left operand,
   -- folding as it goes, and return the fully-extended result.
   parseExtensions :: Settings -> base -> Parser ext
 
 -- |
--- 'Qc.Property'-checker for 'ExtendedBy'\'s \"Base-parser agreement\" law,
+-- 'Qc.Property'-checker for 'Extends'\'s \"Base-parser agreement\" law,
 -- keyed by name. \"Maximal munch\" isn't checked here: it's a per-instance
 -- parsing obligation, not something a generated 'base' value can exercise
 -- through 'parser' alone. The agreement check is itself up to whether
 -- parsing succeeds, ignoring error message text, since a base's 'parser'
 -- may wrap 'parseMaybeExtended' in a 'HeadedMegaparsec.label' or similar
 -- that changes failure messages without changing what's accepted.
-extendedByProperties :: forall base ext. (ExtendedBy base ext, IsAst base, Eq base, Show base, Qc.Arbitrary base) => [(String, Qc.Property)]
+extendedByProperties :: forall base ext. (Extends base ext, IsAst base, Eq base, Show base, Qc.Arbitrary base) => [(String, Qc.Property)]
 extendedByProperties =
   [ ( "Base-parser agreement",
       Qc.property $ \(a :: base) ->
@@ -207,7 +207,7 @@ extendedByProperties =
 -- |
 -- Parses zero or more extensions onto a 'parseBase', via 'parseExtensions'.
 -- This is what @A -> β α*@ (the whole of @A@) means as a parser.
-parseMaybeExtended :: forall base ext. (ExtendedBy base ext) => Settings -> Parser base
+parseMaybeExtended :: forall base ext. (Extends base ext) => Settings -> Parser base
 parseMaybeExtended settings = do
   b <- parseBase @base settings
   optional (parseExtensions @base settings b) >>= maybe (pure b) (pure . embed)
@@ -231,7 +231,7 @@ parseMaybeExtended settings = do
 -- to fail cleanly. 'parseMaybeExtended' doesn't need this: its own
 -- extension check already goes through 'optional', which independently
 -- wraps in 'Megaparsec.try' regardless of what 'parseBase' committed to.
-parseExtended :: forall base ext. (ExtendedBy base ext) => Settings -> Parser ext
+parseExtended :: forall base ext. (Extends base ext) => Settings -> Parser ext
 parseExtended settings = do
   b <- Parser.wrapToHead (parseBase @base settings)
   parseExtensions @base settings b
@@ -242,7 +242,7 @@ parseExtended settings = do
 -- matched, backtracking out of the whole chain (back to "there are no more
 -- items") is no longer attempted — matching the hand-written
 -- recursive-descent loops this replaces. This is the shared backtracking
--- protocol underlying 'ExtendedBy'\'s \"Maximal munch\" law: an instance
+-- protocol underlying 'Extends'\'s \"Maximal munch\" law: an instance
 -- building 'parseExtensions' on top of this combinator gets the law for
 -- free, since 'go' only stops once a further item genuinely isn't
 -- available.

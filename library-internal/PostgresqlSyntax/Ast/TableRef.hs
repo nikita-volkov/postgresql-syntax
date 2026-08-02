@@ -91,7 +91,7 @@ instance IsAst TableRef where
 -- 'PostgresqlSyntax.Ast.JoinedTable' embeds trivially into a bare,
 -- alias-less 'TableRef' (@joined_table@ is one of @table_ref@'s
 -- alternatives), and a 'TableRef' of that exact shape is recognizable back
--- as one. See 'PostgresqlSyntax.Algebra.ExtendedBy' for how this is used to
+-- as one. See 'PostgresqlSyntax.Algebra.Extends' for how this is used to
 -- fold a chain of joins onto a leading 'TableRef'.
 instance Refines JoinedTable TableRef where
   embed a = JoinTableRef a Nothing
@@ -103,7 +103,7 @@ instance Refines JoinedTable TableRef where
 -- Every @table_ref@ production except the left-recursive ones (those are
 -- the @joined_table@ continuations, hosted by
 -- "PostgresqlSyntax.Ast.JoinedTable"\'s
--- 'PostgresqlSyntax.Algebra.ExtendedBy' instance).
+-- 'PostgresqlSyntax.Algebra.Extends' instance).
 --
 -- The two @joined_table@-shaped alternatives here are /not/ left-recursive:
 -- both begin with a parenthesis, so neither can loop back into this parser

@@ -2,7 +2,7 @@
 
 module PostgresqlSyntax.Ast.SimpleSelect where
 
-import PostgresqlSyntax.Algebra (ExtendedBy, IsAst, LeftRecursive)
+import PostgresqlSyntax.Algebra (Extends, IsAst, LeftRecursive)
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectClause (SelectClause)
 import PostgresqlSyntax.Prelude (Data, Eq, Ord, Show)
 import Test.QuickCheck (Arbitrary)
@@ -23,4 +23,4 @@ instance Arbitrary SimpleSelect
 
 instance LeftRecursive SimpleSelect
 
-instance ExtendedBy SelectClause SimpleSelect
+instance Extends SelectClause SimpleSelect

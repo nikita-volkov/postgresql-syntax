@@ -7,7 +7,7 @@
 
 ## Non-breaking
 
-- `PostgresqlSyntax.Algebra`'s `LeftRecursion base ext item` class (internal-library-only, not part of the public `PostgresqlSyntax` API) is now a single-method `ExtendedBy base ext` — drops the unread `item` type parameter: `extension`/`applyExtension`/`foldExtensions` are gone in favor of one `parseExtensions` method; `nonRecursiveParser` → `parseBase`; `parseLeftRecursive` → `parseMaybeExtended`; `leftRecursionProperties` → `extendedByProperties`. `JoinedTableExtension` is deleted (#33).
+- `PostgresqlSyntax.Algebra`'s `LeftRecursion base ext item` class (internal-library-only, not part of the public `PostgresqlSyntax` API) is now a single-method `Extends base ext` — drops the unread `item` type parameter: `extension`/`applyExtension`/`foldExtensions` are gone in favor of one `parseExtensions` method; `nonRecursiveParser` → `parseBase`; `parseLeftRecursive` → `parseMaybeExtended`; `leftRecursionProperties` → `extendedByProperties`. `JoinedTableExtension` is deleted (#33).
 - `TableRef.hs` and `FuncApplicationParams.hs` now have explicit export lists, exporting only their types and instances (#30).
 
 # v0.5.0.1

@@ -34,7 +34,7 @@ data JoinedTable
   deriving (Show, Generic, Eq, Ord, Data)
 
 -- |
--- Parsing delegates to 'parseExtended' over the 'ExtendedBy' instance
+-- Parsing delegates to 'parseExtended' over the 'Extends' instance
 -- below — a bare @table_ref@ parse is greedy, absorbing any trailing @CROSS
 -- JOIN@\/@JOIN@\/@NATURAL JOIN@ continuation into itself, so a
 -- @joined_table@ is never reachable as a bare, zero-extension 'TableRef';
@@ -86,7 +86,7 @@ instance Qc.Arbitrary JoinedTable where
 -- RIGHT INNER_P NATURAL@ in @gram.y@), and there's nothing to hold between
 -- parsing a join and applying it, so no item type is warranted here —
 -- unlike "PostgresqlSyntax.Ast.SimpleSelect", this hub isn't collect-then-fold.
-instance ExtendedBy TableRef JoinedTable where
+instance Extends TableRef JoinedTable where
   -- ==== References
   -- @
   --   | table_ref CROSS JOIN table_ref

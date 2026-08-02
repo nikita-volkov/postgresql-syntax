@@ -74,7 +74,7 @@ instance IsAst SimpleSelect where
   --
   -- @parser = parseExtended \@SelectClause \<|\> baseSimpleSelect@ — a bare
   -- 'SimpleSelect' is either a @select_clause@ chain of at least one
-  -- @UNION@\/@INTERSECT@\/@EXCEPT@ (see 'ExtendedBy' below), or, failing
+  -- @UNION@\/@INTERSECT@\/@EXCEPT@ (see 'Extends' below), or, failing
   -- that (no continuation follows), one of the non-chain base cases; it's
   -- never a bare, zero-extension @select_clause@ (that's not a
   -- 'SimpleSelect' at all — see 'SelectClause'). The chain alternative has
@@ -128,7 +128,7 @@ instance LeftRecursive SimpleSelect where
 -- root @a INTERSECT b UNION c@ at @INTERSECT@ and nest @a EXCEPT b EXCEPT
 -- c@ to the right — both wrong. 'foldChain' needs the whole flat sequence
 -- in hand to sort that out; see its own docs above.
-instance ExtendedBy SelectClause SimpleSelect where
+instance Extends SelectClause SimpleSelect where
   parseExtensions settings lhs = foldChain lhs <$> parseLinks settings
 
 -- |

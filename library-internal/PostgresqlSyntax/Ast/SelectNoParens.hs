@@ -56,7 +56,7 @@ instance IsAst SelectNoParens where
 
 -- |
 -- Parses the @select_clause@ (see
--- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'ExtendedBy' instance for the
+-- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'Extends' instance for the
 -- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining grammar) plus everything that can
 -- follow it.
 sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
