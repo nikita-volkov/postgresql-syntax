@@ -85,7 +85,7 @@ instance IsAst TableRef where
       Just c -> TextBuilders.renderInParens (toTextBuilder settings a) <> " " <> toTextBuilder settings c
       Nothing -> toTextBuilder settings a
 
-  parser settings = Parser.label "table reference" (parseMaybeExtended settings)
+  parser settings = Parser.label "table reference" (parseMaybeExtended @JoinedTable settings)
 
 -- |
 -- 'PostgresqlSyntax.Ast.JoinedTable' embeds trivially into a bare,

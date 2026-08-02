@@ -9,7 +9,7 @@ import PostgresqlSyntax.Ast.ForLockingClause
 import PostgresqlSyntax.Ast.SelectClause
 import PostgresqlSyntax.Ast.SelectLimit
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
-import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect ()
+import {-# SOURCE #-} PostgresqlSyntax.Ast.SimpleSelect (SimpleSelect)
 import PostgresqlSyntax.Ast.SortClause
 import {-# SOURCE #-} PostgresqlSyntax.Ast.WithClause (WithClause)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens
@@ -61,7 +61,7 @@ instance IsAst SelectNoParens where
 -- follow it.
 sharedSelectNoParens :: Settings -> Maybe WithClause -> Parser SelectNoParens
 sharedSelectNoParens settings with = do
-  select <- parseMaybeExtended @SelectClause settings
+  select <- parseMaybeExtended @SimpleSelect settings
   sort <- optional (Parsers.space1 *> parser settings)
   (limit, forLocking) <- limitFirst <|> forLockingFirst <|> pure (Nothing, Nothing)
   return (SelectNoParens with select sort limit forLocking)

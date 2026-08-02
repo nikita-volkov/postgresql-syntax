@@ -181,7 +181,7 @@ class (IsAst a) => LeftRecursive a where
 -- * __Maximal munch__: 'parseExtensions' must not return while a further
 --   extension is available — instances build this on 'parseExtensionChain'
 --   where possible, which already guarantees it.
-class (LeftRecursive base, Refines ext base) => Extends base ext | base -> ext where
+class (LeftRecursive base, Refines ext base) => Extends base ext | ext -> base where
   -- | Parse one or more extensions onto an already-parsed left operand,
   -- folding as it goes, and return the fully-extended result.
   parseExtensions :: Settings -> base -> Parser ext
@@ -200,17 +200,17 @@ extendedByProperties =
       Qc.property $ \(a :: base) ->
         let sql = toText mempty a
             run p = first (const ()) (Extras.run (Extras.totally p) sql)
-         in run (parser @base mempty) Qc.=== run (parseMaybeExtended @base @ext mempty)
+         in run (parser @base mempty) Qc.=== run (parseMaybeExtended @ext mempty)
     )
   ]
 
 -- |
 -- Parses zero or more extensions onto a 'parseBase', via 'parseExtensions'.
 -- This is what @A -> β α*@ (the whole of @A@) means as a parser.
-parseMaybeExtended :: forall base ext. (Extends base ext) => Settings -> Parser base
+parseMaybeExtended :: forall ext base. (Extends base ext) => Settings -> Parser base
 parseMaybeExtended settings = do
   b <- parseBase @base settings
-  optional (parseExtensions @base settings b) >>= maybe (pure b) (pure . embed)
+  optional (parseExtensions @base settings b) >>= maybe (pure b) (pure . embed @ext @base)
 
 -- |
 -- Like 'parseMaybeExtended', but requires at least one extension to follow

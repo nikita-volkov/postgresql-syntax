@@ -38,7 +38,7 @@ instance IsAst SelectClause where
   -- 'PostgresqlSyntax.Ast.SimpleSelect'\'s 'PostgresqlSyntax.Algebra.Extends'
   -- instance for the real @select_clause@ grammar, including
   -- @UNION@\/@INTERSECT@\/@EXCEPT@-chaining.
-  parser settings = parseMaybeExtended @SelectClause settings
+  parser settings = parseMaybeExtended @SimpleSelect settings
 
 -- |
 -- Every @select_clause@ production except the left-recursive ones (those
