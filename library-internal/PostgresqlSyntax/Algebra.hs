@@ -17,6 +17,7 @@ module PostgresqlSyntax.Algebra
     parseMaybeExtended,
     parseExtended,
     parseExtensionChain,
+    Parser,
   )
 where
 
@@ -265,3 +266,5 @@ parseExtensionChain item = go
       pure $ case rest of
         Nothing -> i :| []
         Just (j :| js) -> i :| j : js
+
+type Parser = Parser.HeadedParsec Void Text

@@ -2,7 +2,6 @@ module PostgresqlSyntax.Prelude
   ( module Exports,
     suffixRec,
     extendMany,
-    Parser,
   )
 where
 
@@ -65,7 +64,6 @@ import GHC.Conc as Exports hiding (orElse, threadWaitRead, threadWaitReadSTM, th
 import GHC.Exts as Exports (IsList (Item, fromList), groupWith, inline, lazy, sortWith)
 import GHC.Generics as Exports (Generic, Generic1)
 import GHC.IO.Exception as Exports
-import qualified HeadedMegaparsec
 import Numeric as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, fail, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
 import System.Environment as Exports
@@ -95,5 +93,3 @@ extendMany attempt = loop
       optional (attempt state) >>= \case
         Nothing -> pure state
         Just newState -> loop newState
-
-type Parser = HeadedMegaparsec.HeadedParsec Void Text
