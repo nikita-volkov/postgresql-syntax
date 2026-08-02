@@ -5,7 +5,6 @@ where
 
 import qualified HeadedMegaparsec as Parser
 import PostgresqlSyntax.Algebra
-import {-# SOURCE #-} PostgresqlSyntax.Ast.AExpr (AExpr)
 import PostgresqlSyntax.Ast.ExprList
 import {-# SOURCE #-} PostgresqlSyntax.Ast.SelectWithParens (SelectWithParens)
 import qualified PostgresqlSyntax.Helpers.Gens as Gens

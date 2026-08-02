@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module PostgresqlSyntax.Ast.JoinedTable
   ( JoinedTable (..),
   )
@@ -12,7 +14,6 @@ import qualified PostgresqlSyntax.Helpers.Gens as Gens
 import qualified PostgresqlSyntax.Helpers.Parsers as Parsers
 import qualified PostgresqlSyntax.Helpers.TextBuilders as TextBuilders
 import PostgresqlSyntax.Prelude
-import PostgresqlSyntax.Settings (Settings)
 import qualified Test.QuickCheck as Qc
 
 -- |

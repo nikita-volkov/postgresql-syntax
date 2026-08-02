@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module PostgresqlSyntax.Ast.SimpleSelect where
 
 import PostgresqlSyntax.Algebra (ExtendedBy, IsAst, LeftRecursive)
